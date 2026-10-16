@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# next.js build output
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# env files: secrets never committed; only the template is
+.env
+.env*
+!.env.example
+
+# tooling
+.vercel/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.log
