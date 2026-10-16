@@ -18,7 +18,7 @@ const TURNSTILE = "https://challenges.cloudflare.com";
 const contentSecurityPolicy = [
   "default-src 'self'",
   // 'unsafe-inline': Next.js inlines the scripts that hand page data to React; without it the page never
-  // hydrates (verified in session 1). Injection is prevented elsewhere: DB text is rendered only as text.
+  // hydrates. Injection is prevented elsewhere: DB text is rendered only as text. See docs/adr/0007-csp-unsafe-inline.md.
   // React uses eval() only in development, for readable server error stacks.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${TURNSTILE}`,
   "style-src 'self' 'unsafe-inline'",

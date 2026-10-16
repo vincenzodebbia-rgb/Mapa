@@ -20,6 +20,9 @@ Updated by the agent at the end of every session. Newest first.
   `check`, `deps`, `build` green; home loads with an empty browser console and hydrates.
 - `jq` installed (winget) and copied to `~/.local/bin` so the Claude app sees it; the
   protect-files hook really blocks writing `.env.fake` on Windows.
+- Hooks hardened: `protect-files.sh` fails closed (no jq / unreadable input → edit blocked);
+  `check-on-stop.sh` warns and exits 0 without jq, so it can never loop. Both tested.
+- ADR 0007 records the CSP `'unsafe-inline'` decision.
 
 ## Next
 - Founder: GitHub ruleset on `main`, Actions variables `DEV_SUPABASE_URL` and
@@ -28,8 +31,8 @@ Updated by the agent at the end of every session. Newest first.
 - Session 2 — database (docs/BUILD_PLAN.md).
 
 ## Known issues
-- CSP allows `'unsafe-inline'` scripts: Next.js needs inline scripts to hydrate and nonces would make every
-  page dynamic. Revisit when Next.js SRI (hash-based CSP) is stable.
+- CSP allows `'unsafe-inline'` scripts (docs/adr/0007-csp-unsafe-inline.md). Revisit when Next.js SRI is stable.
+- Without jq every Edit/Write is blocked by `protect-files.sh` (by design). jq lives in `~/.local/bin`.
 - `npm audit`: 5 high in dev-only tooling (`braces` via `eslint-config-next` → `fast-glob`). Not shipped to
   the browser or server. npm's "fix" downgrades to Next 14: do not apply; wait for an upstream release.
 - `next build` and `next typegen` fail fast if `NEXT_PUBLIC_SUPABASE_URL` is missing: CI needs the Actions
