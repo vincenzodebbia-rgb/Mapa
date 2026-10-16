@@ -13,11 +13,14 @@ const supabaseRealtime = supabaseOrigin.replace(/^https:/, "wss:");
 const OPENFREEMAP = "https://tiles.openfreemap.org";
 const TURNSTILE = "https://challenges.cloudflare.com";
 
-// Static CSP (no nonces), so pages can stay statically rendered.
+// Static CSP (no nonces), so pages can stay statically rendered: nonces force dynamic rendering
+// and break Partial Prerendering.
 const contentSecurityPolicy = [
   "default-src 'self'",
+  // 'unsafe-inline': Next.js inlines the scripts that hand page data to React; without it the page never
+  // hydrates (verified in session 1). Injection is prevented elsewhere: DB text is rendered only as text.
   // React uses eval() only in development, for readable server error stacks.
-  `script-src 'self'${isDev ? " 'unsafe-eval'" : ""} ${TURNSTILE}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${TURNSTILE}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseOrigin} ${OPENFREEMAP}`,
   "font-src 'self'",
