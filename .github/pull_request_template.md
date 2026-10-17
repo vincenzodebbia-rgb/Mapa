@@ -1,13 +1,13 @@
-## What changes (one sentence, plain language)
+## Cosa cambia (una frase, linguaggio semplice)
 
-## Block(s) touched
+## Blocchi toccati
 <!-- auth / onboarding / organizations / events / threads / invites / spaces / account / map / app / lib -->
 
-## Founder checklist (tick before merging)
-- [ ] CI is green
-- [ ] I opened the Vercel preview on my phone and did what docs/SPEC.md says for this feature
-- [ ] `architecture-reviewer` says "OK to merge"
-- [ ] Files changed are only in the expected folders (see "Files changed" tab)
-- [ ] If the database changed: there is a NEW migration with RLS + a test
-- [ ] No test was deleted or skipped; no new dependency without a reason written here
-- [ ] No new personal data collected or shown (or docs/PRIVACY_AND_OWNERSHIP.md was updated)
+## Checklist del fondatore (da spuntare prima del merge)
+- [ ] La CI è verde
+- [ ] Ho aperto l'anteprima Vercel dal telefono e ho fatto quello che docs/SPEC.md dice per questa funzione
+- [ ] `architecture-reviewer` dice "OK to merge"
+- [ ] I file modificati sono solo nelle cartelle previste (vedi la scheda "Files changed")
+- [ ] Se il database è cambiato: c'è una NUOVA migrazione con RLS + un test
+- [ ] Nessun test cancellato o saltato; nessuna nuova dipendenza senza un motivo scritto qui
+- [ ] Nessun nuovo dato personale raccolto o mostrato (oppure docs/PRIVACY_AND_OWNERSHIP.md è stato aggiornato)

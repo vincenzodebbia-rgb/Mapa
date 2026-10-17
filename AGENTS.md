@@ -94,7 +94,8 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
 - Mobile first. Accessible: every map view has an equivalent list view; contrast AA; focus visible.
 
 ## Language and naming
-- Code, identifiers, comments, commits, PRs, technical docs: English.
+- Code and identifiers: English. Everything else in Italian: comments, commits, PRs, docs.
+  Commit prefixes stay Conventional Commits (`feat:`, `fix:`…); the description after them is in Italian.
 - All UI text: Spanish, only in `messages/es.json`. No UI strings in components.
 - Terms: see `docs/glossary.md` (asociación → organization kind `association`, hilo → `thread`,
   barrio → `neighborhood`, ficha → `profile`).
