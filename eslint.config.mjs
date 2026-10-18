@@ -16,7 +16,7 @@ const supabaseOnlyInLib = {
 };
 const dbTypesOnlyInDataLayer = {
   group: ["@/lib/database.types", "**/database.types"],
-  message: "DB row types only in features/*/data.ts and actions.ts. Export a DTO from types.ts.",
+  message: "DB row types only in features/*/data.ts, actions.ts and src/lib/supabase/. Export a DTO from types.ts.",
 };
 
 export default defineConfig([
@@ -43,6 +43,7 @@ export default defineConfig([
   },
   { files: ["src/features/*/data.ts", "src/features/*/actions.ts"],
     rules: { "no-restricted-imports": ["error", { patterns: [supabaseOnlyInLib] }] } },
+  // Le factory dei client creano i client Supabase e li tipizzano con Database.
   { files: ["src/lib/supabase/**"], rules: { "no-restricted-imports": "off" } },
 
   // R7-R8: no raw HTML, no hard-coded design

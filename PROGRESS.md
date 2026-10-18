@@ -17,7 +17,12 @@ Updated by the agent at the end of every session. Newest first.
 - Grant per colonna: l'utente non può mai scrivere `kind`, `slug`, `verified`, `entry_method`, `status`,
   `flagged_for_review`, `last_reviewed_at`, `last_activity_at`; anon non ha nessun grant di scrittura.
   `lookup_municipal_association` e `check_rate_limit` sono solo per `service_role` (le action le chiamano con il client admin).
-- `src/lib/database.types.ts` generato da mapa-dev.
+- `src/lib/database.types.ts` generato da mapa-dev; i client in `src/lib/supabase/` sono tipizzati con `Database`
+  (eccezione approvata, scritta in AGENTS.md). Componenti e pagine ricevono DTO.
+- Comandi database bloccati: nuovo hook `.claude/hooks/protect-commands.sh` (db push/reset, link, login, projects, secrets,
+  orgs, `--project-ref`, `--db-url`, Management API, `supabase/.temp`), `protect-files.sh` blocca `supabase/.temp/**` e ora
+  normalizza i percorsi Windows (`C:\`, `c:/`, `/c/`): prima una grafia diversa poteva far saltare i blocchi in silenzio.
+  `db push` e `link` passano da "ask" a "deny". Il push su mapa-dev lo lancia solo il fondatore.
 - Seed fittizia applicata a mapa-dev (`db push --include-seed`): 10 organizzazioni (1 sospesa, 1 "faint", 1 espacio
   segnalato), 15 eventi (7 settimanali, uno per giorno della settimana: la mappa resta viva circa 6 mesi), 7 fili.
 - 12 file pgTAP (i 16 controlli di DATA_MODEL + extra): **tutti verdi su mapa-dev**, 152 asserzioni. Eseguiti senza Docker con
@@ -59,11 +64,18 @@ Updated by the agent at the end of every session. Newest first.
   (`register_entity`, commento `DA DECIDERE (sessione 5)`; nessuna migrazione serve oltre a quella riga).
 - Categoria del Comune "Comerciantes, empresarios, profesionales y autónomos": come trattarla all'import.
 
+## Regole per la sessione 5 (decise dal fondatore)
+- L'email restituita da `moderate_organization` serve **solo** all'action per inviare la motivazione all'organizzazione:
+  non va mai mostrata nell'interfaccia, né restituita al client, né scritta nei log.
+- Le email alle organizzazioni (motivazioni, avvisi, ecc.) partono **sempre** da un indirizzo del progetto sul dominio
+  definitivo, **mai** da un'email personale.
+
 ## Known issues
-- I client Supabase in `src/lib/supabase/` restano senza il tipo `Database`: AGENTS.md permette di importare
-  `database.types.ts` solo in `data.ts` e `actions.ts`. Da decidere con il fondatore se fare un'eccezione per `src/lib/supabase/`.
 - `moderate_organization` restituisce come destinatario della motivazione il `contact_email` pubblico o, se manca,
   l'email di accesso di un membro: è un dato personale che arriva solo all'action dell'admin (obbligo DSA).
+- `protect-commands.sh` legge solo il testo del comando: non vede dentro script lanciati da file (`bash x.sh`).
+  `settings.local.json` contiene ancora un permesso generico `Bash(npx supabase *)`: lo copre il `deny` + l'hook,
+  ma il fondatore può toglierlo.
 - CSP allows `'unsafe-inline'` scripts (docs/adr/0007-csp-unsafe-inline.md). Revisit when Next.js SRI is stable.
 - Without jq every Edit/Write is blocked by `protect-files.sh` (by design). jq lives in `~/.local/bin`.
 - `npm audit`: 5 high in dev-only tooling (`braces` via `eslint-config-next` → `fast-glob`). Not shipped to

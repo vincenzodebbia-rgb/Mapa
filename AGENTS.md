@@ -32,9 +32,15 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
 - `npm run dev` · `npm run lint` (= `eslint .`; `next lint` no longer exists) · `npm run typecheck`
 - `npm test` (Vitest) · `npm run e2e` (Playwright) · `npm run deps` (dependency-cruiser)
 - `npm run check` = typecheck + lint + test. Run it before saying a task is done, and paste the output.
-- Database (no Docker): `npx supabase migration new <name>` → write SQL → `npx supabase db push`
-  (CLI linked ONLY to the dev project) → `npm run db:types` → commit migration + types together.
+- Database (no Docker): `npx supabase migration new <name>` → write SQL → the FOUNDER runs
+  `npx supabase db push` on mapa-dev from their own terminal (CLI linked ONLY to the dev project) →
+  `npm run db:types` → commit migration + types together.
   Production is migrated only by CI. Never use the Supabase dashboard to change the schema.
+- Supabase commands the agent may run: `migration new`, `gen types` (`npm run db:types`), and
+  `db query --linked` (mapa-dev only, for tests inside a transaction that is rolled back).
+  Everything else — `db push`, `db reset`, `link`, `login`, `projects`, `secrets`, `orgs`, `--project-ref`,
+  `--db-url`, the Management API, `supabase/.temp` — is blocked by `.claude/hooks/protect-commands.sh`
+  and `protect-files.sh`. When a push is needed, stop and ask the founder to run it.
 
 ## Architecture: blocks
 - `src/app/` = routing and composition only. A page may call several blocks. No SQL, no Supabase calls.
@@ -49,8 +55,8 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
     → rate limit (if public-facing) → write → `revalidatePath`/`updateTag`. Return `{ ok, error }`.
   - `schema.ts` (zod) · `types.ts` (DTOs) · `components/` · optional `CLAUDE.md` with block rules.
   - No `index.ts`, no `export *`, no barrel files.
-- `src/lib/database.types.ts` is GENERATED. Import it only in `data.ts` and `actions.ts`.
-  Components and pages receive DTOs.
+- `src/lib/database.types.ts` is GENERATED. Import it only in `data.ts`, `actions.ts` and the client
+  factories in `src/lib/supabase/` (typed with `Database`). Components and pages receive DTOs.
 - `map` is a read model: it reads the views `map_items` and `connection_lines` and owns `neighborhoods`.
 - `src/lib/` = code used by 2+ blocks (supabase clients, dates, env, rate-limit, turnstile, i18n).
   Pure domain helpers in `src/lib/domain/`. Before writing a helper, search `src/lib` and `src/components/ui`.
