@@ -10,6 +10,15 @@ Nobody else — human or AI — holds production keys. The CI holds only what db
 - prod: Supabase mapa-prod ← Vercel Production. Migrated only by .github/workflows/db-deploy.yml.
 - Free plan: a Supabase project pauses after ~7 days without activity; resume it from the dashboard.
 
+## Admin access for profile review (once per project)
+`app_admins` decides who can open the private review page. It is never set from the app and never stored in `user_metadata`.
+1. Log in once with the magic link on the site that uses the project (mapa-dev: preview/local; mapa-prod: production).
+2. Supabase dashboard → the project → SQL Editor → run (with your own login email):
+   `insert into public.app_admins (user_id) select id from auth.users where email = 'your@email';`
+3. Check: `select count(*) from public.app_admins;` returns 1.
+This is data, not schema, so the "no dashboard schema changes" rule does not apply. Do it on mapa-dev and on mapa-prod separately.
+To remove access: `delete from public.app_admins where user_id = '<id>';`.
+
 ## Backups
 The Free plan has no automatic backups. Backups contain personal data:
 NEVER store them in this public repository, its Actions artifacts or logs.

@@ -10,7 +10,7 @@
 2. **Cittadini senza account e senza tracce.** Nessun account, nessun cookie, nessun identificatore, nessuna geolocalizzazione, nessun "aggiungi al calendario". L'unico cookie del sito è quello di sessione di Supabase per chi fa login: è tecnico, quindi **non serve un banner cookie**. Il giorno in cui si aggiunge qualsiasi altro cookie o script esterno, questa regola cade e serve un banner: per questo è vietato senza decisione scritta (ADR).
 3. **Niente analytics nella demo.** In seguito solo strumenti senza cookie e aggregati, scelti con un ADR.
 4. **Niente dati personali nei log**, negli errori inviati a strumenti esterni, negli URL, nei nomi dei file.
-5. **Numeri di registro e registro importato** non sono mai leggibili da `anon` o `authenticated`.
+5. **NIF, elenco del Comune importato e risposte dell'iscrizione** non sono mai leggibili da `anon` o da altri utenti (`municipal_associations`, `organization_verifications`, `organization_answers`). Si accettano solo NIF di enti: mai DNI o NIE, mai documenti personali. Dall'elenco del Comune si importano solo CIF, nome, numero di iscrizione, distretto, barrio e categoria: mai telefono, email, indirizzo o numero di soci.
 6. **Contatti pubblici solo per scelta.** I campi di contatto di un'organizzazione sono pubblici perché li compila lei sapendolo: il modulo lo dice in chiaro ("Este contacto será público").
 7. **Immagini:** ri-codificate lato server, metadati EXIF/GPS rimossi. Chi carica dichiara di avere i diritti.
 8. **Diritti GDPR nel prodotto:** "Descargar mis datos" (JSON) ed "Eliminar cuenta" in `/panel`, senza dover scrivere email.
@@ -18,6 +18,8 @@
 10. **Regione UE:** progetti Supabase in una regione UE; funzioni Vercel in `fra1`. Nessun servizio che sposti dati personali fuori dall'UE senza ADR.
 11. **Segnalazioni di contenuti illegali (DSA):** un indirizzo email in `/legal`. Quando il fondatore rimuove un contenuto, l'organizzazione riceve una motivazione (testo standard in `messages/es.json`). Niente moderazione automatica, niente segnalazioni tra organizzazioni.
 12. **Seed e test** con dati inventati. Mai nomi, email o indirizzi di persone o associazioni reali.
+13. **Revisione dei profili.** Il fondatore rilegge tutti i profili ogni 2-3 mesi e riceve un avviso per gli espacios con attività "dubbia" entrati senza invito. Va scritto nelle condiciones e nell'informativa. Per la revisione (anche con Claude) si usano **solo** i dati di `admin_review_list()`: nome, tipo, attività, barrio, web, risposte. Mai NIF né email. L'avviso al fondatore non contiene mai NIF né email di chi si iscrive.
+14. **Moderazione.** Sospensioni, riattivazioni ed eliminazioni si registrano in `moderation_actions` con la motivazione, che arriva sempre all'organizzazione (DSA). L'accesso alla revisione è nella tabella `app_admins`, mai in `user_metadata`.
 
 ## B. Titolare del trattamento: cosa devi fare tu
 
@@ -30,7 +32,8 @@ Finché non esiste un'associazione, **sei tu, come persona, il titolare del trat
 | Accordi con i fornitori (DPA) | Supabase e Vercel li includono nei termini: scarica e archivia le versioni accettate | Quando crei i progetti |
 | Aviso legal (LSSI) | Nome, NIE, email di contatto. Valuta con l'avvocato se usare un indirizzo dedicato | Prima del lancio |
 | Procedura in caso di violazione dei dati | `docs/operations.md`, sezione "Incidente": entro 72 ore notifica all'AEPD se c'è rischio per le persone | Scritta prima del lancio |
-| Conservazione | Account eliminati: subito. Eventi: restano nell'archivio dell'organizzazione finché esiste. Accettazioni: finché esiste l'account. Backup: 30 giorni | Scritta nell'informativa |
+| Conservazione | Account eliminati: subito. Eventi: restano nell'archivio dell'organizzazione finché esiste. Accettazioni: finché esiste l'account. Risposte dell'iscrizione (`organization_answers`, testo scritto dall'ente, privato): finché esiste l'organizzazione. Storico di moderazione (`moderation_actions`): finché serve per eventuali reclami, massimo 3 anni. Backup: 30 giorni | Scritta nell'informativa |
+| Revisione periodica dei profili | Scriverla nelle condiciones e nell'informativa (ogni 2-3 mesi, quali dati si guardano) | Prima del lancio pubblico |
 
 **Backup:** sul piano gratuito Supabase non fa backup. Il backup contiene dati personali, quindi **mai** come file o artifact in un repository pubblico. Va cifrato e salvato in un posto privato (vedi `docs/operations.md`).
 
