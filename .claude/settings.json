@@ -7,21 +7,24 @@
       "Bash(git checkout -b *)", "Bash(git switch *)"
     ],
     "ask": [
-      "Bash(git push *)", "Bash(npx supabase db push *)", "Bash(npx supabase link *)", "Bash(npm install *)", "Bash(npm i *)",
+      "Bash(git push *)", "Bash(npm install *)", "Bash(npm i *)",
       "Edit(./e2e/**)", "Edit(./supabase/tests/**)", "Edit(./src/**/*.test.ts)", "Edit(./src/**/*.test.tsx)",
       "Edit(./.github/**)", "Edit(./.claude/**)", "Edit(./eslint.config.mjs)", "Edit(./.dependency-cruiser.cjs)",
       "Edit(./AGENTS.md)", "Edit(./docs/SPEC.md)", "Edit(./docs/DATA_MODEL.md)", "Edit(./src/app/globals.css)", "Edit(./src/config/brand.ts)"
     ],
     "deny": [
       "Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./.env.production)",
-      "Bash(npx supabase db reset *)", "Bash(git push --force *)", "Bash(git push -f *)", "Bash(rm -rf *)"
+      "Bash(npx supabase db reset *)", "Bash(npx supabase db push)", "Bash(npx supabase db push *)",
+      "Bash(npx supabase link)", "Bash(npx supabase link *)", "Bash(git push --force *)", "Bash(git push -f *)", "Bash(rm -rf *)"
     ],
     "disableBypassPermissionsMode": "disable"
   },
   "hooks": {
     "PreToolUse": [
       { "matcher": "Edit|Write",
-        "hooks": [ { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh" } ] }
+        "hooks": [ { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh" } ] },
+      { "matcher": "Bash",
+        "hooks": [ { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-commands.sh" } ] }
     ],
     "Stop": [
       { "hooks": [ { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-on-stop.sh" } ] }
