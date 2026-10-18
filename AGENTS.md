@@ -1,3 +1,13 @@
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
 <!--
   Single source of rules for every AI agent and every human contributor.
   Keep under 200 lines. If create-next-app or `next dev` adds a block between
@@ -84,7 +94,8 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
 - Mobile first. Accessible: every map view has an equivalent list view; contrast AA; focus visible.
 
 ## Language and naming
-- Code, identifiers, comments, commits, PRs, technical docs: English.
+- Code and identifiers: English. Everything else in Italian: comments, commits, PRs, docs.
+  Commit prefixes stay Conventional Commits (`feat:`, `fix:`…); the description after them is in Italian.
 - All UI text: Spanish, only in `messages/es.json`. No UI strings in components.
 - Terms: see `docs/glossary.md` (asociación → organization kind `association`, hilo → `thread`,
   barrio → `neighborhood`, ficha → `profile`).
