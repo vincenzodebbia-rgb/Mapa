@@ -155,7 +155,7 @@ RLS: `select` se l'evento è visibile. `insert` di righe `co` dai membri dell'`o
 - La scadenza non richiede cron: i pending scaduti sono invisibili agli estranei e si possono cancellare più avanti.
 
 ### invites
-`id`, `token text unique not null default encode(extensions.gen_random_bytes(18), 'base64url')`, `organization_id uuid references organizations on delete cascade`,
+`id`, `token text unique not null` (18 byte casuali in base64 url-safe: `translate(encode(extensions.gen_random_bytes(18), 'base64'), '+/', '-_')`, perché `base64url` esiste solo da Postgres 18), `organization_id uuid references organizations on delete cascade`,
 `created_by uuid references auth.users on delete set null default auth.uid()`, `created_at`, `expires_at default now() + interval '30 days'`,
 `used_at timestamptz`, `used_by_org uuid references organizations on delete set null`.
 - Solo un'organizzazione `association` e `active` crea inviti (trigger). Chi usa l'invito entra con `entry_method = 'invite'`,
@@ -248,8 +248,9 @@ L'avviso al fondatore per gli espacios dubbi lo manda l'**action** (non il datab
 15. Un utente non può modificare `entry_method`, `status`, `flagged_for_review`, `last_reviewed_at` della propria organizzazione.
 16. `lookup_municipal_association` restituisce solo `found` e `name`.
 
-I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`), oppure a mano su mapa-dev con
-`npx supabase test db --linked` (transazione con rollback).
+I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
+(`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,
+dentro una transazione che si chiude con un errore (rollback): vedi `PROGRESS.md`.
 
 ## Regole per cambiare lo schema
 - Una migrazione nuova per ogni cambio; le migrazioni unite sono immutabili.
