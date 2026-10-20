@@ -1,24 +1,50 @@
-# Applies new migrations to the PRODUCTION Supabase project after a merge to main.
-# Nobody (human or agent) runs `supabase db push` against production by hand.
-# Secrets needed: SUPABASE_ACCESS_TOKEN, PROD_PROJECT_REF, PROD_DB_PASSWORD.
-# Verify the exact CLI flags in session 1 against https://supabase.com/docs/guides/deployment/managing-environments
+# Applica le migrazioni nuove al progetto Supabase di PRODUZIONE dopo un merge su main,
+# oppure a mano da Actions → db-deploy → Run workflow.
+# Nessuno (persona o agente) lancia il push su produzione a mano dal proprio computer.
+# Niente access token né link: la CLI si collega direttamente al database con un URL costruito qui.
+# Servono (environment "production"): secrets PROD_PROJECT_REF, PROD_DB_PASSWORD; variable PROD_POOLER_HOST.
+# Vedi docs/operations.md.
 name: db-deploy
 on:
   push:
     branches: [main]
     paths: ['supabase/migrations/**']
+  workflow_dispatch:
+
 permissions:
   contents: read
+
+# Mai due deploy del database insieme: il secondo aspetta il primo.
+concurrency:
+  group: db-deploy
+  cancel-in-progress: false
+
 jobs:
   migrate:
     runs-on: ubuntu-latest
     environment: production
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      PROD_PROJECT_REF: ${{ secrets.PROD_PROJECT_REF }}
+      PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      PROD_POOLER_HOST: ${{ vars.PROD_POOLER_HOST }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
-      - run: supabase link --project-ref ${{ secrets.PROD_PROJECT_REF }}
-      - run: supabase db push
+        with: { version: 2.121.0 }
+      - name: Apply migrations to production
+        run: |
+          set -euo pipefail
+          : "${PROD_PROJECT_REF:?secret PROD_PROJECT_REF mancante}"
+          : "${PROD_DB_PASSWORD:?secret PROD_DB_PASSWORD mancante}"
+          : "${PROD_POOLER_HOST:?variable PROD_POOLER_HOST mancante}"
+
+          # La password va codificata per URL. GitHub nasconde i segreti nei log, ma non la loro
+          # versione codificata né l'URL intero: li mascheriamo noi prima di qualsiasi uso.
+          encoded_password=$(jq -rn --arg p "$PROD_DB_PASSWORD" '$p | @uri')
+          echo "::add-mask::${encoded_password}"
+          # Session pooler: porta 5432, utente postgres.<ref>.
+          db_url="postgresql://postgres.${PROD_PROJECT_REF}:${encoded_password}@${PROD_POOLER_HOST}:5432/postgres"
+          echo "::add-mask::${db_url}"
+
+          # --yes: la CLI chiede conferma prima di applicare le migrazioni; in CI non c'è nessuno a rispondere.
+          supabase db push --db-url "$db_url" --yes
