@@ -28,7 +28,7 @@ jobs:
       PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
       PROD_POOLER_HOST: ${{ vars.PROD_POOLER_HOST }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v1
         with: { version: 2.121.0 }
       - name: Apply migrations to production
