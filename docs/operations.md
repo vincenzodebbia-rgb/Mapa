@@ -10,6 +10,21 @@ Nobody else — human or AI — holds production keys. The CI holds only what db
 - prod: Supabase mapa-prod ← Vercel Production. Migrated only by .github/workflows/db-deploy.yml.
 - Free plan: a Supabase project pauses after ~7 days without activity; resume it from the dashboard.
 
+## Production migrations (.github/workflows/db-deploy.yml)
+Runs on every merge to `main` that touches `supabase/migrations/`, or by hand: Actions → db-deploy → Run workflow.
+It uses no Supabase access token and no `supabase link`: it builds the database URL inside the job
+(session pooler, port 5432, user `postgres.<ref>`, password URL-encoded and masked) and pushes with it.
+Set these in GitHub → Settings → Environments → **production** (the job uses `environment: production`):
+
+| Name | Kind | Value |
+|---|---|---|
+| `PROD_PROJECT_REF` | secret | mapa-prod project ref (Project Settings → General) |
+| `PROD_DB_PASSWORD` | secret | mapa-prod database password (raw, not encoded: the workflow encodes it) |
+| `PROD_POOLER_HOST` | variable | host of the **Session pooler** (Connect → Session pooler), e.g. `aws-0-eu-central-1.pooler.supabase.com` |
+
+`SUPABASE_ACCESS_TOKEN` is no longer needed: delete it from GitHub and revoke it in Supabase → Account → Access Tokens.
+If the database password is rotated, update `PROD_DB_PASSWORD` the same day.
+
 ## Admin access for profile review (once per project)
 `app_admins` decides who can open the private review page. It is never set from the app and never stored in `user_metadata`.
 1. Log in once with the magic link on the site that uses the project (mapa-dev: preview/local; mapa-prod: production).
