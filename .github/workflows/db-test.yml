@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with: { version: 2.121.0 }
       # Servono solo Postgres, Auth (schema auth) e Storage (schema storage per il bucket).
       - name: Start local Supabase
