@@ -11,14 +11,19 @@ Una mappa di Madrid che mostra **cosa fanno oggi** le piccole associazioni, i co
 
 | Tipo (`organizations.kind`) | Come entra | Sulla mappa | Cosa può fare |
 |---|---|---|---|
-| `association` (terzo settore) | Inserisce il numero del registro municipale; verificato in automatico contro `registry_entities`. Un numero = un solo account | Un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, fili, home privata, Invita, pubblicare spazi, memoria dell'anno |
+| `association` (terzo settore) | Email + NIF dell'ente. Se il NIF è nell'elenco del Comune entra subito, verificata (§8). Un NIF = un solo account | Un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, fili, home privata, Invita, pubblicare spazi, memoria dell'anno |
+| `venue` — nella UI "Espacio" (librerie, sale piccole, centri culturali, gallerie, studi, caffè culturali, locali notturni…) | Email + NIF dell'ente + tipo di attività + domande (§8) | Un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, pubblicare spazi disponibili, home privata. Niente fili né inviti |
 | `professional` (collettivi, artisti, chi ha progetti) | Iscrizione libera con email | **Nessun punto proprio.** Compare solo tramite i suoi eventi, nel luogo dell'evento | Pubblicare eventi in qualsiasi luogo, profilo nella sezione Profesionales |
-| Luoghi (bar, librerie, studi) | Non si registrano | Solo il giorno di un evento, come "dove succede" | Niente: sono un indirizzo dentro l'evento |
+| Luoghi non registrati (bar, studi) | Non si registrano | Solo il giorno di un evento, come "dove succede" | Niente: sono un indirizzo dentro l'evento |
 | Cittadini | Nessun account | Vedono tutto il pubblico | Solo condividere un evento |
+
+Nella UI `venue` si chiama "Espacio" e ha una sua sezione "Espacios". Attenzione: anche gli "Espacios disponibles" (§10, tabella `spaces`) usano la stessa parola; il nome delle due sezioni si decide nella sessione 9.
 
 Accesso: **link magico via email** (Supabase Auth), nessuna password. Chi crea un account dichiara di avere almeno 18 anni (da confermare con l'avvocato, vedi PRIVACY).
 
-Protezione da spam senza moderazione manuale: conferma email, Cloudflare Turnstile sui moduli di iscrizione e invito, limite di frequenza sulle azioni di pubblicazione. **Nessun sistema di segnalazione tra organizzazioni.** Esiste solo un indirizzo email pubblico per segnalare contenuti illegali (obbligo DSA), nella pagina `/legal`.
+Protezione da spam: conferma email, Cloudflare Turnstile sui moduli di iscrizione e invito, limite di frequenza sulle azioni di pubblicazione. **Nessun sistema di segnalazione tra organizzazioni.** Esiste solo un indirizzo email pubblico per segnalare contenuti illegali (obbligo DSA), nella pagina `/legal`.
+
+**Revisione del fondatore (minima).** Non c'è moderazione prima della pubblicazione: tutti entrano subito. Il fondatore riceve un avviso solo per gli espacios con attività "dubbia" entrati senza invito, e ogni 2-3 mesi rilegge tutti i profili in una pagina privata (`admin_review_list`: nome, tipo, attività, barrio, web, risposte; mai NIF né email). Può sospendere, riattivare o eliminare un'organizzazione, sempre con una motivazione che le arriva per email (DSA). Un'organizzazione sospesa sparisce dal pubblico con tutti i suoi contenuti; i suoi membri la vedono ancora. Non è una dashboard: niente statistiche né contatori.
 
 ## 3. Pagine (URL in spagnolo)
 
@@ -32,7 +37,7 @@ Protezione da spam senza moderazione manuale: conferma email, Cloudflare Turnsti
 | `/que-es` | tutti | Testo breve "qué es" + manifesto (segnaposto in `messages/es.json`) |
 | `/legal` | tutti | Aviso legal, privacidad, condiciones, email contenuti illegali, link al codice sorgente, attribuzioni open data |
 | `/entrar` | tutti | Login con link magico |
-| `/registro` | tutti | Scelta: "Soy una asociación" / "Soy profesional o colectivo" (§8) |
+| `/registro` | tutti | Scelta: "Soy una asociación" / "Soy un espacio" / "Soy profesional o colectivo" (§8) |
 | `/invitacion/[token]` | tutti | Atterraggio da un invito, con il nome di chi invita (§9) |
 | `/panel` | loggati | Home privata (§9) |
 | `/panel/eventos/nuevo`, `/panel/eventos/[id]` | loggati | Modulo evento (§5) |
@@ -97,10 +102,26 @@ Regole:
 Minima, senza numeri né contatori: nome; `one_liner` (max 120); `when_to_visit` (es. "Los jueves a las 19h"); contatto esterno scelto da loro (email e/o telefono e/o link); barrio; indirizzo solo se scelto; prossimi eventi; per le associazioni, fili confermati con storie. Professionisti: niente punto, niente indirizzo.
 
 ## 8. Registrazione `/registro`
-**Associazione:** email → link magico → numero di registro municipale → ricerca in `registry_entities`. Se esiste e non è usato: account creato, `verified = true`, nome precompilato (modificabile). Se non esiste: "No encontramos este número. Revisa que esté escrito como en el Registro." Se è già usato: messaggio con l'email di contatto del progetto.
+**Chi entra e come** (in parole semplici):
+
+| Chi | Cosa succede |
+|---|---|
+| Associazione che sta nell'elenco del Comune (cerchiamo il suo NIF) | Entra subito, con il segno "verificata". Le chiediamo "¿Sois *nombre*?" con il nome ufficiale |
+| Chiunque arrivi con un invito valido di un'associazione già sulla mappa | Entra subito, qualunque tipo scelga, senza controlli |
+| Espacio con un'attività tranquilla (libreria, sala pequeña, centro cultural, galería, taller/estudio, café cultural) | Entra subito |
+| Espacio con un'attività "dubbia" (discoteca/club, bar nocturno, otro) senza invito | Entra subito, ma il fondatore riceve un avviso e la guarda |
+| Collettivo o artista | Solo email, nessun punto fisso |
+| Associazione che non sta nell'elenco e non ha invito | Entra; se con o senza avviso al fondatore **si decide nella sessione 5** |
+
+**Associazione ed Espacio:** email → link magico → NIF dell'ente (solo formato da ente, mai DNI/NIE). Se il NIF è già usato: messaggio con l'email di contatto del progetto. Poi il nome (precompilato con il nome ufficiale se è nell'elenco, modificabile) e le domande:
+1. "¿Qué hacéis y para quién?" (max 500)
+2. Tipo de actividad — solo per gli Espacios: Librería · Sala pequeña · Centro cultural · Galería · Taller o estudio · Café cultural · Discoteca o club · Bar nocturno · Otro
+3. "¿Cómo se sostiene el proyecto?" (max 500)
+
+Per gli **Espacios** le tre risposte sono obbligatorie; per le **associazioni** le domande 1 e 3 sono facoltative. Per tutti c'è il campo facoltativo **"Web o red social"** (pubblico, `contact_url`).
 Poi: one_liner, when_to_visit, contatto, indirizzo facoltativo (con pin), categoria abituale.
 
-**Professionista/collettivo:** email → link magico → nome, cosa fa, barrio, contatto, una riga "Busco / Ofrezco".
+**Professionista/collettivo:** email → link magico → nome, cosa fa, barrio, contatto, "Web o red social", una riga "Busco / Ofrezco".
 
 In entrambi: casella obbligatoria con 3 regole brevi (realtà vera, nessuna vendita di prodotti, attività reali) + accettazione di condiciones e privacidad. Si salvano versione dei testi e data dell'accettazione.
 
@@ -116,7 +137,7 @@ In entrambi: casella obbligatoria con 3 regole brevi (realtà vera, nessuna vend
 
 ## 10. Profesionales `/profesionales` (solo registrati)
 - Ricerca con pochi filtri: tipo (`association` / `professional` / `space`), testo libero "busco/ofrezco", barrio.
-- **Espacios disponibles:** li pubblicano **solo le associazioni** (tipo, barrio, gratis o a pagamento, descrizione, contatto).
+- **Espacios disponibles:** li pubblicano **le associazioni e gli Espacios** (`venue`), mai i professionisti (tipo, barrio, gratis o a pagamento, descrizione, contatto).
 - Profili minimi: niente foto, niente portfolio, niente contatori.
 - **Nessuna messaggistica interna.** Si mostra il contatto scelto, poi ci si incontra di persona.
 
@@ -126,7 +147,7 @@ Non decisa. Segnaposto neutri, un solo tema scuro, mobile-first. Tutto ciò che 
 ## 12. Privacy e sicurezza (minimo non negoziabile anche nella demo)
 Regole complete in `docs/PRIVACY_AND_OWNERSHIP.md`. In sintesi:
 - RLS su ogni tabella; un utente modifica solo le organizzazioni di cui è membro (`memberships`).
-- Registro municipale importato e numeri di registro mai visibili al pubblico.
+- Elenco del Comune importato, NIF e risposte dell'iscrizione mai visibili al pubblico. Si accettano solo NIF di enti, mai documenti personali.
 - Ogni vista `security_invoker = true`.
 - Nessun analytics, tracker, script di terze parti o cookie oltre a quello di sessione: quindi nessun banner cookie.
 - Nessuna password (solo link magico). Chiavi segrete solo lato server.
@@ -139,7 +160,7 @@ Regole complete in `docs/PRIVACY_AND_OWNERSHIP.md`. In sintesi:
 ## 13. Fuori perimetro nella versione 1
 Le parti non pronte restano dietro un flag in `src/config/flags.ts` (con scadenza), non vengono cancellate.
 
-Copertina/intro animata e identità visiva · notifiche · account per cittadini · aggiungi al calendario · chat o messaggi interni · like/follower/contatori · segnalazioni tra organizzazioni · prove o conferme degli eventi · colori per categoria o per organizzazione · Ghost Map o realtà non registrate sulla mappa · formulari "raccolta bisogni" · filo creato dal vivo all'aperitivo · personalizzazione della pagina da parte dell'associazione · sezione storie/memorie · lingua italiana (predisposta, non attiva) · esportazione eventi in formati aperti (iCal/JSON/ActivityPub: modello dati **predisposto**, implementazione dopo, flag `openFeeds`) · dashboard del fondatore · pagina "quién cree en este barrio" (dopo che esiste un'associazione titolare).
+Copertina/intro animata e identità visiva · notifiche · account per cittadini · aggiungi al calendario · chat o messaggi interni · like/follower/contatori · segnalazioni tra organizzazioni · prove o conferme degli eventi · colori per categoria o per organizzazione · Ghost Map o realtà non registrate sulla mappa · formulari "raccolta bisogni" · filo creato dal vivo all'aperitivo · personalizzazione della pagina da parte dell'associazione · sezione storie/memorie · lingua italiana (predisposta, non attiva) · esportazione eventi in formati aperti (iCal/JSON/ActivityPub: modello dati **predisposto**, implementazione dopo, flag `openFeeds`) · dashboard del fondatore con statistiche (esiste solo la pagina privata di revisione, §2) · pagina "quién cree en este barrio" (dopo che esiste un'associazione titolare).
 
 ## 14. Pagine per Google (SEO)
 
@@ -157,18 +178,18 @@ Copertina/intro animata e identità visiva · notifiche · account per cittadini
 **Regole per tutte le pagine pubbliche:** `generateMetadata` con titolo e descrizione specifici in spagnolo; JSON-LD schema.org (`Event`, `Organization`, `BreadcrumbList`); Open Graph; `sitemap.ts` dinamica solo con pagine indicizzabili; `robots.ts` che esclude le aree private; slug stabili; contenuto renderizzato sul server.
 
 ## 15. Dati per la demo
-`supabase/seed.sql` con **organizzazioni ed eventi inventati e dichiaratamente fittizi** (nessun nome reale) concentrati in un barrio (es. Carabanchel) più qualche evento altrove e 4-6 fili confermati. Date relative a `now()`, così la demo è viva ogni giorno. Registro di prova con 5 numeri fittizi.
+`supabase/seed.sql` con **organizzazioni ed eventi inventati e dichiaratamente fittizi** (nessun nome reale) concentrati in un barrio (es. Carabanchel) più qualche evento altrove e 4-6 fili confermati. Date relative a `now()`, così la demo è viva ogni giorno. Elenco del Comune di prova con 5 NIF fittizi in `municipal_associations`.
 
 ## 16. Criteri di accettazione della demo
 1. Aprendo `/` da telefono si vede Madrid con punti `pulse`, `lit` e `faint` dai dati di seed.
-2. Un'associazione si registra con un numero presente in `registry_entities` e arriva a `/panel`; con un numero inesistente riceve il messaggio di errore.
+2. Un'associazione si registra con un NIF presente in `municipal_associations` ed entra verificata a `/panel`; con un NIF già usato o in formato personale (DNI/NIE) riceve il messaggio di errore.
 3. Un evento creato dal telefono con titolo e data (resto precompilato) appare sulla mappa in meno di 1 minuto di lavoro.
 4. Un professionista crea un evento in un bar: il bar compare sulla mappa solo per quell'evento.
 5. A propone un filo a B; solo A e B lo vedono in attesa; dopo l'accettazione compare su `/conexiones` e la storia si legge toccandolo.
 6. Il link Invita apre `/invitacion/[token]` con il nome di chi invita.
 7. Un titolo evento con `<script>` o `<img onerror>` appare come testo nel popup e nella pagina.
 8. Un utente non può modificare eventi di un'organizzazione di cui non è membro (test).
-9. Un anonimo non può leggere numeri di registro né fili `pending`, neanche attraverso le viste (test).
+9. Un anonimo non può leggere NIF né fili `pending`, neanche attraverso le viste (test).
 10. Un'immagine caricata con coordinate GPS nei metadati viene salvata senza.
 11. "Eliminar cuenta" cancella account, membership e contenuti personali; "Descargar mis datos" restituisce un JSON.
 12. `/barrio/[slug]` con dati mostra eventi e associazioni ed è in sitemap; un barrio vuoto ha `noindex`.

@@ -1,0 +1,28 @@
+# Test pgTAP del database (RLS, funzioni, viste) su un Postgres locale nel runner.
+# Nessun segreto: `supabase start` crea un database usa e getta con migrazioni + seed,
+# poi `supabase test db` esegue supabase/tests/*.sql.
+name: db-test
+# Sulle PR gira sempre: è un controllo obbligatorio del ruleset, e con un filtro paths
+# resterebbe "in attesa" per sempre sulle PR che non toccano supabase/.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths: ['supabase/**', '.github/workflows/db-test.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  # Il nome del job è quello che il ruleset richiede come controllo: non cambiarlo senza aggiornare il ruleset.
+  db-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: 2.121.0 }
+      # Servono solo Postgres, Auth (schema auth) e Storage (schema storage per il bucket).
+      - name: Start local Supabase
+        run: supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: pgTAP
+        run: supabase test db
