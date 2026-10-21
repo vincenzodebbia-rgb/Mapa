@@ -1,5 +1,108 @@
 {
   "home": {
     "comingSoon": "Estamos preparando el mapa. Vuelve pronto."
+  },
+  "map": {
+    "nav": {
+      "label": "Mapas",
+      "hoy": "Hoy",
+      "conexiones": "Conexiones"
+    },
+    "loading": "Cargando el mapa…",
+    "view": {
+      "list": "Ver lista",
+      "map": "Ver mapa"
+    },
+    "popup": {
+      "see": "Ver"
+    }
+  },
+  "hoy": {
+    "metaTitle": "Hoy en Madrid",
+    "metaDescription": "Lo que hacen hoy y esta semana las asociaciones, los espacios y la gente que hace cosas en Madrid.",
+    "heading": "Hoy en Madrid",
+    "mapLabel": "Mapa de Madrid con los eventos de hoy y de los próximos 7 días",
+    "soloHoy": {
+      "label": "Solo hoy",
+      "on": "Solo hoy: activado",
+      "off": "Solo hoy: desactivado"
+    },
+    "legend": {
+      "title": "Qué significa cada luz",
+      "pulse": "Luz que late: pasa hoy y todavía no ha terminado.",
+      "lit": "Luz fija: pasa en los próximos 7 días.",
+      "soloHoy": "Con «Solo hoy» se ven únicamente las luces de hoy."
+    },
+    "filters": {
+      "title": "Filtros",
+      "price": "Precio",
+      "priceAll": "Todos",
+      "free": "Gratis",
+      "paid": "De pago",
+      "category": "Categoría",
+      "categoryAll": "Todas",
+      "organizer": "Quién organiza",
+      "organizerAll": "Todos",
+      "neighborhood": "Barrio",
+      "neighborhoodAll": "Toda Madrid",
+      "neighborhoodHint": "El barrio centra el mapa y filtra la lista.",
+      "apply": "Aplicar",
+      "clear": "Quitar filtros"
+    },
+    "organizers": {
+      "asociaciones": "Asociaciones",
+      "espacios": "Espacios",
+      "gente": "Gente que hace cosas"
+    },
+    "categories": {
+      "musica": "Música",
+      "teatro_danza": "Teatro y danza",
+      "arte": "Arte",
+      "talleres": "Talleres",
+      "encuentros": "Encuentros y charlas",
+      "comunidad": "Comunidad",
+      "otros": "Otros"
+    },
+    "price": {
+      "free": "Gratis",
+      "donation": "Aportación voluntaria",
+      "paid": "De pago",
+      "paidAmount": "{amount}"
+    },
+    "when": {
+      "today": "Hoy, {start}–{end}",
+      "otherDay": "{date}, {start}–{end}"
+    },
+    "list": {
+      "heading": "Eventos",
+      "count": "{count} eventos",
+      "countOne": "1 evento",
+      "organizedBy": "Organiza: {names}",
+      "at": "Dónde: {place}",
+      "neighborhood": "En {name}"
+    },
+    "empty": {
+      "today": "Hoy no hay nada por aquí. Mira los próximos días.",
+      "week": "No hay eventos en los próximos 7 días.",
+      "filtered": "No hay eventos con estos filtros."
+    }
+  },
+  "conexiones": {
+    "metaTitle": "Conexiones",
+    "metaDescription": "Las asociaciones y los espacios de Madrid que ya están en el mapa.",
+    "heading": "Quién está",
+    "intro": "Asociaciones y espacios que ya están en el mapa.",
+    "mapLabel": "Mapa de Madrid con las asociaciones y los espacios",
+    "kinds": {
+      "association": "Asociación",
+      "venue": "Espacio"
+    },
+    "list": {
+      "heading": "Asociaciones y espacios",
+      "count": "{count} asociaciones y espacios",
+      "countOne": "1 asociación o espacio"
+    },
+    "seeProfile": "Ver ficha",
+    "empty": "Todavía no hay asociaciones ni espacios con dirección."
   }
 }
