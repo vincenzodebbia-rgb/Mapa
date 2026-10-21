@@ -1,7 +1,4 @@
 {
-  "home": {
-    "comingSoon": "Estamos preparando el mapa. Vuelve pronto."
-  },
   "map": {
     "nav": {
       "label": "Mapas",
@@ -79,7 +76,7 @@
       "countOne": "1 evento",
       "organizedBy": "Organiza: {names}",
       "at": "Dónde: {place}",
-      "neighborhood": "En {name}"
+      "separator": " · "
     },
     "empty": {
       "today": "Hoy no hay nada por aquí. Mira los próximos días.",

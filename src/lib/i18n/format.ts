@@ -2,7 +2,7 @@
 
 export type MessageTree = { readonly [key: string]: string | MessageTree };
 
-/** Dot path of every text leaf in a message tree, e.g. "home.comingSoon". */
+/** Dot path of every text leaf in a message tree, e.g. "map.loading". */
 export type MessageKey<T> = {
   [K in keyof T & string]: T[K] extends string ? K : `${K}.${MessageKey<T[K]>}`;
 }[keyof T & string];

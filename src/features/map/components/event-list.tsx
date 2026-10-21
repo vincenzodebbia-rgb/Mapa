@@ -48,7 +48,7 @@ export function EventList({ events, now }: { events: MapEvent[]; now: Date }) {
                 </p>
               ))}
               <p className="text-sm text-muted">
-                {t(`hoy.categories.${event.category}`)} · {describeEventPrice(event)}
+                {[t(`hoy.categories.${event.category}`), describeEventPrice(event)].join(t("hoy.list.separator"))}
               </p>
             </li>
           );

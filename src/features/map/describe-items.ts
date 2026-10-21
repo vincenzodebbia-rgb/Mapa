@@ -26,7 +26,7 @@ export function describeEventPrice(event: MapEvent): string {
 }
 
 export function describeEventPlace(event: MapEvent): string | null {
-  const place = [event.venueName, event.address].filter(Boolean).join(" · ");
+  const place = [event.venueName, event.address].filter(Boolean).join(t("hoy.list.separator"));
   return place ? t("hoy.list.at", { place }) : null;
 }
 

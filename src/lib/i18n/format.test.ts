@@ -28,8 +28,8 @@ describe("lookupMessage", () => {
     expect(() => lookupMessage(tree, "toString")).toThrow("Missing message");
   });
 
-  it("resolves every key of messages/es.json to a text", () => {
-    expect(lookupMessage(messages, "home.comingSoon")).toBeTypeOf("string");
+  it("resolves a real key of messages/es.json to its text", () => {
+    expect(lookupMessage(messages, "map.loading")).toBe("Cargando el mapa…");
   });
 });
 
@@ -59,7 +59,7 @@ describe("message keys", () => {
   });
 
   it("accepts only keys that exist in messages/es.json (checked by npm run typecheck)", () => {
-    const existing: TranslationKey = "home.comingSoon";
+    const existing: TranslationKey = "map.loading";
     // @ts-expect-error: una chiave che non esiste in messages/es.json deve fallire il typecheck.
     const missing: TranslationKey = "home.doesNotExist";
     expect([existing, missing]).toHaveLength(2);
