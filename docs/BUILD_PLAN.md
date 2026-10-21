@@ -4,6 +4,8 @@
 > Claude propone un piano (plan mode): leggilo, approvalo, poi lascialo lavorare.
 > Le durate sono stime: con i limiti del piano Pro conta 2-4 settimane di calendario fino alla demo.
 > Il design (nome, logo, copertina) **non** fa parte di questo piano fino alla Fase D.
+> **Ordine (revisione del 21 ottobre, `docs/decisioni/2026-10-revisione-sezioni.md`):** si costruiscono tutte le sessioni 3-9 prima del lancio. **Dopo la sessione 4** il fondatore mostra la demo in privato a 2-3 associazioni di fiducia per raccogliere commenti prima delle sessioni 5-9. Fuori restano solo la Memoria del año e i fili accesi (costruiti, ma dietro il flag `threads` fino a dopo il lancio).
+> Le modifiche al database decise nella revisione si fanno con migrazioni nuove nella sessione che costruisce quella parte.
 
 ## Fase 0 — Prima di scrivere codice (tu, senza Claude Code)
 
@@ -35,43 +37,54 @@
 
 **Si chiude quando:** i test di sicurezza passano, `connection_lines` non mostra fili pending ad anon, i tipi generati sono nella PR.
 
-## Sessione 3 — Mappa "Hoy" in sola lettura (ramo `feat/map`)
+## Sessione 3 — Mappa "Hoy" e "Conexiones" statica, in sola lettura (ramo `feat/map`)
 
-> Leggi SPEC §4. Nel blocco `map`: `data.ts` legge la vista `map_items`; funzioni pure `light-state.ts` (`getLightState`), `to-geojson.ts`, `build-popup.ts` (solo `textContent`, link solo http/https) con test Vitest, compreso un titolo `<img src=x onerror=alert(1)>`. Un solo componente client `components/map-view.tsx` con react-map-gl/maplibre, caricato con `dynamic(..., { ssr: false })` da un piccolo wrapper client; i dati arrivano dalla pagina server come GeoJSON e aggiornano la `<Source>`. I colori della mappa si leggono a runtime dalle variabili CSS `--color-light` e `--color-faint`. Legenda richiudibile, filtri nell'URL, vista elenco equivalente, messaggio per i giorni vuoti, attribuzione OpenStreetMap visibile. Pulse disattivato con prefers-reduced-motion. Aggiungi un test Playwright: "la home mostra almeno un punto dalla seed e la vista elenco mostra lo stesso numero di elementi".
+> Leggi SPEC §4 e §6. Nel blocco `map`: `data.ts` legge la vista `map_items` (e i barrios); funzioni pure `light-state.ts` (`getLightState`: solo `pulse` e `lit`, niente `faint`), `to-geojson.ts`, `build-popup.ts` (solo `textContent`, link solo http/https) con test Vitest, compreso un titolo `<img src=x onerror=alert(1)>`. Un solo componente client `components/map-view.tsx` con react-map-gl/maplibre, caricato con `dynamic(..., { ssr: false })` da un piccolo wrapper client; i dati arrivano dalla pagina server come GeoJSON e aggiornano la `<Source>`. I colori della mappa si leggono a runtime dalla variabile CSS `--color-light`.
+> **Hoy (`/`):** solo eventi (`pulse` oggi, `lit` prossimi 7 giorni). Interruttore "Solo hoy" (`?solo=hoy`), filtri nell'URL: Gratis/De pago, Categoría, Quién organiza (Asociaciones · Espacios · Gente que hace cosas), Barrio (centra la mappa e filtra l'elenco). Legenda richiudibile a due stati, vista elenco con gli stessi filtri, messaggio per i giorni vuoti, attribuzione OpenStreetMap visibile. Pulse disattivato con prefers-reduced-motion.
+> **Conexiones (`/conexiones`):** mappa statica di chi c'è, con lo stesso componente: associazioni ed espacios attivi con indirizzo, punto acceso, nome al tocco con link a `/a/[slug]`, vista elenco. Nessun filo.
+> Niente immagini. Se serve una migrazione (es. tipo degli organizzatori nella vista, centro dei barrios), scrivila e fermati: il push su mapa-dev lo lancia il fondatore.
+> Test Playwright: "la home mostra almeno un punto dalla seed e la vista elenco mostra lo stesso numero di elementi", e lo stesso per `/conexiones`.
 
-**Si chiude quando:** dal telefono vedi i punti della seed nei tre stati; il test Playwright passa.
+**Si chiude quando:** dal telefono vedi gli eventi della seed nei due stati, "Solo hoy" e i filtri funzionano, `/conexiones` mostra chi c'è; i test Playwright passano.
 
 ## Sessione 4 — Pagine pubbliche e Google (ramo `feat/public-pages`)
 
-> Leggi SPEC §5 (pagina evento), §7, §14. Pagine `/a/[slug]`, `/e/[slug]`, `/barrio/[slug]`, `/que-es`, `/legal` composte in `src/app` chiamando i blocchi. Metadati, JSON-LD (`Event`, `Organization`, `BreadcrumbList`), Open Graph, `sitemap.ts` e `robots.ts` con le regole di indicizzazione della tabella §14, redirect 301 degli eventi 7 giorni dopo la fine, `noindex` dei barrios vuoti e dei professionisti che l'hanno chiesto. Pulsante Compartir (Web Share API con fallback WhatsApp e copia). `/legal` con testi segnaposto e attribuzioni degli open data e di OpenStreetMap. Test: JSON-LD valido su una pagina evento della seed.
+> Leggi SPEC §5 (pagina evento), §7, §14. Pagine `/a/[slug]`, `/e/[slug]`, `/barrio/[slug]`, `/que-es`, `/legal` composte in `src/app` chiamando i blocchi. Metadati, JSON-LD (`Event`, `Organization`, `BreadcrumbList`), Open Graph (pagina evento: immagine generata di solo testo con titolo, data e luogo, oppure nessuna; **nessuna foto evento**), `sitemap.ts` e `robots.ts` con le regole di indicizzazione della tabella §14, redirect 301 degli eventi 7 giorni dopo la fine, `noindex` dei barrios vuoti e di "Gente que hace cosas" che l'ha chiesto. Pulsante Compartir (Web Share API con fallback WhatsApp e copia). `/legal` con testi segnaposto e attribuzioni degli open data e di OpenStreetMap.
+> Scheda `/a/[slug]`: logo piccolo facoltativo e "Nuestra historia" (SPEC §7). Se si fanno qui (o nella sessione 7): migrazione con colonna `logo_path`, bucket `org-logos` + policy (stessa regola di percorso di `event-images`) e colonna `story` (max 1000); logo ri-codificato con sharp in WebP max 256×256 px senza metadati, test che un JPEG con GPS esce senza GPS.
+> Pagine di barrio: servono i confini ufficiali, script `scripts/import-neighborhoods.ts` (open data del Comune, licenza nelle attribuzioni di `/legal`). Test: JSON-LD valido su una pagina evento della seed.
 
 **Si chiude quando:** le pagine si aprono dal telefono, la sitemap contiene solo pagine indicizzabili.
 
+## Punto demo privata (dopo la sessione 4, tu con Claude)
+> Leggi SPEC §15 (sito demo). Banner fisso **"Demo · datos de ejemplo"** dietro un flag (es. `demoBanner`, acceso solo nel progetto demo tramite variabile d'ambiente). Controlla che i nomi della seed siano chiaramente inventati.
+
+**Tu:** su Vercel un secondo progetto (es. `mapa-demo`) dallo stesso repository, con le variabili di **mapa-dev** in Production. Dopo il primo login sulla demo, aggiungi a mano la tua riga in `memberships` verso un'associazione fittizia della seed (come per `app_admins`, `docs/operations.md`). Poi mostra la demo in privato a 2-3 associazioni di fiducia e raccogli i commenti prima delle sessioni 5-9.
+
 ## Sessione 5 — Accesso e registrazione (ramo `feat/onboarding`)
 
-> Leggi SPEC §2 e §8, e PRIVACY_AND_OWNERSHIP parte A. Login con link magico (`/entrar`), callback, `src/proxy.ts` che aggiorna la sessione; le pagine private ricontrollano l'utente con `getClaims()`. `/registro` con i tre percorsi (associazione, espacio, professionista; vedi `docs/decisioni/2026-10-iscrizione.md`); chiamano le funzioni SQL `lookup_municipal_association`, `register_entity` e `create_professional`; casella regole + condiciones + privacidad + età, con versione dei testi. Cloudflare Turnstile sui moduli (verifica lato server in `src/lib/turnstile.ts`) e `check_rate_limit` sui tentativi. Script `scripts/import-municipal-associations.ts` che importa il CSV del Comune (solo CIF, Razon_Social, Num_Inscripcion, Distrito, Barrio, Categoria; righe con lo stesso CIF unite) usando la chiave secret; in dev usa solo i NIF fittizi della seed. Avviso al fondatore per gli espacios dubbi (`founderNotificationEmail` in `brand.ts`, mai NIF né email). Decidere: associazione fuori elenco senza invito (con o senza avviso), categoria "Comerciantes…", espacio gestito da un autonomo. Test: NIF già usato, NIF personale, NIF valido in elenco e fuori elenco.
+> Leggi SPEC §2 e §8, e PRIVACY_AND_OWNERSHIP parte A. Login con link magico (`/entrar`), callback, `src/proxy.ts` che aggiorna la sessione; le pagine private ricontrollano l'utente con `getClaims()`. `/registro` con i tre percorsi (associazione, espacio, "Gente que hace cosas" = `professional`; vedi `docs/decisioni/2026-10-iscrizione.md` e `docs/decisioni/2026-10-revisione-sezioni.md`). Espacios: "¿Quiénes sois?" (`what_for_whom`), tipo de actividad, "¿Qué ofrecéis?" e indirizzo, tutti obbligatori; migrazione che sostituisce `how_sustained` con `what_they_offer` (espandi → migra i dati → contrai) e aggiorna `admin_review_list`. Inviti facoltativi; revisione automatica minima per tutti; chiamano le funzioni SQL `lookup_municipal_association`, `register_entity` e `create_professional`; casella regole + condiciones + privacidad + età, con versione dei testi. Cloudflare Turnstile sui moduli (verifica lato server in `src/lib/turnstile.ts`) e `check_rate_limit` sui tentativi. Script `scripts/import-municipal-associations.ts` che importa il CSV del Comune (solo CIF, Razon_Social, Num_Inscripcion, Distrito, Barrio, Categoria; righe con lo stesso CIF unite) usando la chiave secret; in dev usa solo i NIF fittizi della seed. Avviso al fondatore per gli espacios dubbi (`founderNotificationEmail` in `brand.ts`, mai NIF né email). Decidere: associazione fuori elenco senza invito (con o senza avviso), categoria "Comerciantes…", espacio gestito da un autonomo. Test: NIF già usato, NIF personale, NIF valido in elenco e fuori elenco.
 
 **Si chiude quando:** un'associazione di prova si registra dal telefono e arriva a `/panel`.
 
 ## Sessione 6 — Eventi (ramo `feat/events`)
 
-> Leggi SPEC §5. Modulo in 4 blocchi a `/panel/eventos/nuevo` e modifica a `/panel/eventos/[id]`. Geocodifica lato server in `src/lib/domain/geocode.ts` (Nominatim, User-Agent da env, cache in `geocode_cache`, max 1 richiesta/secondo) e pin trascinabile. Immagine: ricevuta dall'action, ri-codificata con sharp in WebP max 1600 px senza metadati, caricata nel bucket con path `{org}/{event}.webp`; test che un JPEG con GPS esce senza GPS. Co-organizzatori con il componente di ricerca passato come slot dalla pagina (il blocco events non importa organizations). Ripetizioni gestite dalla funzione SQL `event_occurrences`. Limite 20 eventi al giorno con `check_rate_limit`. Sezione "Mis eventos" e "Archivo" in `/panel`.
+> Leggi SPEC §5. Modulo in 4 blocchi a `/panel/eventos/nuevo` e modifica a `/panel/eventos/[id]`. Geocodifica lato server in `src/lib/domain/geocode.ts` (Nominatim, User-Agent da env, cache in `geocode_cache`, max 1 richiesta/secondo) e pin trascinabile. **Nessuna immagine evento** (SPEC §5): niente campo nel modulo né nella pagina; il bucket `event-images` (e la colonna `image_path`) si possono togliere con una migrazione. Co-organizzatori con il componente di ricerca passato come slot dalla pagina (il blocco events non importa organizations). Ripetizioni gestite dalla funzione SQL `event_occurrences`. Limite 20 eventi al giorno con `check_rate_limit`. Sezione "Mis eventos" e "Archivo" in `/panel`.
 
 **Si chiude quando:** crei un evento dal telefono in meno di un minuto e lo vedi acceso sulla mappa.
 
 ## Sessione 7 — Home privata (ramo `feat/panel`)
 
-> Leggi SPEC §9. In `/panel`: Invita (link `/invitacion/[token]`, messaggio precompilato, WhatsApp/copia, landing pubblica tramite `get_invite`), Mi ficha (con "Mostrar mi perfil en Google" per i professionisti), Mi cuenta: "Descargar mis datos" (`export_my_data`) ed "Eliminar cuenta" (prima i file Storage, poi `delete_my_account`, con conferma). `/panel` è composizione di pagina: nessun blocco nuovo.
+> Leggi SPEC §9. In `/panel`: Invita (facoltativo; link `/invitacion/[token]`, messaggio precompilato, WhatsApp/copia, landing pubblica tramite `get_invite`), Mi ficha (dati di contatto pubblici ben visibili, logo, "Nuestra historia" se non fatti nella sessione 4, "Mostrar mi perfil en Google" per "Gente que hace cosas"), riquadro "Ayuda y contacto" (`brand.contactEmail` + link a `/legal`), Mi cuenta: "Descargar mis datos" (`export_my_data`) ed "Eliminar cuenta" (prima i file Storage, compreso il logo, poi `delete_my_account`, con conferma). Niente Memoria del año (flag `annualMemory` spento). `/panel` è composizione di pagina: nessun blocco nuovo.
 
 **Si chiude quando:** scarichi il tuo JSON ed elimini un account di prova senza lasciare tracce (test).
 
 ## Sessione 8 — Fili e Conexiones (ramo `feat/threads`, flag `threads`)
 
-> Leggi SPEC §6. Proporre, accettare, ignorare, modificare la propria storia, eliminare. Pending visibile solo alle due associazioni. Mappa `/conexiones` dalla vista `connection_lines` nello stesso componente `map-view` (modalità linee), colori casuali dai token `--color-thread-*`. Elenco dei fili nella scheda dell'associazione. Test: un terzo non vede il pending.
+> Leggi SPEC §6. Si costruisce prima del lancio ma resta **dietro il flag `threads` spento** fino a dopo il lancio. Proporre, accettare, ignorare, modificare la propria storia, eliminare. Pending visibile solo alle due associazioni. Su `/conexiones` (che già mostra chi c'è dalla sessione 3) si aggiungono le linee dalla vista `connection_lines` nello stesso componente `map-view` (modalità linee), colori casuali dai token `--color-thread-*`, solo con il flag acceso. Elenco dei fili nella scheda dell'associazione. Test: un terzo non vede il pending.
 
-## Sessione 9 — Profesionales e spazi (ramo `feat/professionals`, flag `professionals`)
+## Sessione 9 — Bacheca Profesionales (ramo `feat/professionals`, flag `professionals`)
 
-> Leggi SPEC §10. `/profesionales` solo per utenti registrati: ricerca con filtri tipo/testo/barrio, profili minimi, "Espacios disponibles" pubblicabili solo da associazioni. Nessun messaggio interno. È composizione di `organizations` e `spaces`.
+> Leggi SPEC §10. `/profesionales` solo per utenti registrati: bacheca di annunci **Busco / Ofrezco** (tipo, barrio, descrizione max 300, contatto scelto), filtri Busco/Ofrezco, tipo, barrio, testo. Scadenza automatica dopo 60 giorni con rinnovo a un clic; pulsante "Ya lo he encontrado" che chiude l'annuncio. Gli ex "Espacios disponibles" sono annunci "Ofrezco espacio", pubblicabili solo da associazioni ed espacios. Migrazione: scadenza, stato chiuso, eventuale unificazione con `spaces`. Nessun messaggio interno. È composizione di `organizations` e `spaces`.
 
 ## Punto demo
 Controlla i 15 criteri di accettazione di SPEC §16 dal telefono, uno per uno. Ciò che non è pronto va dietro un flag, non si cancella.

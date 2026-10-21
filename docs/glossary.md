@@ -7,7 +7,7 @@
 | NIF dell'ente | NIF | `nif` (in `organization_verifications`; `cif` in `municipal_associations`) |
 | modo di ingresso | — | `entry_method` |
 | sospensione | suspensión | `organizations.status = 'suspended'` |
-| professionista / collettivo | profesional / colectivo | organization with `kind = 'professional'` |
+| professionista / collettivo / chi ha progetti | Gente que hace cosas | organization with `kind = 'professional'` |
 | organizzazione (entrambe) | entidad | `organization` |
 | scheda | ficha | `profile` (route `/a/[slug]`) |
 | evento | evento | `event` |
@@ -19,5 +19,6 @@
 | invito | invitación | `invite` |
 | home privata | panel | `/panel` |
 | numero di registro | número de inscripción | `registry_number` (solo in `municipal_associations`) |
-| stato di luce | estado de luz | `light state`: `pulse`, `lit`, `faint` |
+| stato di luce | estado de luz | `light state`: `pulse` (oggi), `lit` (prossimi 7 giorni) |
+| annuncio (bacheca) | anuncio (Busco / Ofrezco) | sessione 9 |
 | archivio | archivo | past events of an organization |

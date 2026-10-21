@@ -4,7 +4,7 @@
  */
 export const flags = {
   intro: false, // cover/intro animation — waits for the visual identity (docs/DESIGN_HANDOFF.md). Expires: design phase.
-  threads: true, // hilos + /conexiones. Expires: 2027-03-31.
+  threads: false, // hilos (lines on /conexiones, panel section). Off until after launch; /conexiones itself is not gated. Expires: 2027-03-31.
   professionals: true, // /profesionales + spaces. Expires: 2027-03-31.
   annualMemory: false, // /panel/memoria/[year]. Expires: 2027-06-30.
   openFeeds: false, // iCal/JSON/ActivityPub exports (data model ready, not built). Expires: 2027-06-30.

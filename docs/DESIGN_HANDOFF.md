@@ -16,7 +16,7 @@ un'animazione d'ingresso, illustrazioni, font decorativi o colori nuovi. Se una 
 | Font | `src/app/layout.tsx` (solo il caricamento con `next/font`) + `--font-display`/`--font-sans` | font di sistema | font del marchio |
 | Logo, favicon, icone PWA, immagine Open Graph | `public/brand/` | logo testuale | SVG del logo, favicon 32 px, icone 192 e 512 px (anche "maskable"), OG 1200×630 |
 | Stile della mappa | `brand.mapStyleUrl` | stile scuro di OpenFreeMap | stile personalizzato (es. fatto con Maputnik) salvato in `public/brand/map-style.json` |
-| Aspetto dei 3 stati di luce | token `--color-light`, `--color-faint` + animazione `pulse` in `globals.css` | pallino che pulsa | forma e animazione definitive |
+| Aspetto dei 2 stati di luce (`pulse`, `lit`) | token `--color-light` + animazione `pulse` in `globals.css` | pallino che pulsa | forma e animazione definitive |
 | Colori dei fili | token `--color-thread-1…4` | 4 colori neutri | palette dei fili |
 | Copertina / intro | `src/components/brand/intro.tsx` dietro il flag `intro` (spento) | vuoto | copertina e animazione d'ingresso |
 | Testi del marchio | `messages/es.json` (chiavi `brand.*`, `queEs.*`) | segnaposto | manifesto, "qué es" |
