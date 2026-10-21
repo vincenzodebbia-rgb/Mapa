@@ -3,9 +3,26 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: sessione 2 (database) fatta sul ramo `feat/database`, non ancora pushato, nessuna PR.
+- Fase: sessione 3 (mappa) fatta sul ramo `feat/map`, non ancora pushato, nessuna PR.
 
 ## Done
+### 2026-10-21/22 — Sessione 3: mappa Hoy e Conexiones
+- Revisione del fondatore del 21 ottobre applicata a SPEC e BUILD_PLAN (tutte le sessioni), glossary, DESIGN_HANDOFF,
+  CLAUDE.md dei blocchi map ed events; documento in `docs/decisioni/2026-10-revisione-sezioni.md`. Flag `threads` spento.
+- **next-intl tolto** (ADR 0008): Smart App Control blocca `@swc/core`, che il plugin carica sempre; dev, build e typecheck
+  fallivano. Al suo posto `t()` in `src/lib/i18n/t.ts` (server-only, chiavi controllate dal typecheck, `{variabili}`).
+- Migrazione `20261021223424_map_filters` (applicata dal fondatore a mapa-dev): `map_items.organizer_kinds`, punti di
+  Conexiones solo per organizzazioni attive, vista `map_neighborhoods` (centro e riquadro dei barrios). Test pgTAP 13.
+  Tutti i 13 file pgTAP verdi su mapa-dev (172 asserzioni, transazioni annullate). Tipi rigenerati.
+- Blocco `map`: `data.ts`, `schema.ts` (filtri nell'URL), funzioni pure con test (`light-state`, `filter-events`,
+  `to-geojson`, `build-popup` con happy-dom), un solo componente MapLibre (`map-view.tsx`) caricato da `map-view-loader.tsx`,
+  `HoyView` e `ConexionesView`, legenda, filtri (`next/form`, funzionano anche senza JS), "Solo hoy", vista elenco.
+- `/` = Hoy (solo eventi, pulse/lit), `/conexiones` = chi c'è (senza fili). Nuova primitiva `Select` in `src/components/ui`.
+- MapLibre 6 + Turbopack: il worker va indicato con `setWorkerUrl(new URL(..., import.meta.url))`, altrimenti 404.
+- Playwright: 4 test verdi su `next dev` e su `next build && next start` (punti disegnati = elementi dell'elenco, Solo hoy,
+  Conexiones, filtri sbagliati nell'URL). Chromium di Playwright installato su questo PC.
+- Nuova dipendenza dev: `happy-dom` (DOM per i test di `build-popup`). Tolte: `next-intl` (e con lei `@swc/core`).
+
 ### 2026-10-18 — Sessione 2: database
 - Decisioni sull'iscrizione applicate a DATA_MODEL, SPEC, PRIVACY_AND_OWNERSHIP, glossary, operations, BUILD_PLAN
   (sessione 5); documento spostato in `docs/decisioni/2026-10-iscrizione.md`. Correzioni del fondatore: i `venue`
@@ -53,9 +70,9 @@ Updated by the agent at the end of every session. Newest first.
 - ADR 0007 records the CSP `'unsafe-inline'` decision.
 
 ## Next
-- Fondatore: push di `feat/database`, PR, controllare che `db-test` sia verde in Actions; poi aggiungerlo ai check
-  obbligatori del ruleset. Dopo il primo login su mapa-dev: aggiungersi ad `app_admins` (`docs/operations.md`).
-- Sessione 3 — mappa "Hoy" (la seed su mapa-dev è pronta).
+- Fondatore: push di `feat/map`, PR, CI verde (anche `db-test` con il test 13), anteprima Vercel dal telefono.
+- Sessione 4 — pagine pubbliche (`/a/[slug]`, `/e/[slug]`: oggi i link "Ver" e "Ver ficha" della mappa danno 404),
+  logo e "Nuestra historia", import dei barrios ufficiali. Poi la demo privata.
 
 ## Domande aperte (sessione 5)
 - **Espacio gestito da un autonomo con solo NIF personale** (DNI/NIE): oggi non può iscriversi, perché il NIF accetta solo il
@@ -82,4 +99,12 @@ Updated by the agent at the end of every session. Newest first.
   the browser or server. npm's "fix" downgrades to Next 14: do not apply; wait for an upstream release.
 - `next build` and `next typegen` fail fast if `NEXT_PUBLIC_SUPABASE_URL` is missing: CI needs the Actions
   variables above before the PR can be green.
-- Playwright browsers are not downloaded yet (`npx playwright install` in session 3).
+- Playwright: su questo PC c'è solo Chromium (`npx playwright install chromium`). Gli e2e non girano in CI (serve
+  la seed di mapa-dev): da decidere prima del lancio.
+- Seed su mapa-dev: gli eventi **singoli** (concerto a pagamento, micro abierto della "gente", ecc.) erano relativi al
+  giorno della seed (18 ottobre) e ora sono passati. Restano vivi solo i settimanali e il mensile: oggi i filtri "De pago"
+  e "Gente que hace cosas" danno 0 risultati. Per la demo serve rilanciare la seed (o renderla più robusta) su mapa-dev.
+- Il server di anteprima del pannello browser dell'app Claude non raggiunge Supabase (`fetch failed`); `npm run dev` dal
+  terminale sì. Per provare la mappa: avviare il dev server dal terminale.
+- Il form dei filtri mette nell'URL anche i campi vuoti (`?precio=&cat=musica`): vengono ignorati, solo estetica.
+- I link "Ver" (`/e/[slug]`) e "Ver ficha" (`/a/[slug]`) danno 404 fino alla sessione 4.
