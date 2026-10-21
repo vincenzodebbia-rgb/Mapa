@@ -687,11 +687,26 @@ export type Database = {
           occ_end: string | null
           occ_start: string | null
           organization_kind: Database["public"]["Enums"]["org_kind"] | null
+          organizer_kinds: Database["public"]["Enums"]["org_kind"][] | null
           organizer_names: string | null
           price_amount: number | null
           price_type: Database["public"]["Enums"]["price_type"] | null
           slug: string | null
           venue_name: string | null
+        }
+        Relationships: []
+      }
+      map_neighborhoods: {
+        Row: {
+          center_lat: number | null
+          center_lng: number | null
+          district: string | null
+          east: number | null
+          name: string | null
+          north: number | null
+          slug: string | null
+          south: number | null
+          west: number | null
         }
         Relationships: []
       }

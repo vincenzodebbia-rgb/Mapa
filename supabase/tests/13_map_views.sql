@@ -9,12 +9,12 @@ select no_plan();
 insert into auth.users (id, email) values
   ('0000000a-0000-4000-8000-000000000013', 'a13@test.invalid'),
   ('0000000c-0000-4000-8000-000000000013', 's13@test.invalid');
-insert into public.organizations (id, kind, name, entry_method, location) values
-  ('a0000000-0000-4000-8000-000000000013', 'association', 'Asociación trece', 'self_declared', 'SRID=4326;POINT(-3.70 40.41)'),
-  ('b0000000-0000-4000-8000-000000000013', 'venue', 'Espacio trece', 'self_declared', 'SRID=4326;POINT(-3.71 40.42)'),
-  ('c0000000-0000-4000-8000-000000000013', 'professional', 'Gente trece', 'email_only', null),
-  ('d0000000-0000-4000-8000-000000000013', 'association', 'Suspendida trece', 'self_declared', 'SRID=4326;POINT(-3.72 40.43)'),
-  ('e0000000-0000-4000-8000-000000000013', 'association', 'Sin dirección trece', 'self_declared', null);
+insert into public.organizations (id, kind, name, entry_method, location, venue_activity) values
+  ('a0000000-0000-4000-8000-000000000013', 'association', 'Asociación trece', 'self_declared', 'SRID=4326;POINT(-3.70 40.41)', null),
+  ('b0000000-0000-4000-8000-000000000013', 'venue', 'Espacio trece', 'self_declared', 'SRID=4326;POINT(-3.71 40.42)', 'libreria'),
+  ('c0000000-0000-4000-8000-000000000013', 'professional', 'Gente trece', 'email_only', null, null),
+  ('d0000000-0000-4000-8000-000000000013', 'association', 'Suspendida trece', 'self_declared', 'SRID=4326;POINT(-3.72 40.43)', null),
+  ('e0000000-0000-4000-8000-000000000013', 'association', 'Sin dirección trece', 'self_declared', null, null);
 insert into public.memberships (user_id, organization_id) values
   ('0000000a-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000013'),
   ('0000000c-0000-4000-8000-000000000013', 'd0000000-0000-4000-8000-000000000013');
