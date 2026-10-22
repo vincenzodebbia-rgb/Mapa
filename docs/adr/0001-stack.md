@@ -3,7 +3,8 @@
 Status: accepted (2026-10)
 
 ## Decision
-Stack: Next.js 16, Supabase, MapLibre/OpenFreeMap, Tailwind v4, Vercel
+Stack: Next.js 16, Supabase, MapLibre/OpenFreeMap, Tailwind v4, Vercel.
+UI texts: no i18n library since 2026-10-22, see 0008-i18n-senza-next-intl.md.
 
 ## Why
 Mainstream, documented, free tiers fit a solo founder; Supabase gives auth+Postgres+RLS+storage in one EU-hosted service; MapLibre+OpenFreeMap are open source with no API key or per-load billing (Mapbox GL is proprietary since v2 and bills per load).

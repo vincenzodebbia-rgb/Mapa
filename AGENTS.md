@@ -25,7 +25,8 @@ The product name and visual identity are NOT decided. Never invent them (see Des
 ## Stack (do not change without a new ADR in docs/adr/)
 Next.js 16 App Router · TypeScript strict · React 19 · Supabase (Postgres, Auth with magic link,
 Storage, RLS) via `@supabase/ssr` · MapLibre GL via `react-map-gl/maplibre` + OpenFreeMap tiles ·
-Tailwind CSS v4 · next-intl (Spanish only, no locale in URLs) · zod · Vitest · Playwright · npm.
+Tailwind CSS v4 · UI texts via `t()` in `src/lib/i18n/` (Spanish only, no locale in URLs, no i18n library:
+docs/adr/0008-i18n-senza-next-intl.md) · zod · Vitest · Playwright · npm.
 Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
 
 ## Commands
@@ -103,6 +104,8 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
 - Code and identifiers: English. Everything else in Italian: comments, commits, PRs, docs.
   Commit prefixes stay Conventional Commits (`feat:`, `fix:`…); the description after them is in Italian.
 - All UI text: Spanish, only in `messages/es.json`. No UI strings in components.
+  Server code reads them with `t("group.key", { name })` from `src/lib/i18n/t.ts` (server-only; a key that does not
+  exist fails the typecheck). Client components never read messages: they receive their texts as props.
 - Terms: see `docs/glossary.md` (asociación → organization kind `association`, hilo → `thread`,
   barrio → `neighborhood`, ficha → `profile`).
 - Files kebab-case, components PascalCase, functions are explicit verbs (`getMapItems`, not `fetchData`).

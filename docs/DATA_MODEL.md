@@ -203,9 +203,13 @@ Cancellare righe non cancella i file: le action cancellano prima i file tramite 
 - `map_items`: una riga per ogni cosa che può accendersi sulla mappa nella finestra `[now(), now() + 7 giorni]`:
   - occorrenze di eventi da `public.event_occurrences(now(), now() + interval '7 days')` non ancora finite,
     con `item_type = 'event'`, slug, titolo (`name`), category, price_type, price_amount, occ_start, occ_end, venue_name, address,
-    lng/lat, slug del barrio, nomi degli organizzatori (`string_agg` ordinato: prima l'owner);
-  - associazioni ed espacios con una posizione, con `item_type = 'organization'`, `organization_kind`, slug, name, lng/lat, `last_activity_at`.
-  Lo stato di luce si calcola in TypeScript con `getLightState(item, now)` (pura, testata).
+    lng/lat, slug del barrio, nomi degli organizzatori (`string_agg` ordinato: prima l'owner) e, in fondo,
+    `organizer_kinds org_kind[]` (tipi di tutti gli organizzatori, per il filtro "Quién organiza");
+  - associazioni ed espacios **attivi** con una posizione, con `item_type = 'organization'`, `organization_kind`, slug, name,
+    lng/lat, `last_activity_at` (`organizer_kinds` null). Servono solo alla mappa Conexiones: la mappa Hoy mostra solo eventi.
+  Lo stato di luce (`pulse` | `lit`, solo eventi) si calcola in TypeScript con `getLightState(item, now)` (pura, testata).
+- `map_neighborhoods`: per ogni barrio slug, name, district, centro `center_lng`/`center_lat` (`centroid` o, se manca, il
+  centroide del confine) e riquadro `west`/`south`/`east`/`north` in gradi. Serve al selettore "Barrio" della mappa.
 - `connection_lines`: fili confermati con slug, nome, lng/lat di entrambe le organizzazioni, le due storie, `color_seed`.
 - Essendo `security_invoker`, ereditano le policy: niente `pending` per `anon` o terzi, niente elementi di organizzazioni sospese.
 
