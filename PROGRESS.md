@@ -3,9 +3,36 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: sessione 3 (mappa) fatta sul ramo `feat/map`, non ancora pushato, nessuna PR.
+- Fase: sessione 4 (pagine pubbliche) fatta sul ramo `feat/public-pages`; PR in bozza aperta dal fondatore.
+  Migrazioni applicate a mapa-dev dal fondatore (CLI 2.122.0). Dopo: punto demo privata.
 
 ## Done
+### 2026-10-22/25 — Sessione 4: pagine pubbliche e Google
+- **Barrios ufficiali:** `scripts/import-neighborhoods.ts` scarica `Barrios.zip` dal geoportale del Comune (shapefile,
+  EPSG:25830, CC BY 4.0) e GENERA la migrazione `neighborhoods_official` (131 barrios; PostGIS trasforma in WGS84,
+  upsert per slug, ricalcolo del barrio di organizzazioni ed eventi). Nessuna dipendenza nuova (zip, dbf e shp letti a mano, testati).
+- Migrazione `org_logo_story`: `logo_path` (solo `{id}/logo.webp`), `story` (≤1000), bucket `org-logos` con le policy di
+  `event-images`. `reencodeLogo` (sharp): WebP ≤256×256 senza metadati; test con un JPEG che contiene davvero il GPS.
+  Il caricamento arriva con "Mi ficha" (sessione 7).
+- Migrazione `public_pages`: viste `upcoming_events` (60 giorni), `neighborhood_pages` (`has_content`), `neighborhood_neighbors`
+  (5 m di tolleranza) e funzione `event_schedule` (prossima occorrenza e fine dell'ultima). Test pgTAP 14 e 15.
+- pgTAP 1-15 su mapa-dev in transazione annullata: **182/182 ok**. Ogni asserzione scrive in una tabella temporanea,
+  il file finisce con `raise exception` che riporta i risultati (la tabella `__tresults__` di pgTAP qui non esiste).
+- Seed rieseguibile (cancella solo `5eed0000-…` e i NIF `G99…`), punti calcolati dentro i barrios veri, eventi singoli
+  nei 30 giorni dopo il caricamento. Ricaricata su mapa-dev il 25/10: 12 organizzazioni, 24 eventi, 8 barrios con contenuto.
+- Pagine `/a/[slug]`, `/e/[slug]`, `/barrio/[slug]`: letture come anon con `createSupabasePublicClient()` (senza cookie) in
+  `'use cache'`, `ensureStatic = 'navigation'` + `instant = false` + `generateStaticParams` con un segnaposto non valido
+  (`__`): il build non legge il database, la pagina si genera intera al primo accesso, quindi **404 e redirect 308 sono veri**
+  (verificati con curl e con Playwright). `/que-es` e `/legal` con testi provvisori e attribuzioni.
+- SEO: metadati in spagnolo, canonical, Open Graph solo testo (nessuna immagine), JSON-LD `Event`/`Organization`/
+  `BreadcrumbList` resi come figlio di `<script>` (React 19 non tocca virgolette né `&`; `<` → `<`; nessun
+  `dangerouslySetInnerHTML`, nessun ADR), `sitemap.ts` (solo pagine indicizzabili, letta a richiesta) e `robots.ts`.
+- Compartir: Web Share API dove esiste, link WhatsApp e copia sempre.
+- `NEXT_PUBLIC_SITE_URL` non blocca più build e CI: `getSiteUrl()` → variabile, dominio di produzione Vercel, URL del
+  deployment, `localhost:3000`.
+- PostgREST restituisce le colonne geography in EWKB esadecimale: `parseEwkbPoint` in `src/lib/domain/geo.ts`.
+- Playwright: 11 test verdi (4 della mappa + 7 delle pagine pubbliche).
+
 ### 2026-10-21/22 — Sessione 3: mappa Hoy e Conexiones
 - Revisione del fondatore del 21 ottobre applicata a SPEC e BUILD_PLAN (tutte le sessioni), glossary, DESIGN_HANDOFF,
   CLAUDE.md dei blocchi map ed events; documento in `docs/decisioni/2026-10-revisione-sezioni.md`. Flag `threads` spento.
@@ -70,9 +97,12 @@ Updated by the agent at the end of every session. Newest first.
 - ADR 0007 records the CSP `'unsafe-inline'` decision.
 
 ## Next
-- Fondatore: push di `feat/map`, PR, CI verde (anche `db-test` con il test 13), anteprima Vercel dal telefono.
-- Sessione 4 — pagine pubbliche (`/a/[slug]`, `/e/[slug]`: oggi i link "Ver" e "Ver ficha" della mappa danno 404),
-  logo e "Nuestra historia", import dei barrios ufficiali. Poi la demo privata.
+- Fondatore: PR di `feat/public-pages` con CI verde (anche `db-test` con i test 14-15), `@architecture-reviewer`,
+  anteprima Vercel dal telefono (`/a/…`, `/e/…`, `/barrio/opanel`, `/sitemap.xml`).
+- `NEXT_PUBLIC_SITE_URL`: Vercel `mapa` Production = `https://<dominio>` quando ci sarà (fino ad allora vuota va bene,
+  si usa il dominio `*.vercel.app`); Preview: non impostarla; `mapa-demo` Production: facoltativa; GitHub Actions: non serve.
+- Punto demo privata (BUILD_PLAN): banner "Demo · datos de ejemplo" dietro flag, progetto Vercel `mapa-demo`.
+- Sessione 7: caricamento del logo con `reencodeLogo` e `updateTag(ORGANIZATIONS_TAG)`; sessione 6: `updateTag(EVENTS_TAG)`.
 
 ## Domande aperte (sessione 5)
 - **Espacio gestito da un autonomo con solo NIF personale** (DNI/NIE): oggi non può iscriversi, perché il NIF accetta solo il
@@ -101,10 +131,20 @@ Updated by the agent at the end of every session. Newest first.
   variables above before the PR can be green.
 - Playwright: su questo PC c'è solo Chromium (`npx playwright install chromium`). Gli e2e non girano in CI (serve
   la seed di mapa-dev): da decidere prima del lancio.
-- Seed su mapa-dev: gli eventi **singoli** (concerto a pagamento, micro abierto della "gente", ecc.) erano relativi al
-  giorno della seed (18 ottobre) e ora sono passati. Restano vivi solo i settimanali e il mensile: oggi i filtri "De pago"
-  e "Gente que hace cosas" danno 0 risultati. Per la demo serve rilanciare la seed (o renderla più robusta) su mapa-dev.
+- Seed su mapa-dev: gli eventi singoli coprono i 30 giorni dopo l'ultimo caricamento (25/10); settimanali e mensile
+  ~6 mesi. Prima della demo (o se la mappa si svuota) rilanciare `npx supabase db query --linked -f supabase/seed.sql`:
+  tocca solo i dati fittizi, ma cancella anche le membership verso le organizzazioni fittizie (da riaggiungere a mano).
+- Le pagine pubbliche sono in cache per minuti (`cacheLife("minutes")`): una modifica fatta direttamente nel database
+  compare dopo al massimo qualche minuto. Le action future devono chiamare `updateTag`.
+- Su un'anteprima Vercel (Preview) il link di "Compartir" e il canonical puntano al dominio di produzione (valore di
+  riserva di `getSiteUrl()`); le anteprime hanno comunque `noindex` da Vercel.
+- `event_schedule` e `neighborhood_pages` espandono le occorrenze di tutti gli eventi: va bene con pochi eventi; se
+  diventa lento, aggiungere un filtro per evento a `event_occurrences`.
+- Nessun logo nella seed: il rendering del logo (`next/image` `unoptimized` dallo Storage) non è ancora provato dal vivo.
+- SPEC §16.7 (titolo `<img onerror>` come testo) è coperto dai test di `build-popup` e `JsonLd`, non da un e2e: nella seed
+  non c'è un titolo così (si potrà fare con il modulo eventi, sessione 6).
 - Il server di anteprima del pannello browser dell'app Claude non raggiunge Supabase (`fetch failed`); `npm run dev` dal
   terminale sì. Per provare la mappa: avviare il dev server dal terminale.
 - Il form dei filtri mette nell'URL anche i campi vuoti (`?precio=&cat=musica`): vengono ignorati, solo estetica.
-- I link "Ver" (`/e/[slug]`) e "Ver ficha" (`/a/[slug]`) danno 404 fino alla sessione 4.
+- Dal processo dell'agente la CLI Supabase a volte non vede il login (salvato nel Gestore credenziali di Windows); con la
+  2.122.0 il 25/10 ha funzionato. La 2.121.0 falliva con `failed to initialise login role: TransportError`.
