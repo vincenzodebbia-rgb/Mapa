@@ -199,7 +199,7 @@ I **fili** (§6) sono costruiti prima del lancio ma restano spenti (flag `thread
 |---|---|---|
 | `/a/[slug]` associazione | sì | sempre |
 | `/a/[slug]` professionista | sì di default | interruttore "Mostrar mi perfil en Google"; se spento `noindex` |
-| `/e/[slug]` evento | sì fino alla fine | 7 giorni dopo `ends_at` → redirect 301 alla scheda dell'organizzatore |
+| `/e/[slug]` evento | sì fino alla fine | 7 giorni dopo la fine dell'ultima occorrenza → redirect permanente alla scheda dell'organizzatore (308 di Next.js, che Google tratta come 301; decisione della sessione 4) |
 | `/barrio/[slug]` | solo con contenuto | `noindex` finché non ha almeno un'associazione o un evento futuro |
 | `/`, `/conexiones`, `/que-es`, `/legal` | sì | |
 | `/panel`, `/profesionales`, `/entrar`, `/registro`, `/invitacion/*` | no | `noindex`, fuori dalla sitemap |

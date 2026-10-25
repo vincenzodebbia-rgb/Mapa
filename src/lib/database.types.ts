@@ -82,6 +82,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_organizers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "upcoming_events"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_organizers_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -429,12 +436,14 @@ export type Database = {
           last_activity_at: string
           last_reviewed_at: string | null
           location: unknown
+          logo_path: string | null
           name: string
           neighborhood_id: string | null
           one_liner: string | null
           seeking_offering: string | null
           slug: string
           status: Database["public"]["Enums"]["org_status"]
+          story: string | null
           updated_at: string
           usual_category: Database["public"]["Enums"]["event_category"] | null
           venue_activity: Database["public"]["Enums"]["venue_activity"] | null
@@ -455,12 +464,14 @@ export type Database = {
           last_activity_at?: string
           last_reviewed_at?: string | null
           location?: unknown
+          logo_path?: string | null
           name: string
           neighborhood_id?: string | null
           one_liner?: string | null
           seeking_offering?: string | null
           slug: string
           status?: Database["public"]["Enums"]["org_status"]
+          story?: string | null
           updated_at?: string
           usual_category?: Database["public"]["Enums"]["event_category"] | null
           venue_activity?: Database["public"]["Enums"]["venue_activity"] | null
@@ -481,12 +492,14 @@ export type Database = {
           last_activity_at?: string
           last_reviewed_at?: string | null
           location?: unknown
+          logo_path?: string | null
           name?: string
           neighborhood_id?: string | null
           one_liner?: string | null
           seeking_offering?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["org_status"]
+          story?: string | null
           updated_at?: string
           usual_category?: Database["public"]["Enums"]["event_category"] | null
           venue_activity?: Database["public"]["Enums"]["venue_activity"] | null
@@ -710,6 +723,42 @@ export type Database = {
         }
         Relationships: []
       }
+      neighborhood_neighbors: {
+        Row: {
+          neighbor_name: string | null
+          neighbor_slug: string | null
+          slug: string | null
+        }
+        Relationships: []
+      }
+      neighborhood_pages: {
+        Row: {
+          district: string | null
+          has_content: boolean | null
+          name: string | null
+          slug: string | null
+        }
+        Relationships: []
+      }
+      upcoming_events: {
+        Row: {
+          address: string | null
+          category: Database["public"]["Enums"]["event_category"] | null
+          id: string | null
+          neighborhood_name: string | null
+          neighborhood_slug: string | null
+          occ_end: string | null
+          occ_start: string | null
+          organizer_ids: string[] | null
+          organizer_names: string | null
+          price_amount: number | null
+          price_type: Database["public"]["Enums"]["price_type"] | null
+          slug: string | null
+          title: string | null
+          venue_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_review_list: {
@@ -753,6 +802,14 @@ export type Database = {
           event_id: string
           occ_end: string
           occ_start: string
+        }[]
+      }
+      event_schedule: {
+        Args: { p_event_id: string }
+        Returns: {
+          last_end: string
+          next_end: string
+          next_start: string
         }[]
       }
       export_my_data: { Args: never; Returns: Json }

@@ -43,6 +43,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Development only: the e2e test of Compartir opens the same dev server as 127.0.0.1 (a host different from the
+  // site URL, like a Vercel preview). Loopback only: nothing outside this computer.
+  allowedDevOrigins: ["127.0.0.1"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

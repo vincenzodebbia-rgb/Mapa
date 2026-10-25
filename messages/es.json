@@ -101,5 +101,128 @@
     },
     "seeProfile": "Ver ficha",
     "empty": "Todavía no hay asociaciones ni espacios con dirección."
+  },
+  "page": {
+    "backToMap": "Volver al mapa",
+    "footer": {
+      "label": "Más información",
+      "queEs": "Qué es",
+      "legal": "Aviso legal y privacidad"
+    }
+  },
+  "queEs": {
+    "metaTitle": "Qué es",
+    "metaDescription": "Un mapa libre y sin publicidad de lo que hacen hoy las asociaciones, los espacios y la gente que hace cosas en Madrid.",
+    "heading": "Qué es",
+    "intro": "Texto provisional. Un mapa de Madrid con lo que hacen hoy las pequeñas asociaciones, los espacios y la gente que hace cosas, y los hilos entre quienes se conocen.",
+    "body": "Es gratis, de código abierto y sin publicidad ni algoritmos. La idea es que cierres el mapa y salgas a la calle.",
+    "manifestoHeading": "Manifiesto",
+    "manifesto": "Texto provisional: el manifiesto se publicará aquí."
+  },
+  "legal": {
+    "metaTitle": "Aviso legal y privacidad",
+    "metaDescription": "Aviso legal, privacidad, condiciones de uso, contacto, código fuente y atribuciones de datos abiertos.",
+    "heading": "Aviso legal y privacidad",
+    "placeholder": "Textos provisionales: los revisará un abogado antes del lanzamiento.",
+    "notice": {
+      "heading": "Aviso legal",
+      "body": "Texto provisional del aviso legal: titular del sitio, finalidad y responsabilidad."
+    },
+    "privacy": {
+      "heading": "Privacidad",
+      "body": "Texto provisional. Recogemos lo mínimo: el correo para entrar y los datos públicos que cada organización decide mostrar. Sin analítica, sin rastreadores y sin más cookies que la de la sesión."
+    },
+    "terms": {
+      "heading": "Condiciones de uso",
+      "body": "Texto provisional de las condiciones: realidades verdaderas, nada de venta de productos, actividades reales."
+    },
+    "illegal": {
+      "heading": "Contenidos ilegales",
+      "body": "Si ves un contenido ilegal, escríbenos a {email}. Lo revisaremos y te responderemos."
+    },
+    "contact": {
+      "heading": "Contacto",
+      "body": "Para dudas y problemas: {email}."
+    },
+    "source": {
+      "heading": "Código fuente",
+      "body": "El proyecto es software libre con licencia AGPL-3.0.",
+      "link": "Ver el código fuente"
+    },
+    "attributions": {
+      "heading": "Atribuciones",
+      "osm": "Datos del mapa: © colaboradores de OpenStreetMap, con licencia ODbL.",
+      "openFreeMap": "Teselas del mapa: OpenFreeMap.",
+      "neighborhoods": "Límites de los barrios: Ayuntamiento de Madrid, «Barrios municipales» (Geoportal), con licencia CC BY 4.0.",
+      "associations": "Registro de asociaciones: Ayuntamiento de Madrid, «Entidades de participación ciudadana. Asociaciones (Sección 1ª)», con licencia CC BY 4.0.",
+      "source": "Fuente",
+      "license": "Licencia CC BY 4.0"
+    }
+  },
+  "breadcrumb": {
+    "home": "Inicio"
+  },
+  "event": {
+    "metaDescription": "{date}, {time}. {place}. Organiza: {organizers}.",
+    "organizedBy": "Organizado por",
+    "and": " y ",
+    "listSeparator": ", ",
+    "hoursRange": "{start}–{end}",
+    "dateTime": "{date}, {time}",
+    "when": "Cuándo",
+    "whenValue": "{date}, de {start} a {end}",
+    "repeats": {
+      "weekly": "Se repite cada semana.",
+      "monthly": "Se repite cada mes."
+    },
+    "ended": "Este evento ya ha terminado.",
+    "price": "Precio",
+    "where": "Dónde",
+    "neighborhood": "Barrio: {name}",
+    "about": "Más información",
+    "directions": "Cómo llegar (OpenStreetMap)",
+    "share": "Compartir este evento",
+    "shareText": "{title} · {date}, {time} · {place}"
+  },
+  "organization": {
+    "metaDescriptionFallback": "{name} en el mapa de Madrid.",
+    "kinds": {
+      "association": "Asociación",
+      "venue": "Espacio",
+      "professional": "Gente que hace cosas"
+    },
+    "verified": "Verificada en el registro municipal",
+    "logoAlt": "Logo de {name}",
+    "whenToVisit": "Cuándo ir",
+    "contact": "Contacto",
+    "email": "Correo: {value}",
+    "phone": "Teléfono: {value}",
+    "web": "Web o red social",
+    "neighborhood": "Barrio",
+    "address": "Dirección",
+    "story": "Nuestra historia",
+    "upcoming": "Próximos eventos",
+    "noUpcoming": "No hay eventos en las próximas semanas."
+  },
+  "barrio": {
+    "metaTitle": "Qué pasa en {name}",
+    "metaDescription": "Eventos, asociaciones y espacios de {name} ({district}), en Madrid.",
+    "metaDescriptionNoDistrict": "Eventos, asociaciones y espacios de {name}, en Madrid.",
+    "heading": "Qué pasa en {name}",
+    "district": "Distrito: {name}",
+    "mapLabel": "Mapa de {name} con sus eventos, asociaciones y espacios",
+    "upcoming": "Próximos eventos",
+    "noUpcoming": "No hay eventos en las próximas semanas.",
+    "organizations": "Asociaciones y espacios",
+    "noOrganizations": "Todavía no hay asociaciones ni espacios en este barrio.",
+    "neighbors": "Barrios vecinos",
+    "empty": "Todavía no hay nada en este barrio. Cuando una asociación o un espacio se apunte, aparecerá aquí."
+  },
+  "share": {
+    "share": "Compartir",
+    "whatsapp": "Enviar por WhatsApp",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado.",
+    "copyFailed": "No se ha podido copiar. Copia la dirección de la página."
   }
 }
