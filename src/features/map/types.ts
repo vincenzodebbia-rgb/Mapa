@@ -51,6 +51,13 @@ export type NeighborhoodPage = MapNeighborhood & {
   neighbors: { slug: string; name: string }[];
 };
 
+/** What lights up on a barrio map. `now` is the time of the cached read (ISO), for the light states. */
+export type NeighborhoodMapItems = {
+  events: MapEvent[];
+  places: MapPlace[];
+  now: string;
+};
+
 /** What a popup shows, already formatted on the server. The client only turns it into DOM text. */
 export type PopupContent = {
   title: string;

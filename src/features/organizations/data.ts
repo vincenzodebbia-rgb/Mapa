@@ -2,7 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createSupabasePublicClient, getPublicStorageUrl } from "@/lib/supabase/public";
 import { unwrap } from "@/lib/supabase/unwrap";
-import type { OrganizationKind, OrganizationProfile, OrganizationSummary } from "./types";
+import type { OrganizationKind, OrganizationProfile, OrganizationSitemapEntry, OrganizationSummary } from "./types";
 
 // Public reads, as anon (RLS: no suspended organizations), cached so the public pages are static
 // and can answer a real 404. Writes (session 7, "Mi ficha") must call updateTag(ORGANIZATIONS_TAG).
@@ -71,7 +71,7 @@ export async function getOrganizationsInNeighborhood(neighborhoodSlug: string): 
 }
 
 /** Profiles that may appear in the sitemap (professionals who turned off Google are left out). */
-export async function getIndexableOrganizationSlugs(): Promise<{ slug: string; updatedAt: string }[]> {
+export async function getIndexableOrganizationSlugs(): Promise<OrganizationSitemapEntry[]> {
   "use cache";
   cacheLife("minutes");
   cacheTag(ORGANIZATIONS_TAG);

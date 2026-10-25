@@ -172,7 +172,7 @@ values
    null, 'Calle de los Libros Falsos 7', pg_temp.spot('comillas', 120, -120), '5eed0000-0000-4000-8000-0000000000b1'),
   ('Taller de dibujo para principiantes', 'Lápiz, papel y nada de miedo.', 'talleres', 'paid', 12.00,
    pg_temp.madrid_at(6, '17:00'), pg_temp.madrid_at(6, '19:00'), 'none', null,
-   'Librería Página Cero', 'Calle de los Libros Falsos 7', pg_temp.spot('comillas', 120, -120), '5eed0000-0000-4000-8000-0000000000c2'),
+   'Librería Página Cero (ficticia)', 'Calle de los Libros Falsos 7', pg_temp.spot('comillas', 120, -120), '5eed0000-0000-4000-8000-0000000000c2'),
   ('Merienda vecinal', 'Cada uno trae algo para compartir.', 'comunidad', 'free', null,
    pg_temp.madrid_at(8, '17:30'), pg_temp.madrid_at(8, '19:30'), 'none', null,
    null, 'Calle de Mentira 10', pg_temp.spot('puerta-bonita', 0, 0), '5eed0000-0000-4000-8000-0000000000a7'),

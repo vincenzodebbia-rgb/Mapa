@@ -36,6 +36,12 @@ export type EventPage = {
   organizers: EventOrganizer[];
 };
 
+/** What the event page shows: the event, a permanent redirect 7 days after the end, or a 404. */
+export type EventPageResult =
+  | { status: "found"; event: EventPage; indexable: boolean }
+  | { status: "redirect"; organizerSlug: string }
+  | { status: "missing" };
+
 /** One upcoming occurrence in a list (organization profile, neighborhood page). */
 export type UpcomingEvent = {
   key: string; // event id + occurrence start

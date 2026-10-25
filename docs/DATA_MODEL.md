@@ -95,7 +95,8 @@ RLS: `select` delle proprie righe. Inserita solo da `register_entity()` / `creat
 (professionisti: "Mostrar mi perfil en Google"; associazioni e espacios sempre true), `verified boolean default false`,
 `entry_method entry_method not null`, `venue_activity venue_activity`, `status org_status not null default 'active'`,
 `flagged_for_review boolean not null default false`, `last_reviewed_at timestamptz`,
-`last_activity_at timestamptz default now()`, `created_at`, `updated_at`.
+`last_activity_at timestamptz default now()`, `created_at`, `updated_at`,
+`logo_path text` (sessione 4: null oppure esattamente `{id}/logo.webp`, check), `story text (≤1000)` ("Nuestra historia", solo testo).
 - Vincoli: `kind = 'professional'` ⇒ `location is null` (i professionisti non hanno un punto proprio);
   `venue_activity` obbligatoria se `kind = 'venue'`, nulla altrimenti.
 - `verified = true` solo per `entry_method = 'municipal_registry'`.
@@ -104,10 +105,10 @@ RLS: `select` delle proprie righe. Inserita solo da `register_entity()` / `creat
 - RLS `select` (`anon`, `authenticated`): `status = 'active'` **oppure** l'utente è membro (vede la propria organizzazione anche sospesa,
   per leggere la motivazione e scaricare i dati). Nessuna policy `insert` (solo funzioni). `update` solo dai membri.
 - Privilegi per colonna: `grant update (name, one_liner, when_to_visit, contact_email, contact_phone, contact_url, address, location,
-  usual_category, seeking_offering, indexable, venue_activity)`. L'utente non cambia mai `kind`, `slug`, `verified`, `entry_method`,
+  usual_category, seeking_offering, indexable, venue_activity, logo_path, story)`; `logo_path` e `story` sono anche nella `grant select` pubblica. L'utente non cambia mai `kind`, `slug`, `verified`, `entry_method`,
   `status`, `flagged_for_review`, `last_reviewed_at`, `last_activity_at`.
 - Trigger: `slug` generato all'inserimento; `neighborhood_id` da `location` (`ST_Covers` su `neighborhoods.boundary`);
-  `last_activity_at` aggiornato quando cambia la scheda; se cambia `venue_activity` verso un'attività dubbia e l'ente non è entrato
+  `last_activity_at` aggiornato quando cambia la scheda (logo e storia compresi); se cambia `venue_activity` verso un'attività dubbia e l'ente non è entrato
   con invito, `flagged_for_review = true` (il trigger non lo rimette mai a false: lo fa solo `mark_reviewed()`).
 
 ### memberships
@@ -171,8 +172,11 @@ RLS: `select` solo a `authenticated`, se l'organizzazione è `active` o l'utente
 
 ### neighborhoods
 `id`, `slug text unique`, `name text`, `district text`, `boundary geography(MultiPolygon,4326)`, `centroid geography(Point,4326)`.
-RLS: `select` pubblico. Riempita una volta da `scripts/import-neighborhoods.ts` dai confini open data del Comune (la seed contiene
-solo rettangoli segnaposto). Attribuzione in `/legal`.
+RLS: `select` pubblico. Riempita dalla migrazione `neighborhoods_official` (131 barrios), **generata** da
+`scripts/import-neighborhoods.ts` a partire dallo shapefile "Barrios municipales" del geoportale del Comune (EPSG:25830,
+trasformato in WGS84 da PostGIS, CC BY 4.0): lo script non scrive mai in un database; per aggiornare i confini si rigenera
+una migrazione nuova (upsert per slug, ricalcolo di `neighborhood_id` di organizzazioni ed eventi). `centroid` = point on surface.
+La seed usa solo gli slug. Attribuzione in `/legal`.
 
 ### app_admins
 `user_id uuid primary key references auth.users on delete cascade`, `created_at`.
@@ -199,6 +203,11 @@ Policy insert/update/delete: la prima cartella del path è un'organizzazione di 
 I file li carica solo l'action dopo che `sharp` li ha ri-codificati in WebP, max 1600 px, senza metadati.
 Cancellare righe non cancella i file: le action cancellano prima i file tramite l'API Storage.
 
+Bucket `org-logos` (sessione 4): lettura pubblica, solo `image/webp`, max 512 KB. Path `"{organization_id}/logo.webp"` (lo stesso
+valore di `organizations.logo_path`). Policy select/insert/update/delete identiche a `event-images` (stessa funzione
+`private.can_write_event_image`: la prima cartella è un'organizzazione di cui l'utente è membro; insert/update solo se attiva).
+Il file lo carica solo l'action di "Mi ficha" (sessione 7) dopo `reencodeLogo` (sharp: WebP, max 256×256 px, senza metadati).
+
 ## Viste (read model) — tutte `with (security_invoker = true)`
 - `map_items`: una riga per ogni cosa che può accendersi sulla mappa nella finestra `[now(), now() + 7 giorni]`:
   - occorrenze di eventi da `public.event_occurrences(now(), now() + interval '7 days')` non ancora finite,
@@ -211,12 +220,19 @@ Cancellare righe non cancella i file: le action cancellano prima i file tramite 
 - `map_neighborhoods`: per ogni barrio slug, name, district, centro `center_lng`/`center_lat` (`centroid` o, se manca, il
   centroide del confine) e riquadro `west`/`south`/`east`/`north` in gradi. Serve al selettore "Barrio" della mappa.
 - `connection_lines`: fili confermati con slug, nome, lng/lat di entrambe le organizzazioni, le due storie, `color_seed`.
+- `upcoming_events` (sessione 4): occorrenze non finite da `event_occurrences(now(), now() + 60 giorni)` con slug, titolo,
+  category, prezzo, `occ_start`/`occ_end`, venue_name, address, slug e nome del barrio, `organizer_ids uuid[]` e
+  `organizer_names` (prima l'owner). Per la scheda (filtro per organizzatore) e la pagina di barrio.
+- `neighborhood_pages` (sessione 4): slug, name, district, `has_content` = esiste un'associazione o un espacio attivi nel barrio
+  oppure un evento non ancora finito. `false` → `noindex` e fuori dalla sitemap.
+- `neighborhood_neighbors` (sessione 4): coppie di barrios confinanti (`ST_DWithin` 5 m, per le fessure tra i confini ufficiali).
 - Essendo `security_invoker`, ereditano le policy: niente `pending` per `anon` o terzi, niente elementi di organizzazioni sospese.
 
 ## Funzioni
 | Funzione | Tipo | Cosa fa |
 |---|---|---|
 | `event_occurrences(p_from, p_to)` | SQL, security invoker | Espande le ripetizioni in `(event_id, occ_start, occ_end)`. **Calcola in ora locale** (`(starts_at at time zone 'Europe/Madrid') + k * interval '1 week'`, poi di nuovo `timestamptz`), così le 19:00 restano 19:00 al cambio dell'ora. Mensile = `inizio + k mesi` dalla data originale (nessuna deriva). Unica implementazione delle ripetizioni. |
+| `event_schedule(p_event_id)` | SQL, security invoker | Sessione 4. Da `event_occurrences`: `next_start`/`next_end` (prossima occorrenza non finita) e `last_end` (fine dell'ultima), per la pagina evento e il redirect 7 giorni dopo la fine. Espande tutti gli eventi: va bene finché il database è piccolo. Righe nulle se l'evento non è visibile. |
 | `is_doubtful_activity(p_activity)` | immutable | `true` per `discoteca_club`, `bar_nocturno`, `otro`. Unico posto della lista. |
 | `is_admin()` | security definer, stable | Esiste una riga in `app_admins` per `auth.uid()`. |
 | `lookup_municipal_association(p_nif)` | security definer, solo `service_role` | Restituisce solo `found` + `name` ufficiale, per "¿Sois *nombre*?". L'action chiama prima `check_rate_limit` (max 10 al giorno per connessione) e poi questa con il client admin. |
@@ -251,6 +267,10 @@ L'avviso al fondatore per gli espacios dubbi lo manda l'**action** (non il datab
 14. `register_entity`: NIF in elenco → `municipal_registry`, non segnalato; invito valido per una discoteca → `invite`, non segnalato; discoteca senza invito → `self_declared`, segnalato; libreria senza invito → non segnalata; `venue` senza attività → `venue_activity_required`; `venue` senza risposte → `answers_required`.
 15. Un utente non può modificare `entry_method`, `status`, `flagged_for_review`, `last_reviewed_at` della propria organizzazione.
 16. `lookup_municipal_association` restituisce solo `found` e `name`.
+17. (sessione 4, file 14) Logo e storia: il membro scrive solo nella cartella della propria organizzazione in `org-logos`; anon ed
+    estranei no; `story` oltre 1000 e `logo_path` di un'altra organizzazione rifiutati.
+18. (sessione 4, file 15) `upcoming_events`, `event_schedule`, `neighborhood_pages` e `neighborhood_neighbors` non mostrano enti
+    sospesi né i loro eventi; un barrio vuoto ha `has_content = false`.
 
 I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
 (`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,

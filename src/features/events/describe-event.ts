@@ -1,7 +1,7 @@
 import "server-only";
 import { formatMadridDate, formatMadridTime } from "@/lib/dates";
 import { t } from "@/lib/i18n/t";
-import type { EventOrganizer, EventPage, PriceType, UpcomingEvent } from "./types";
+import type { EventPage, PriceType, UpcomingEvent } from "./types";
 
 // Turns event DTOs into the texts people read, on the server, always in Madrid time.
 
@@ -18,7 +18,7 @@ export function describeEventDate(event: Pick<EventPage | UpcomingEvent, "starts
 
 /** "19:00–21:00" */
 export function describeEventHours(event: Pick<EventPage | UpcomingEvent, "startsAt" | "endsAt">): string {
-  return `${formatMadridTime(event.startsAt)}–${formatMadridTime(event.endsAt)}`;
+  return t("event.hoursRange", { start: formatMadridTime(event.startsAt), end: formatMadridTime(event.endsAt) });
 }
 
 export function describePrice(event: { priceType: PriceType; priceAmount: number | null }): string {
@@ -30,11 +30,4 @@ export function describePrice(event: { priceType: PriceType; priceAmount: number
 
 export function describePlace(event: Pick<EventPage | UpcomingEvent, "venueName" | "address">): string {
   return [event.venueName, event.address].filter(Boolean).join(t("hoy.list.separator"));
-}
-
-/** "A, B y C" (Spanish list), owner first: for the meta description. */
-export function joinOrganizerNames(organizers: EventOrganizer[]): string {
-  const names = organizers.map((organizer) => organizer.name);
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(t("event.listSeparator"))}${t("event.and")}${names.at(-1)}`;
 }

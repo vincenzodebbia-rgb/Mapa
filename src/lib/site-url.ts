@@ -1,6 +1,7 @@
 import "server-only";
 import { brand } from "@/config/brand";
 import { getPublicEnv } from "./env";
+import { getDeploymentEnv } from "./server-env";
 
 type SiteUrlEnv = {
   siteUrl?: string;
@@ -32,11 +33,11 @@ export function resolveSiteUrl(env: SiteUrlEnv): URL {
 }
 
 export function getSiteUrl(): URL {
+  const deployment = getDeploymentEnv();
   return resolveSiteUrl({
     siteUrl: getPublicEnv().NEXT_PUBLIC_SITE_URL,
-    // Vercel system variables (no protocol), present at build and run time on Vercel.
-    vercelProductionUrl: process.env.VERCEL_PROJECT_PRODUCTION_URL,
-    vercelUrl: process.env.VERCEL_URL,
+    vercelProductionUrl: deployment.VERCEL_PROJECT_PRODUCTION_URL,
+    vercelUrl: deployment.VERCEL_URL,
   });
 }
 

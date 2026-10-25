@@ -167,6 +167,8 @@
     "organizedBy": "Organizado por",
     "and": " y ",
     "listSeparator": ", ",
+    "hoursRange": "{start}–{end}",
+    "dateTime": "{date}, {time}",
     "when": "Cuándo",
     "whenValue": "{date}, de {start} a {end}",
     "repeats": {

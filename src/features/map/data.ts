@@ -4,7 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
-import type { MapEvent, MapNeighborhood, MapPlace, NeighborhoodPage } from "./types";
+import type { MapEvent, MapNeighborhood, MapPlace, NeighborhoodMapItems, NeighborhoodPage } from "./types";
 
 // Reads the views map_items and map_neighborhoods (security_invoker: RLS hides suspended organizations).
 // View columns (and data) are all nullable in the generated types: rows missing a required value are skipped.
@@ -82,9 +82,7 @@ export async function getNeighborhoodPage(slug: string): Promise<NeighborhoodPag
  * What lights up on the barrio map: events of the next 7 days and the associations and venues there.
  * `now` is the time of this cached read (light states are computed against it, not at prerender time).
  */
-export async function getNeighborhoodMapItems(
-  slug: string,
-): Promise<{ events: MapEvent[]; places: MapPlace[]; now: string }> {
+export async function getNeighborhoodMapItems(slug: string): Promise<NeighborhoodMapItems> {
   "use cache";
   cacheLife("minutes");
   cacheTag(...NEIGHBORHOOD_TAGS);

@@ -24,7 +24,7 @@ export function UpcomingEventList({ heading, emptyMessage, events }: UpcomingEve
               <li key={event.key} className="flex flex-col gap-1 rounded-card border border-line bg-surface p-4">
                 <p className="text-sm text-muted">
                   <time dateTime={event.startsAt}>
-                    {describeEventDate(event)}, {describeEventHours(event)}
+                    {t("event.dateTime", { date: describeEventDate(event), time: describeEventHours(event) })}
                   </time>
                 </p>
                 <h3 className="text-base font-semibold">

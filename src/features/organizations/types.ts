@@ -25,7 +25,10 @@ export type OrganizationProfile = {
   indexable: boolean;
 };
 
-/** An organization in a list (neighborhood page, sitemap). */
+/** An indexable profile in the sitemap. */
+export type OrganizationSitemapEntry = { slug: string; updatedAt: string };
+
+/** An organization in a list (neighborhood page). */
 export type OrganizationSummary = {
   slug: string;
   kind: OrganizationKind;

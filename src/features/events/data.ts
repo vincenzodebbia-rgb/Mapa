@@ -5,7 +5,7 @@ import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { unwrap } from "@/lib/supabase/unwrap";
 import { isEventIndexable, shouldRedirectEvent } from "./event-page-rules";
-import type { EventOrganizer, EventPage, UpcomingEvent } from "./types";
+import type { EventOrganizer, EventPageResult, UpcomingEvent } from "./types";
 
 // Public reads, as anon (RLS: no events of suspended organizations), cached so the event page is static
 // and answers a real 404 or 308. Writes (session 6) must call updateTag(EVENTS_TAG).
@@ -18,11 +18,6 @@ const EVENT_COLUMNS =
   "id, slug, title, description, category, price_type, price_amount, recurrence, starts_at, ends_at, venue_name, address, location, neighborhood:neighborhoods(slug, name), event_organizers(role, organization:organizations(slug, name, kind))";
 const UPCOMING_COLUMNS =
   "id, slug, title, category, price_type, price_amount, occ_start, occ_end, venue_name, address, organizer_names";
-
-export type EventPageResult =
-  | { status: "found"; event: EventPage; indexable: boolean }
-  | { status: "redirect"; organizerSlug: string }
-  | { status: "missing" };
 
 const toIso = (value: string) => new Date(value).toISOString();
 
