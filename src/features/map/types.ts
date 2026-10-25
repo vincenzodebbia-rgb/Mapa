@@ -45,6 +45,12 @@ export type MapNeighborhood = {
   bounds: [west: number, south: number, east: number, north: number];
 };
 
+/** A barrio page (/barrio/[slug]): noindex while it has no content (docs/SPEC.md §14). */
+export type NeighborhoodPage = MapNeighborhood & {
+  hasContent: boolean;
+  neighbors: { slug: string; name: string }[];
+};
+
 /** What a popup shows, already formatted on the server. The client only turns it into DOM text. */
 export type PopupContent = {
   title: string;

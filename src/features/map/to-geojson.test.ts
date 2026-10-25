@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { eventsToGeoJson, placesToGeoJson } from "./to-geojson";
+import { eventsToGeoJson, neighborhoodToGeoJson, placesToGeoJson } from "./to-geojson";
 import type { MapEvent, MapPlace } from "./types";
 
 const now = new Date("2026-07-16T16:00:00Z");
@@ -64,5 +64,25 @@ describe("placesToGeoJson", () => {
       neighborhoodSlug: null,
     };
     expect(placesToGeoJson([place]).features[0]?.properties).toEqual({ key: "p1", light: "lit" });
+  });
+});
+
+describe("neighborhoodToGeoJson", () => {
+  it("puts events and places in one collection with unique ids", () => {
+    const place: MapPlace = {
+      id: "o1",
+      slug: "colmena",
+      name: "Colmena",
+      kind: "association",
+      address: null,
+      lng: -3.73,
+      lat: 40.38,
+      neighborhoodSlug: "opanel",
+    };
+    const collection = neighborhoodToGeoJson([event], [place], now);
+    expect(collection.features.map((feature) => [feature.id, feature.properties])).toEqual([
+      [0, { key: event.key, light: "pulse" }],
+      [1, { key: "o1", light: "lit" }],
+    ]);
   });
 });

@@ -22,6 +22,14 @@ export function eventsToGeoJson(events: MapEvent[], now: Date): MapFeatureCollec
   );
 }
 
+/** The barrio map: its events (pulse/lit) and its places (lit), in one collection with unique ids. */
+export function neighborhoodToGeoJson(events: MapEvent[], places: MapPlace[], now: Date): MapFeatureCollection {
+  return toFeatureCollection([
+    ...events.map((event) => ({ key: event.key, lng: event.lng, lat: event.lat, light: getLightState(event, now) })),
+    ...places.map((place) => ({ key: place.id, lng: place.lng, lat: place.lat, light: "lit" as const })),
+  ]);
+}
+
 /** Places on the Conexiones map are all `lit`: being there is enough. */
 export function placesToGeoJson(places: MapPlace[]): MapFeatureCollection {
   return toFeatureCollection(places.map((place) => ({ key: place.id, lng: place.lng, lat: place.lat, light: "lit" })));

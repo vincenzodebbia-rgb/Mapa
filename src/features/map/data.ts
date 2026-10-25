@@ -1,8 +1,10 @@
 import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Database } from "@/lib/database.types";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
-import type { MapEvent, MapNeighborhood, MapPlace } from "./types";
+import type { MapEvent, MapNeighborhood, MapPlace, NeighborhoodPage } from "./types";
 
 // Reads the views map_items and map_neighborhoods (security_invoker: RLS hides suspended organizations).
 // View columns (and data) are all nullable in the generated types: rows missing a required value are skipped.
@@ -46,6 +48,68 @@ export async function getNeighborhoods(): Promise<MapNeighborhood[]> {
     const neighborhood = toMapNeighborhood(row);
     return neighborhood ? [neighborhood] : [];
   });
+}
+
+// Barrio pages (/barrio/[slug]): public reads as anon, cached so the page is static and answers a real 404.
+// Events and organizations change them: their writes refresh these tags.
+const NEIGHBORHOOD_TAGS = ["neighborhoods", "events", "organizations"];
+
+/** The barrio with its center and box, whether it has content (indexable) and its neighbors. */
+export async function getNeighborhoodPage(slug: string): Promise<NeighborhoodPage | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(...NEIGHBORHOOD_TAGS);
+
+  const supabase = createSupabasePublicClient();
+  const [place, page, neighbors] = await Promise.all([
+    supabase.from("map_neighborhoods").select(NEIGHBORHOOD_COLUMNS).eq("slug", slug).maybeSingle(),
+    supabase.from("neighborhood_pages").select("has_content").eq("slug", slug).maybeSingle(),
+    supabase.from("neighborhood_neighbors").select("neighbor_slug, neighbor_name").eq("slug", slug).order("neighbor_name"),
+  ]);
+  const placeRow = unwrap(place);
+  const neighborhood = placeRow ? toMapNeighborhood(placeRow) : null;
+  if (!neighborhood) return null;
+  return {
+    ...neighborhood,
+    hasContent: unwrap(page)?.has_content === true,
+    neighbors: (unwrap(neighbors) ?? []).flatMap(({ neighbor_slug, neighbor_name }) =>
+      neighbor_slug && neighbor_name ? [{ slug: neighbor_slug, name: neighbor_name }] : [],
+    ),
+  };
+}
+
+/**
+ * What lights up on the barrio map: events of the next 7 days and the associations and venues there.
+ * `now` is the time of this cached read (light states are computed against it, not at prerender time).
+ */
+export async function getNeighborhoodMapItems(
+  slug: string,
+): Promise<{ events: MapEvent[]; places: MapPlace[]; now: string }> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(...NEIGHBORHOOD_TAGS);
+
+  const supabase = createSupabasePublicClient();
+  const [events, places] = await Promise.all([
+    supabase.from("map_items").select(EVENT_COLUMNS).eq("item_type", "event").eq("neighborhood_slug", slug).order("occ_start"),
+    supabase.from("map_items").select(PLACE_COLUMNS).eq("item_type", "organization").eq("neighborhood_slug", slug).order("name"),
+  ]);
+  return {
+    events: (unwrap(events) ?? []).flatMap((row) => toMapEvent(row) ?? []),
+    places: (unwrap(places) ?? []).flatMap((row) => toMapPlace(row) ?? []),
+    now: new Date().toISOString(),
+  };
+}
+
+/** Barrios with at least one association, venue or future event: the only ones in the sitemap. */
+export async function getNeighborhoodSlugsWithContent(): Promise<string[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(...NEIGHBORHOOD_TAGS);
+
+  const supabase = createSupabasePublicClient();
+  const rows = unwrap(await supabase.from("neighborhood_pages").select("slug").eq("has_content", true).order("slug")) ?? [];
+  return rows.flatMap((row) => (row.slug ? [row.slug] : []));
 }
 
 function toMapEvent(

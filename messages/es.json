@@ -159,6 +159,63 @@
       "license": "Licencia CC BY 4.0"
     }
   },
+  "breadcrumb": {
+    "home": "Inicio"
+  },
+  "event": {
+    "metaDescription": "{date}, {time}. {place}. Organiza: {organizers}.",
+    "organizedBy": "Organizado por",
+    "and": " y ",
+    "listSeparator": ", ",
+    "when": "Cuándo",
+    "whenValue": "{date}, de {start} a {end}",
+    "repeats": {
+      "weekly": "Se repite cada semana.",
+      "monthly": "Se repite cada mes."
+    },
+    "ended": "Este evento ya ha terminado.",
+    "price": "Precio",
+    "where": "Dónde",
+    "neighborhood": "Barrio: {name}",
+    "about": "Más información",
+    "directions": "Cómo llegar (OpenStreetMap)",
+    "share": "Compartir este evento",
+    "shareText": "{title} · {date}, {time} · {place}"
+  },
+  "organization": {
+    "metaDescriptionFallback": "{name} en el mapa de Madrid.",
+    "kinds": {
+      "association": "Asociación",
+      "venue": "Espacio",
+      "professional": "Gente que hace cosas"
+    },
+    "verified": "Verificada en el registro municipal",
+    "logoAlt": "Logo de {name}",
+    "whenToVisit": "Cuándo ir",
+    "contact": "Contacto",
+    "email": "Correo: {value}",
+    "phone": "Teléfono: {value}",
+    "web": "Web o red social",
+    "neighborhood": "Barrio",
+    "address": "Dirección",
+    "story": "Nuestra historia",
+    "upcoming": "Próximos eventos",
+    "noUpcoming": "No hay eventos en las próximas semanas."
+  },
+  "barrio": {
+    "metaTitle": "Qué pasa en {name}",
+    "metaDescription": "Eventos, asociaciones y espacios de {name} ({district}), en Madrid.",
+    "metaDescriptionNoDistrict": "Eventos, asociaciones y espacios de {name}, en Madrid.",
+    "heading": "Qué pasa en {name}",
+    "district": "Distrito: {name}",
+    "mapLabel": "Mapa de {name} con sus eventos, asociaciones y espacios",
+    "upcoming": "Próximos eventos",
+    "noUpcoming": "No hay eventos en las próximas semanas.",
+    "organizations": "Asociaciones y espacios",
+    "noOrganizations": "Todavía no hay asociaciones ni espacios en este barrio.",
+    "neighbors": "Barrios vecinos",
+    "empty": "Todavía no hay nada en este barrio. Cuando una asociación o un espacio se apunte, aparecerá aquí."
+  },
   "share": {
     "share": "Compartir",
     "whatsapp": "Enviar por WhatsApp",
