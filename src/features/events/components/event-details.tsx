@@ -4,7 +4,6 @@ import { formatMadridTime } from "@/lib/dates";
 import { t } from "@/lib/i18n/t";
 import { describeEventDate, describeEventHours, describePlace, describePrice } from "../describe-event";
 import { buildEventJsonLd } from "../event-json-ld";
-import { buildWhatsAppShareUrl } from "../share-links";
 import type { EventPage } from "../types";
 import { ShareButton } from "./share-button";
 
@@ -12,7 +11,7 @@ const linkClass = "underline underline-offset-2 focus-visible:outline-2 focus-vi
 
 type EventDetailsProps = {
   event: EventPage;
-  /** Absolute URL of this page, for sharing and JSON-LD. */
+  /** Absolute URL of this page on the site's domain: JSON-LD, and the share link until the browser knows its own. */
   url: string;
   /** Site origin, for the organizers' absolute URLs in JSON-LD. */
   siteUrl: string;
@@ -102,8 +101,7 @@ export function EventDetails({ event, url, siteUrl, upcoming }: EventDetailsProp
         <ShareButton
           title={event.title}
           text={shareText}
-          url={url}
-          whatsappUrl={buildWhatsAppShareUrl(shareText, url)}
+          fallbackUrl={url}
           texts={{
             share: t("share.share"),
             whatsapp: t("share.whatsapp"),

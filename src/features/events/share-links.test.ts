@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { buildWhatsAppShareUrl } from "./share-links";
+import { buildWhatsAppShareUrl, resolveShareUrl } from "./share-links";
+
+const fallback = "https://mapa.example.org/e/coro-vecinal";
+
+describe("resolveShareUrl", () => {
+  it("shares the page being viewed, e.g. a Vercel preview, not the production domain", () => {
+    const preview = { protocol: "https:", host: "mapa-git-feat-x.vercel.app", pathname: "/e/coro-vecinal" };
+    expect(resolveShareUrl(preview, fallback)).toBe("https://mapa-git-feat-x.vercel.app/e/coro-vecinal");
+  });
+
+  it("keeps the port and drops nothing but query and hash", () => {
+    const local = { protocol: "http:", host: "127.0.0.1:3000", pathname: "/e/coro-vecinal" };
+    expect(resolveShareUrl(local, fallback)).toBe("http://127.0.0.1:3000/e/coro-vecinal");
+  });
+
+  it("falls back to the site URL without a browser or with a non-web scheme", () => {
+    expect(resolveShareUrl(null, fallback)).toBe(fallback);
+    expect(resolveShareUrl({ protocol: "file:", host: "", pathname: "/x" }, fallback)).toBe(fallback);
+  });
+});
 
 describe("buildWhatsAppShareUrl", () => {
   it("puts text and link in a single encoded text parameter", () => {

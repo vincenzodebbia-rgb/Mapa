@@ -46,6 +46,17 @@ test("una pagina evento della seed contiene JSON-LD Event valido", async ({ page
   await expect(page.getByRole("link", { name: "Enviar por WhatsApp" })).toHaveAttribute("href", /^https:\/\/wa\.me\/\?text=/);
 });
 
+test("Compartir condivide l'indirizzo della pagina aperta, non quello del sito", async ({ page, request }) => {
+  // Same server, another host name: like a Vercel preview, whose site URL is the production domain.
+  const eventPath = (await getSitemapPaths(request)).find((path) => path.startsWith("/e/")) ?? "/";
+  const otherOrigin = "http://127.0.0.1:3000";
+  await page.goto(`${otherOrigin}${eventPath}`);
+  const whatsapp = page.getByRole("link", { name: "Enviar por WhatsApp" });
+  await expect(whatsapp).toHaveAttribute("href", new RegExp(encodeURIComponent(`${otherOrigin}${eventPath}`)));
+  // The canonical stays on the site's own domain.
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /^http:\/\/localhost:3000\//);
+});
+
 test("la scheda di un'associazione mostra storia, contatti e prossimi eventi", async ({ page }) => {
   const response = await page.goto(COLMENA);
   expect(response?.status()).toBe(200);

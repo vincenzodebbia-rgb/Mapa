@@ -136,8 +136,10 @@ Updated by the agent at the end of every session. Newest first.
   tocca solo i dati fittizi, ma cancella anche le membership verso le organizzazioni fittizie (da riaggiungere a mano).
 - Le pagine pubbliche sono in cache per minuti (`cacheLife("minutes")`): una modifica fatta direttamente nel database
   compare dopo al massimo qualche minuto. Le action future devono chiamare `updateTag`.
-- Su un'anteprima Vercel (Preview) il link di "Compartir" e il canonical puntano al dominio di produzione (valore di
-  riserva di `getSiteUrl()`); le anteprime hanno comunque `noindex` da Vercel.
+- Su un'anteprima Vercel (Preview) canonical, sitemap e JSON-LD puntano al dominio di produzione (valore di riserva di
+  `getSiteUrl()`); le anteprime hanno comunque `noindex` da Vercel. "Compartir" invece usa l'indirizzo della pagina aperta
+  (`window.location`), con l'URL del sito solo come riserva (corretto dopo la prova dal telefono del 25/10).
+- `allowedDevOrigins: ["127.0.0.1"]` in `next.config.ts`: serve solo all'e2e di Compartir in sviluppo.
 - `event_schedule` e `neighborhood_pages` espandono le occorrenze di tutti gli eventi: va bene con pochi eventi; se
   diventa lento, aggiungere un filtro per evento a `event_occurrences`.
 - Nessun logo nella seed: il rendering del logo (`next/image` `unoptimized` dallo Storage) non è ancora provato dal vivo.
