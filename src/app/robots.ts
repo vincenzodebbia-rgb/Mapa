@@ -6,8 +6,9 @@ import { toAbsoluteUrl } from "@/lib/site-url";
 const PRIVATE_PATHS = ["/panel", "/profesionales", "/entrar", "/registro", "/invitacion/"];
 
 export default function robots(): MetadataRoute.Robots {
-  // Demo site: no Disallow at all. A blocked page is never read, so its noindex would be missed and the bare URL
-  // could still show up; crawlers must get in and find noindex everywhere (X-Robots-Tag + meta). No sitemap either.
+  // Sito demo: nessun Disallow. Una pagina bloccata non viene mai letta, quindi il suo noindex sfuggirebbe e l'URL
+  // nudo potrebbe comparire comunque; i crawler devono entrare e trovare il noindex ovunque (X-Robots-Tag + meta).
+  // Nemmeno la sitemap.
   if (flags.demo) return { rules: { userAgent: "*", allow: "/" } };
   return {
     rules: { userAgent: "*", allow: "/", disallow: PRIVATE_PATHS },

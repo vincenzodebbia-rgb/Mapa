@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// The private demo site (NEXT_PUBLIC_DEMO=1): its own dev server on port 3001, started with the variable.
-// Next.js allows one `next dev` per folder: stop any other dev server first, and run it after `npm run e2e`.
+// Il sito demo privato (NEXT_PUBLIC_DEMO=1): un dev server tutto suo sulla porta 3001, avviato con la variabile.
+// Next.js permette un solo `next dev` per cartella: prima spegni ogni altro dev server, e lancialo dopo `npm run e2e`.
 export default defineConfig({
   testDir: "./e2e",
   testMatch: "demo.spec.ts",
@@ -12,7 +12,7 @@ export default defineConfig({
     command: "npm run dev -- --port 3001",
     url: "http://localhost:3001",
     env: { NEXT_PUBLIC_DEMO: "1" },
-    // Never reuse: a server already on 3001 may have been started without the variable.
+    // Mai riusarlo: un server già acceso sulla 3001 potrebbe essere partito senza la variabile.
     reuseExistingServer: false,
   },
 });

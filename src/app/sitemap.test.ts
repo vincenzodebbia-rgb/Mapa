@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({ connection: vi.fn(async () => undefined) }));
-// Hoisted, so the spy the test checks is the very one the sitemap calls, also after vi.resetModules().
+// Hoisted: lo spy controllato dal test è proprio quello che chiama la sitemap, anche dopo vi.resetModules().
 const getIndexableOrganizationSlugs = vi.hoisted(() =>
   vi.fn(async () => [{ slug: "colmena", updatedAt: "2026-10-01T10:00:00Z" }]),
 );

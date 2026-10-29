@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // data-demo gives the banner its room (--app-top-offset in globals.css).
+    // data-demo fa spazio al banner (--app-top-offset in globals.css).
     <html lang="es" data-demo={flags.demo ? "" : undefined}>
       <body className="min-h-dvh bg-night font-sans text-ink antialiased">
         {flags.demo && (

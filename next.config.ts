@@ -41,8 +41,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // We never ask for these (docs/PRIVACY_AND_OWNERSHIP.md): forbid them for any embedded code too.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  // Demo site: every response (pages, images, sitemap) stays out of search engines. robots.txt lets crawlers in,
-  // so they can read it.
+  // Sito demo: ogni risposta (pagine, immagini, sitemap) resta fuori dai motori di ricerca. robots.txt lascia entrare
+  // i crawler, così possono leggerlo.
   ...(flags.demo ? [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] : []),
 ];
 

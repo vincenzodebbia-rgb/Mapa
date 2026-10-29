@@ -11,7 +11,7 @@ import { toAbsoluteUrl } from "@/lib/site-url";
 const STATIC_PATHS = ["/", "/conexiones", "/que-es", "/legal"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Demo site: nothing to index.
+  // Sito demo: niente da indicizzare.
   if (flags.demo) return [];
   // At request time, not at build: the build must not need the database. The reads themselves are cached.
   await connection();

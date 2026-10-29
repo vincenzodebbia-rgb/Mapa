@@ -8,8 +8,8 @@ export const flags = {
   professionals: true, // /profesionales + spaces. Expires: 2027-03-31.
   annualMemory: false, // /panel/memoria/[year]. Expires: 2027-06-30.
   openFeeds: false, // iCal/JSON/ActivityPub exports (data model ready, not built). Expires: 2027-06-30.
-  // Private demo site (Vercel project mapa-demo on mapa-dev data): banner + noindex + empty sitemap.
-  // Only the exact value "1" turns it on. Read at build time (NEXT_PUBLIC_*): change it, then redeploy. Expires: 2027-03-31.
+  // Sito demo privato (progetto Vercel mapa-demo sui dati di mapa-dev): banner + noindex + sitemap vuota.
+  // Lo accende solo il valore esatto "1". Letto al build (NEXT_PUBLIC_*): se cambia, rifai il deploy. Scade: 2027-03-31.
   demo: isDemoValue(process.env.NEXT_PUBLIC_DEMO),
 } as const;
 

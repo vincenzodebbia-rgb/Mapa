@@ -4,10 +4,10 @@ import { flags } from "@/config/flags";
 type PageRobots = Metadata["robots"];
 
 /**
- * The robots meta of a page. Every page that sets `robots` must use this: in Next.js a page's `robots`
- * (even `undefined`) replaces the layout's, so the demo noindex would be lost.
- * Demo site → noindex everywhere; not indexable → noindex but links followed (docs/SPEC.md §14);
- * otherwise nothing (indexed).
+ * Il meta robots di una pagina. Ogni pagina che imposta `robots` deve usare questa funzione: in Next.js il `robots`
+ * della pagina (anche `undefined`) sostituisce quello del layout, e il noindex della demo andrebbe perso.
+ * Sito demo → noindex ovunque; non indicizzabile → noindex ma link seguiti (docs/SPEC.md §14);
+ * altrimenti niente (indicizzata).
  */
 export function getPageRobots(indexable: boolean, demo: boolean = flags.demo): PageRobots {
   if (demo) return { index: false, follow: false };

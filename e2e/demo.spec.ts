@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Runs only against the demo server (playwright.demo.config.ts, NEXT_PUBLIC_DEMO=1) with the seed of mapa-dev.
+// Gira solo contro il server demo (playwright.demo.config.ts, NEXT_PUBLIC_DEMO=1) con la seed di mapa-dev.
 
 const COLMENA = "/a/colectivo-vecinal-la-colmena-ficticio";
 const BANNER = "Demo · datos de ejemplo";
 
-// The sitemap is empty on the demo site: the event comes from the Colmena profile.
+// Nel sito demo la sitemap è vuota: l'evento si prende dalla scheda della Colmena.
 async function getSeedEventPath(page: Page): Promise<string> {
   await page.goto(COLMENA);
   const href = await page.getByRole("list", { name: "Próximos eventos" }).getByRole("link").first().getAttribute("href");
@@ -30,7 +30,7 @@ test("sul telefono il banner non fa scorrere le pagine mappa", async ({ page }) 
       innerHeight: window.innerHeight,
     }));
     expect(scrollHeight, path).toBeLessThanOrEqual(innerHeight);
-    // The map starts right under the banner, not behind it.
+    // La mappa comincia subito sotto il banner, non dietro.
     const banner = await page.getByRole("note").boundingBox();
     const main = await page.getByRole("main").boundingBox();
     expect(main?.y, path).toBeGreaterThanOrEqual((banner?.y ?? 0) + (banner?.height ?? 0) - 1);
