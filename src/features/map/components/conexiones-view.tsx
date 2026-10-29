@@ -18,7 +18,7 @@ export function ConexionesView({ places, filters }: { places: MapPlace[]; filter
   const notice = places.length === 0 ? <MapNotice message={t("conexiones.empty")} /> : null;
 
   return (
-    <main className="flex h-dvh flex-col">
+    <main className="flex h-app flex-col">
       <header className="flex flex-col gap-2 p-3">
         <div className="flex flex-wrap items-center gap-2">
           <MapSwitch current="conexiones" />

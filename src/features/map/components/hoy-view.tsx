@@ -36,7 +36,7 @@ export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
   const bounds = neighborhoods.find((neighborhood) => neighborhood.slug === filters.barrio)?.bounds ?? null;
 
   return (
-    <main className="flex h-dvh flex-col">
+    <main className="flex h-app flex-col">
       <header className="flex flex-col gap-2 p-3">
         <h1 className="sr-only">{t("hoy.heading")}</h1>
         <div className="flex flex-wrap items-center gap-2">

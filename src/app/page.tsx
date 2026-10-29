@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 // so the static shell (fallback) ships first (Cache Components).
 export default function HoyPage({ searchParams }: PageProps<"/">) {
   return (
-    <Suspense fallback={<p className="grid h-dvh place-items-center text-muted">{t("map.loading")}</p>}>
+    <Suspense fallback={<p className="grid h-app place-items-center text-muted">{t("map.loading")}</p>}>
       <HoyContent searchParams={searchParams} />
     </Suspense>
   );

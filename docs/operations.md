@@ -9,6 +9,11 @@ Nobody else — human or AI — holds production keys. The CI holds only what db
 - dev: Supabase mapa-dev ← Vercel Preview deployments and local development. Claude may touch it.
 - prod: Supabase mapa-prod ← Vercel Production. Migrated only by .github/workflows/db-deploy.yml.
 - Free plan: a Supabase project pauses after ~7 days without activity; resume it from the dashboard.
+- demo: Vercel project `mapa-demo` (same repository) with the **mapa-dev** variables in Production plus
+  `NEXT_PUBLIC_DEMO=1`. Only the exact value `1` counts. It turns on the banner "Demo · datos de ejemplo",
+  `noindex, nofollow` on every response (`X-Robots-Tag` header + meta) and an empty sitemap. robots.txt has no
+  `Disallow`, on purpose: crawlers must get in to read the noindex. The value is baked in at build: redeploy after
+  changing it. Never set it on the real project or on Preview. Test: `npm run e2e:demo` (stop `npm run dev` first).
 
 ## Production migrations (.github/workflows/db-deploy.yml)
 Runs on every merge to `main` that touches `supabase/migrations/`, or by hand: Actions → db-deploy → Run workflow.

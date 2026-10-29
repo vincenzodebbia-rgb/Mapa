@@ -8,6 +8,7 @@ import { formatMadridDate, formatMadridTime } from "@/lib/dates";
 import { parseSlug } from "@/lib/domain/slug";
 import { t } from "@/lib/i18n/t";
 import { buildBreadcrumbList } from "@/lib/seo/json-ld";
+import { getPageRobots } from "@/lib/seo/robots";
 import { getSiteUrl, toAbsoluteUrl } from "@/lib/site-url";
 import { getContentPageTexts } from "../../content-page-texts";
 import { STATIC_PARAMS_PLACEHOLDER } from "../../static-params";
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: PageProps<"/e/[slug]">): Prom
     description,
     alternates: { canonical: path },
     // Indexed until the end; then noindex until the redirect (docs/SPEC.md §14).
-    robots: indexable ? undefined : { index: false, follow: true },
+    robots: getPageRobots(indexable),
     // Text-only Open Graph: no event photos in v1 (docs/SPEC.md §5).
     openGraph: { title: event.title, description, url: path, type: "website" },
   };

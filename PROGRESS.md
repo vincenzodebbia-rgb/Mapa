@@ -3,10 +3,24 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: sessione 4 (pagine pubbliche) fatta sul ramo `feat/public-pages`; PR in bozza aperta dal fondatore.
-  Migrazioni applicate a mapa-dev dal fondatore (CLI 2.122.0). Dopo: punto demo privata.
+- Fase: sessione 4 unita in `main` (PR #13). Punto demo privata fatto sul ramo `chore/demo`. Dopo: progetto
+  Vercel `mapa-demo`, demo alle associazioni, poi sessione 5.
 
 ## Done
+### 2026-10-29 — Punto demo privata
+- Flag `demo` in `src/config/flags.ts`: acceso solo con `NEXT_PUBLIC_DEMO=1` (letto al build). Senza variabile il sito
+  vero non cambia (e2e: niente banner, niente `X-Robots-Tag`, robots e sitemap come prima).
+- Banner "Demo · datos de ejemplo" (`messages/es.json` → `demo.banner`) in cima a ogni pagina, sticky, colori dai token.
+  Le viste a tutto schermo usano `h-app`/`min-h-app` (`globals.css`, `--app-top-offset`): sul telefono le mappe Hoy e
+  Conexiones restano alte quanto lo schermo, senza scorrere.
+- noindex ovunque in demo: header `X-Robots-Tag: noindex, nofollow` (next.config) + meta dal layout. `/a`, `/e` e
+  `/barrio` usano `getPageRobots()` (`src/lib/seo/robots.ts`), perché in Next un `robots` della pagina, anche
+  `undefined`, sostituisce quello del layout. robots.txt in demo senza `Disallow` (i crawler devono leggere il noindex);
+  sitemap vuota senza leggere il database.
+- Seed controllata: tutti i nomi sono chiaramente inventati ("ficticio/a", "de Prueba", "Imaginaria"…). Nessuna modifica.
+- Test: 4 file unitari nuovi (flag, robots della pagina, robots.txt, sitemap, con e senza variabile); e2e
+  `npm run e2e:demo` (5 test, server su 3001 con la variabile) + 1 test nuovo senza variabile (13 in tutto).
+
 ### 2026-10-22/25 — Sessione 4: pagine pubbliche e Google
 - **Barrios ufficiali:** `scripts/import-neighborhoods.ts` scarica `Barrios.zip` dal geoportale del Comune (shapefile,
   EPSG:25830, CC BY 4.0) e GENERA la migrazione `neighborhoods_official` (131 barrios; PostGIS trasforma in WGS84,
@@ -101,7 +115,8 @@ Updated by the agent at the end of every session. Newest first.
   anteprima Vercel dal telefono (`/a/…`, `/e/…`, `/barrio/opanel`, `/sitemap.xml`).
 - `NEXT_PUBLIC_SITE_URL`: Vercel `mapa` Production = `https://<dominio>` quando ci sarà (fino ad allora vuota va bene,
   si usa il dominio `*.vercel.app`); Preview: non impostarla; `mapa-demo` Production: facoltativa; GitHub Actions: non serve.
-- Punto demo privata (BUILD_PLAN): banner "Demo · datos de ejemplo" dietro flag, progetto Vercel `mapa-demo`.
+- Fondatore: progetto Vercel `mapa-demo` con le variabili di mapa-dev in Production + `NEXT_PUBLIC_DEMO=1`
+  (`docs/operations.md`); prima di mostrarla rilanciare la seed se gli eventi singoli sono finiti; riga in `memberships`.
 - Sessione 7: caricamento del logo con `reencodeLogo` e `updateTag(ORGANIZATIONS_TAG)`; sessione 6: `updateTag(EVENTS_TAG)`.
 
 ## Domande aperte (sessione 5)
@@ -129,6 +144,8 @@ Updated by the agent at the end of every session. Newest first.
   the browser or server. npm's "fix" downgrades to Next 14: do not apply; wait for an upstream release.
 - `next build` and `next typegen` fail fast if `NEXT_PUBLIC_SUPABASE_URL` is missing: CI needs the Actions
   variables above before the PR can be green.
+- `npm run e2e:demo` avvia un secondo `next dev` (porta 3001): Next ne permette uno per cartella, quindi va lanciato
+  con `npm run dev` spento e dopo `npm run e2e`, non insieme.
 - Playwright: su questo PC c'è solo Chromium (`npx playwright install chromium`). Gli e2e non girano in CI (serve
   la seed di mapa-dev): da decidere prima del lancio.
 - Seed su mapa-dev: gli eventi singoli coprono i 30 giorni dopo l'ultimo caricamento (25/10); settimanali e mensile

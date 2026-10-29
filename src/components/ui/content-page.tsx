@@ -15,7 +15,7 @@ const linkClass = "underline-offset-2 hover:underline focus-visible:outline-2 fo
 /** Neutral shell of the text pages (profile, event, barrio, qué es, legal). Mobile first, tokens only. */
 export function ContentPage({ backLabel, footerLabel, footerLinks, children }: ContentPageProps) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 p-4">
+    <div className="mx-auto flex min-h-app w-full max-w-2xl flex-col gap-6 p-4">
       <header>
         <Link href="/" className={`text-sm text-muted ${linkClass}`}>
           {backLabel}

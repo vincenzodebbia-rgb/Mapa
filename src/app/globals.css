@@ -42,6 +42,13 @@
 html { color-scheme: dark; }
 body { background: var(--color-night); color: var(--color-ink); font-family: var(--font-sans); }
 
+/* Altezza di ciò che il layout radice mette sopra ogni pagina: il banner demo (src/config/flags.ts → demo), altrimenti 0.
+   Le viste a tutto schermo usano h-app / min-h-app invece di h-dvh, così nella demo la mappa sta ancora nel telefono. */
+:root { --app-top-offset: 0rem; }
+:root[data-demo] { --app-top-offset: 2rem; }
+@utility h-app { height: calc(100dvh - var(--app-top-offset)); }
+@utility min-h-app { min-height: calc(100dvh - var(--app-top-offset)); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
