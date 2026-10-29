@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
+import { flags } from "@/config/flags";
 import { getIndexableEventSlugs } from "@/features/events/data";
 import { getNeighborhoodSlugsWithContent } from "@/features/map/data";
 import { getIndexableOrganizationSlugs } from "@/features/organizations/data";
@@ -10,6 +11,8 @@ import { toAbsoluteUrl } from "@/lib/site-url";
 const STATIC_PATHS = ["/", "/conexiones", "/que-es", "/legal"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Demo site: nothing to index.
+  if (flags.demo) return [];
   // At request time, not at build: the build must not need the database. The reads themselves are cached.
   await connection();
   const [organizations, events, neighborhoods] = await Promise.all([

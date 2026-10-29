@@ -116,6 +116,15 @@ test("pagine inesistenti danno 404 vero, l'evento finito da 7 giorni un redirect
   expect(new URL(redirect.headers().location ?? "", "http://localhost").pathname).toBe(COLMENA);
 });
 
+test("senza NEXT_PUBLIC_DEMO: niente banner demo né header X-Robots-Tag", async ({ page, request }) => {
+  for (const path of ["/", COLMENA]) {
+    const response = await request.get(path);
+    expect(response.headers()["x-robots-tag"], path).toBeUndefined();
+    await page.goto(path);
+    await expect(page.getByText("Demo · datos de ejemplo"), path).toHaveCount(0);
+  }
+});
+
 test("robots.txt esclude le aree private e indica la sitemap", async ({ request }) => {
   const text = await (await request.get("/robots.txt")).text();
   for (const path of ["/panel", "/profesionales", "/entrar", "/registro", "/invitacion/"]) {

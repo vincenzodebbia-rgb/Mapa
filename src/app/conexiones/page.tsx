@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 // Threads are not shown here until the `threads` flag is on (after launch, docs/SPEC.md §6).
 export default function ConexionesPage({ searchParams }: PageProps<"/conexiones">) {
   return (
-    <Suspense fallback={<p className="grid h-dvh place-items-center text-muted">{t("map.loading")}</p>}>
+    <Suspense fallback={<p className="grid h-app place-items-center text-muted">{t("map.loading")}</p>}>
       <ConexionesContent searchParams={searchParams} />
     </Suspense>
   );

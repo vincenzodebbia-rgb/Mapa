@@ -12,6 +12,7 @@ import { getOrganizationsInNeighborhood } from "@/features/organizations/data";
 import { parseSlug } from "@/lib/domain/slug";
 import { t } from "@/lib/i18n/t";
 import { buildBreadcrumbList } from "@/lib/seo/json-ld";
+import { getPageRobots } from "@/lib/seo/robots";
 import { toAbsoluteUrl } from "@/lib/site-url";
 import { getContentPageTexts } from "../../content-page-texts";
 import { STATIC_PARAMS_PLACEHOLDER } from "../../static-params";
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: PageProps<"/barrio/[slug]">):
     description,
     alternates: { canonical: path },
     // noindex until it has an association, a venue or a future event (docs/SPEC.md §14).
-    robots: neighborhood.hasContent ? undefined : { index: false, follow: true },
+    robots: getPageRobots(neighborhood.hasContent),
     openGraph: { title, description, url: path, type: "website" },
   };
 }

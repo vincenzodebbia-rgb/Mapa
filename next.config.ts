@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { flags } from "./src/config/flags";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -40,6 +41,9 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // We never ask for these (docs/PRIVACY_AND_OWNERSHIP.md): forbid them for any embedded code too.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Demo site: every response (pages, images, sitemap) stays out of search engines. robots.txt lets crawlers in,
+  // so they can read it.
+  ...(flags.demo ? [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] : []),
 ];
 
 const nextConfig: NextConfig = {

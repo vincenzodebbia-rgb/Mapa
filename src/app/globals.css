@@ -42,6 +42,13 @@
 html { color-scheme: dark; }
 body { background: var(--color-night); color: var(--color-ink); font-family: var(--font-sans); }
 
+/* Height of what the root layout puts above every page: the demo banner (src/config/flags.ts → demo), 0 otherwise.
+   Full-screen views use h-app / min-h-app instead of h-dvh, so on the demo site the map still fits the phone. */
+:root { --app-top-offset: 0rem; }
+:root[data-demo] { --app-top-offset: 2rem; }
+@utility h-app { height: calc(100dvh - var(--app-top-offset)); }
+@utility min-h-app { min-height: calc(100dvh - var(--app-top-offset)); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

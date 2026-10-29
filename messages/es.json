@@ -224,5 +224,8 @@
     "copy": "Copiar enlace",
     "copied": "Enlace copiado.",
     "copyFailed": "No se ha podido copiar. Copia la dirección de la página."
+  },
+  "demo": {
+    "banner": "Demo · datos de ejemplo"
   }
 }

@@ -12,6 +12,7 @@
     "deps": "depcruise src --config .dependency-cruiser.cjs",
     "test": "vitest run",
     "e2e": "playwright test",
+    "e2e:demo": "playwright test -c playwright.demo.config.ts",
     "check": "npm run typecheck && npm run lint && npm run test",
     "db:types": "npx supabase gen types typescript --project-id jvthbqxmequhgliofnpb > src/lib/database.types.ts"
   },
