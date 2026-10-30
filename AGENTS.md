@@ -42,6 +42,8 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
   Everything else — `db push`, `db reset`, `link`, `login`, `projects`, `secrets`, `orgs`, `--project-ref`,
   `--db-url`, the Management API, `supabase/.temp` — is blocked by `.claude/hooks/protect-commands.sh`
   and `protect-files.sh`. When a push is needed, stop and ask the founder to run it.
+- The founder works in auto mode (no per-command approval): the protections are the hooks in `.claude/hooks/`,
+  the `deny`/`ask` rules in `.claude/settings.json` and CI. Never work around them; if one blocks you, stop and ask.
 
 ## Architecture: blocks
 - `src/app/` = routing and composition only. A page may call several blocks. No SQL, no Supabase calls.
