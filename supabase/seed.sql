@@ -109,11 +109,15 @@ insert into public.organization_verifications (organization_id, nif) values
   ('5eed0000-0000-4000-8000-0000000000b2', 'B99100068'),
   ('5eed0000-0000-4000-8000-0000000000b3', 'B99100083');
 
-insert into public.organization_answers (organization_id, what_for_whom, how_sustained) values
-  ('5eed0000-0000-4000-8000-0000000000a1', 'Actividades para vecinos de todas las edades.', null),
-  ('5eed0000-0000-4000-8000-0000000000b1', 'Presentaciones de libros para el barrio.', 'Venta de libros.'),
-  ('5eed0000-0000-4000-8000-0000000000b2', 'Conciertos y sesiones de baile.', 'Entradas y barra.'),
-  ('5eed0000-0000-4000-8000-0000000000b3', 'Ensayos y estrenos de grupos pequeños.', 'Alquiler por horas.');
+-- Il club segnalato: avviso per attività dubbia (sessione 5, flag_reason).
+update public.organizations set flag_reason = 'doubtful_activity' where id = '5eed0000-0000-4000-8000-0000000000b2';
+
+-- Associazioni: how_sustained ("¿Cómo se sostiene el proyecto?"); espacios: what_they_offer ("¿Qué ofrecéis a nivel cultural?").
+insert into public.organization_answers (organization_id, what_for_whom, how_sustained, what_they_offer) values
+  ('5eed0000-0000-4000-8000-0000000000a1', 'Actividades para vecinos de todas las edades.', 'Cuotas de los socios.', null),
+  ('5eed0000-0000-4000-8000-0000000000b1', 'Presentaciones de libros para el barrio.', null, 'Presentaciones y clubes de lectura.'),
+  ('5eed0000-0000-4000-8000-0000000000b2', 'Conciertos y sesiones de baile.', null, 'Conciertos de grupos pequeños.'),
+  ('5eed0000-0000-4000-8000-0000000000b3', 'Ensayos y estrenos de grupos pequeños.', null, 'Sala para ensayar y estrenar.');
 
 -- La Colmena ha invitato il Ateneo.
 insert into public.invites (organization_id, used_at, used_by_org) values

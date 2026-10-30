@@ -372,18 +372,21 @@ export type Database = {
           organization_id: string
           updated_at: string
           what_for_whom: string | null
+          what_they_offer: string | null
         }
         Insert: {
           how_sustained?: string | null
           organization_id: string
           updated_at?: string
           what_for_whom?: string | null
+          what_they_offer?: string | null
         }
         Update: {
           how_sustained?: string | null
           organization_id?: string
           updated_at?: string
           what_for_whom?: string | null
+          what_they_offer?: string | null
         }
         Relationships: [
           {
@@ -428,7 +431,9 @@ export type Database = {
           contact_phone: string | null
           contact_url: string | null
           created_at: string
+          entity_type: Database["public"]["Enums"]["entity_type"]
           entry_method: Database["public"]["Enums"]["entry_method"]
+          flag_reason: Database["public"]["Enums"]["flag_reason"] | null
           flagged_for_review: boolean
           id: string
           indexable: boolean
@@ -456,7 +461,9 @@ export type Database = {
           contact_phone?: string | null
           contact_url?: string | null
           created_at?: string
+          entity_type: Database["public"]["Enums"]["entity_type"]
           entry_method: Database["public"]["Enums"]["entry_method"]
+          flag_reason?: Database["public"]["Enums"]["flag_reason"] | null
           flagged_for_review?: boolean
           id?: string
           indexable?: boolean
@@ -484,7 +491,9 @@ export type Database = {
           contact_phone?: string | null
           contact_url?: string | null
           created_at?: string
+          entity_type?: Database["public"]["Enums"]["entity_type"]
           entry_method?: Database["public"]["Enums"]["entry_method"]
+          flag_reason?: Database["public"]["Enums"]["flag_reason"] | null
           flagged_for_review?: boolean
           id?: string
           indexable?: boolean
@@ -766,7 +775,9 @@ export type Database = {
         Returns: {
           contact_url: string
           created_at: string
+          entity_type: Database["public"]["Enums"]["entity_type"]
           entry_method: Database["public"]["Enums"]["entry_method"]
+          flag_reason: Database["public"]["Enums"]["flag_reason"]
           flagged_for_review: boolean
           how_sustained: string
           id: string
@@ -778,6 +789,7 @@ export type Database = {
           status: Database["public"]["Enums"]["org_status"]
           venue_activity: Database["public"]["Enums"]["venue_activity"]
           what_for_whom: string
+          what_they_offer: string
         }[]
       }
       check_rate_limit: {
@@ -787,10 +799,16 @@ export type Database = {
       create_professional: {
         Args: {
           p_age_confirmed: boolean
+          p_contact_email?: string
+          p_contact_phone?: string
+          p_contact_url?: string
+          p_indexable?: boolean
           p_invite_token?: string
           p_name: string
+          p_neighborhood_slug?: string
           p_one_liner: string
           p_privacy_version: string
+          p_seeking_offering?: string
           p_terms_version: string
         }
         Returns: string
@@ -843,24 +861,42 @@ export type Database = {
       }
       register_entity: {
         Args: {
+          p_address?: string
           p_age_confirmed: boolean
+          p_contact_email?: string
+          p_contact_phone?: string
+          p_contact_url?: string
+          p_entity_type: Database["public"]["Enums"]["entity_type"]
           p_how_sustained?: string
           p_invite_token?: string
-          p_kind: Database["public"]["Enums"]["org_kind"]
+          p_lat?: number
+          p_lng?: number
           p_name: string
           p_nif: string
+          p_one_liner?: string
           p_privacy_version: string
           p_terms_version: string
+          p_usual_category?: Database["public"]["Enums"]["event_category"]
           p_venue_activity?: Database["public"]["Enums"]["venue_activity"]
           p_what_for_whom?: string
+          p_what_they_offer?: string
+          p_when_to_visit?: string
         }
         Returns: {
+          flag_reason: Database["public"]["Enums"]["flag_reason"]
           flagged: boolean
           slug: string
         }[]
       }
     }
     Enums: {
+      entity_type:
+        | "association"
+        | "foundation"
+        | "cooperative"
+        | "public_entity"
+        | "commercial"
+        | "informal"
       entry_method:
         | "municipal_registry"
         | "invite"
@@ -874,6 +910,11 @@ export type Database = {
         | "encuentros"
         | "comunidad"
         | "otros"
+      flag_reason:
+        | "not_in_registry"
+        | "public_entity"
+        | "no_nif"
+        | "doubtful_activity"
       moderation_action: "suspend" | "reactivate" | "delete"
       org_kind: "association" | "venue" | "professional"
       org_status: "active" | "suspended"
@@ -1021,6 +1062,14 @@ export const Constants = {
   },
   public: {
     Enums: {
+      entity_type: [
+        "association",
+        "foundation",
+        "cooperative",
+        "public_entity",
+        "commercial",
+        "informal",
+      ],
       entry_method: [
         "municipal_registry",
         "invite",
@@ -1035,6 +1084,12 @@ export const Constants = {
         "encuentros",
         "comunidad",
         "otros",
+      ],
+      flag_reason: [
+        "not_in_registry",
+        "public_entity",
+        "no_nif",
+        "doubtful_activity",
       ],
       moderation_action: ["suspend", "reactivate", "delete"],
       org_kind: ["association", "venue", "professional"],

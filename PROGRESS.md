@@ -3,10 +3,40 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: sessione 4 unita in `main` (PR #13). Punto demo privata fatto sul ramo `chore/demo`. Dopo: progetto
-  Vercel `mapa-demo`, demo alle associazioni, poi sessione 5.
+- Fase: **sessione 5 a metà** sul ramo `feat/onboarding` (pushato, nessuna PR ancora). Fatti: documenti, protezioni,
+  migrazioni (applicate a mapa-dev dal fondatore il 30/10), tipi, test pgTAP. Manca tutto il codice: `/entrar`, callback,
+  `/registro`, `/revision`, `/panel` provvisorio (vedi "Next").
 
 ## Done
+### 2026-10-30 — Sessione 5 (prima parte): iscrizione, schema
+- Decisioni del 29 ottobre applicate a SPEC, DATA_MODEL, PRIVACY, glossary, BUILD_PLAN; documento in
+  `docs/decisioni/2026-10-29-iscrizione.md` con le scelte del fondatore sul piano (A–F).
+- **Mappatura** "¿Qué sois?" → `entity_type` → `kind` (un solo posto: `private.kind_for_entity_type`): asociación,
+  fundación, cooperativa, entidad pública → `association`; actividad comercial → `venue`; gente que hace cosas → `professional`.
+- Migrazione `20261030121852_entity_type`: enum `entity_type` e `flag_reason`; `organizations.entity_type` (privata, non
+  modificabile) e `flag_reason` (privata); `organization_answers.what_they_offer` (`how_sustained` resta per le associazioni);
+  NIF unico tranne P/Q/S (indice parziale); helper `is_personal_nif` e `nif_allowed_for` (G / G / F / P-Q-S / A-B-E-J);
+  trigger: barrio scelto per i professionisti (`grant update (neighborhood_id)`, per gli altri si ricalcola sempre dal punto),
+  motivo `doubtful_activity` quando l'avviso si accende cambiando attività. Righe esistenti riempite da `kind`.
+- Migrazione `20261030121855_registration_v2`: `register_entity` nuova firma (tipo, NIF facoltativo solo per `commercial`,
+  scheda completa, indirizzo + lng/lat obbligatori per `commercial`, punto solo dentro la Comunidad de Madrid →
+  `invalid_location`), restituisce `(slug, flagged, flag_reason)`; avviso: fuori elenco `not_in_registry`, ente pubblico
+  sempre `public_entity`, commerciale senza NIF `no_nif`, attività dubbia `doubtful_activity`, invito mai.
+  `create_professional` con barrio (slug), contatti, Busco/Ofrezco, `indexable`. `admin_review_list` con tipo,
+  `what_they_offer`, motivo. `mark_reviewed` azzera anche il motivo.
+- pgTAP: 07 adattato (DNI/NIE → `personal_nif`; associazione fuori elenco ora segnalata), nuovo 16 (43 asserzioni).
+  Prova a secco prima del push, ogni file in transazione annullata: **226/226 verdi**, mapa-dev pulito dopo.
+- Dopo il push: tipi rigenerati; su mapa-dev 7 `association`, 3 `commercial` (1 segnalata), 2 `informal`.
+  Seed aggiornata (risposte degli espacios in `what_they_offer`, motivo del club).
+- Protezioni per la modalità automatica (commit separato): `protect-commands.sh` blocca ogni comando che nomina un file
+  `.env*` (tranne `.env.example`) o carica dotenv; `settings.json` con allow/ask/deny nuovi; riga in AGENTS.md.
+  Nota pratica: il blocco guarda il testo, quindi blocca anche messaggi di commit che nominano quei file.
+- Prova a secco senza Docker (da rifare così): per ogni file di `supabase/tests/`, un file con `begin;` + migrazioni nuove +
+  corpo del test con ogni `select <asserzione>` a inizio riga riscritto in `insert into pg_temp.__r (line) select …`
+  (tabella temporanea con `grant all … to public`, perché i test cambiano ruolo), poi un blocco `do` che fa
+  `raise exception` con totale e righe non `ok`. Lanciato con `npx supabase db query --linked -f <file>`.
+
+## Done (prima)
 ### 2026-10-29 — Punto demo privata
 - Flag `demo` in `src/config/flags.ts`: acceso solo con `NEXT_PUBLIC_DEMO=1` (letto al build). Senza variabile il sito
   vero non cambia (e2e: niente banner, niente `X-Robots-Tag`, robots e sitemap come prima).
@@ -111,6 +141,21 @@ Updated by the agent at the end of every session. Newest first.
 - ADR 0007 records the CSP `'unsafe-inline'` decision.
 
 ## Next
+- **Sessione 5, seconda parte (ramo `feat/onboarding`)** — il piano approvato il 29-30/10:
+  - `auth`: `/entrar` (email + Turnstile + rate limit per IP con hash HMAC giornaliero dalla chiave secret),
+    `src/app/auth/confirm/route.ts` (sia `code` sia `token_hash`), logout, utente con `getClaims()`.
+  - `onboarding`: `/registro` (link magico se anonimo; con organizzazione → `/panel`); "¿Qué sois?" e campi per tipo;
+    "¿Sois *nombre*?" (lookup con rate limit 10/giorno); NIF validato con zod prima del database (mai DNI/NIE inviati);
+    caselle regole + condiciones + privacidad + 18 anni (versioni in `src/lib/legal-versions.ts`); Turnstile.
+  - `src/lib/turnstile.ts`, `src/lib/rate-limit.ts`, `src/lib/domain/geocode.ts` (Nominatim, cache, 1 richiesta/s:
+    anticipato dalla sessione 6 per l'indirizzo obbligatorio dei commercial); pin trascinabile nel blocco `map`,
+    passato come slot dalla pagina.
+  - `/revision` (blocco `account`): solo `is_admin()`, sola lettura, organizzazioni segnalate da `admin_review_list`
+    con motivo; mai NIF né email. `noindex`.
+  - `/panel` provvisorio (nome + "Salir"). Script `scripts/import-municipal-associations.ts` (6 colonne, CIF doppi uniti,
+    categoria "Comerciantes…" saltata). Test Vitest + Playwright (utente creato con `generateLink` dell'admin, poi cancellato).
+  - Fondatore: Supabase → Auth → URL Configuration con `http://localhost:3000/**` e il dominio Vercel tra i Redirect URL;
+    chiavi Turnstile vere su Vercel.
 - Fondatore: PR di `feat/public-pages` con CI verde (anche `db-test` con i test 14-15), `@architecture-reviewer`,
   anteprima Vercel dal telefono (`/a/…`, `/e/…`, `/barrio/opanel`, `/sitemap.xml`).
 - `NEXT_PUBLIC_SITE_URL`: Vercel `mapa` Production = `https://<dominio>` quando ci sarà (fino ad allora vuota va bene,

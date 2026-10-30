@@ -1,5 +1,7 @@
 -- Test 6 e 14: register_entity decide entry_method e avviso, rifiuta NIF usati o personali,
--- e chiede attività e risposte agli espacios.
+-- e chiede attività, risposte e indirizzo agli espacios (entity_type 'commercial').
+-- Sessione 5: i documenti personali hanno il codice proprio personal_nif; l'associazione fuori elenco
+-- senza invito ora è segnalata (decisione del 29 ottobre). Gli altri tipi: 16_entity_types.sql.
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
@@ -57,25 +59,26 @@ select throws_ok(
 );
 select throws_ok(
   $$ select public.register_entity('association', '12345678Z', 'Persona', 't1', 'p1', true) $$,
-  'P0001', 'invalid_nif', 'un DNI viene rifiutato'
+  'P0001', 'personal_nif', 'un DNI viene rifiutato'
 );
 select throws_ok(
   $$ select public.register_entity('association', 'X1234567L', 'Persona', 't1', 'p1', true) $$,
-  'P0001', 'invalid_nif', 'un NIE viene rifiutato'
+  'P0001', 'personal_nif', 'un NIE viene rifiutato'
 );
 select throws_ok(
   $$ select public.register_entity('association', 'G97000029', 'Sin edad', 't1', 'p1', false) $$,
   'P0001', 'terms_required', 'senza dichiarazione di età fallisce'
 );
 select throws_ok(
-  $$ select public.register_entity('professional', 'G97000029', 'Pro', 't1', 'p1', true) $$,
+  $$ select public.register_entity('informal', 'G97000029', 'Pro', 't1', 'p1', true) $$,
   'P0001', 'invalid_kind', 'i professionisti passano da create_professional'
 );
--- u2: associazione fuori elenco, senza invito (DA DECIDERE in sessione 5: per ora non segnalata).
+-- u2: associazione fuori elenco, senza invito: entra con avviso (decisione del 29 ottobre).
 select results_eq(
-  $$ select flagged from public.register_entity('association', 'G97000029', 'Fuera del elenco', 't1', 'p1', true) $$,
-  $$ values (false) $$,
-  'associazione fuori elenco senza invito: per ora non segnalata'
+  $$ select flagged, flag_reason::text
+     from public.register_entity('association', 'G97000029', 'Fuera del elenco', 't1', 'p1', true) $$,
+  $$ values (true, 'not_in_registry') $$,
+  'associazione fuori elenco senza invito: segnalata con not_in_registry'
 );
 reset role;
 select is(
@@ -88,8 +91,10 @@ select is(
 set local request.jwt.claims to '{"sub":"00000003-0000-4000-8000-000000000001","role":"authenticated"}';
 set local role authenticated;
 select results_eq(
-  $$ select flagged from public.register_entity('venue', 'B97000037', 'Discoteca Invitada', 't1', 'p1', true,
-       'token-de-prueba-valido', 'discoteca_club', 'Conciertos', 'Entradas') $$,
+  $$ select flagged from public.register_entity('commercial', 'B97000037', 'Discoteca Invitada', 't1', 'p1', true,
+       p_invite_token => 'token-de-prueba-valido', p_venue_activity => 'discoteca_club',
+       p_what_for_whom => 'Conciertos', p_what_they_offer => 'Conciertos de grupos del barrio',
+       p_address => 'Calle de Prueba 1', p_lng => -3.73, p_lat => 40.39) $$,
   $$ values (false) $$,
   'discoteca con invito: non segnalata'
 );
@@ -107,13 +112,16 @@ select isnt(
 set local request.jwt.claims to '{"sub":"00000004-0000-4000-8000-000000000001","role":"authenticated"}';
 set local role authenticated;
 select throws_ok(
-  $$ select public.register_entity('venue', 'B97000045', 'Discoteca', 't1', 'p1', true,
-       'token-de-prueba-valido', 'discoteca_club', 'Conciertos', 'Entradas') $$,
+  $$ select public.register_entity('commercial', 'B97000045', 'Discoteca', 't1', 'p1', true,
+       p_invite_token => 'token-de-prueba-valido', p_venue_activity => 'discoteca_club',
+       p_what_for_whom => 'Conciertos', p_what_they_offer => 'Conciertos',
+       p_address => 'Calle de Prueba 2', p_lng => -3.73, p_lat => 40.39) $$,
   'P0001', 'invalid_invite', 'un invito già usato non vale'
 );
 select results_eq(
-  $$ select flagged from public.register_entity('venue', 'B97000045', 'Discoteca', 't1', 'p1', true,
-       null, 'discoteca_club', 'Conciertos', 'Entradas') $$,
+  $$ select flagged from public.register_entity('commercial', 'B97000045', 'Discoteca', 't1', 'p1', true,
+       p_venue_activity => 'discoteca_club', p_what_for_whom => 'Conciertos', p_what_they_offer => 'Conciertos',
+       p_address => 'Calle de Prueba 2', p_lng => -3.73, p_lat => 40.39) $$,
   $$ values (true) $$,
   'discoteca senza invito: segnalata'
 );
@@ -125,13 +133,20 @@ select results_eq(
   $$ values ('self_declared', true) $$,
   'discoteca senza invito: self_declared e flagged_for_review'
 );
+select is(
+  (select o.flag_reason::text from public.organizations o join public.memberships m on m.organization_id = o.id
+   where m.user_id = '00000004-0000-4000-8000-000000000001'),
+  'doubtful_activity', 'discoteca senza invito: motivo doubtful_activity'
+);
 
 -- u5: libreria senza invito ---------------------------------------------------
 set local request.jwt.claims to '{"sub":"00000005-0000-4000-8000-000000000001","role":"authenticated"}';
 set local role authenticated;
 select results_eq(
-  $$ select flagged from public.register_entity('venue', 'B97000052', 'Librería', 't1', 'p1', true,
-       null, 'libreria', 'Libros para el barrio', 'Venta de libros') $$,
+  $$ select flagged from public.register_entity('commercial', 'B97000052', 'Librería', 't1', 'p1', true,
+       p_venue_activity => 'libreria', p_what_for_whom => 'Libros para el barrio',
+       p_what_they_offer => 'Presentaciones de libros',
+       p_address => 'Calle de Prueba 3', p_lng => -3.73, p_lat => 40.39) $$,
   $$ values (false) $$,
   'libreria senza invito: non segnalata'
 );
@@ -141,12 +156,12 @@ reset role;
 set local request.jwt.claims to '{"sub":"00000006-0000-4000-8000-000000000001","role":"authenticated"}';
 set local role authenticated;
 select throws_ok(
-  $$ select public.register_entity('venue', 'B97000060', 'Sin actividad', 't1', 'p1', true) $$,
+  $$ select public.register_entity('commercial', 'B97000060', 'Sin actividad', 't1', 'p1', true) $$,
   'P0001', 'venue_activity_required', 'venue senza attività: venue_activity_required'
 );
 select throws_ok(
-  $$ select public.register_entity('venue', 'B97000060', 'Sin respuestas', 't1', 'p1', true,
-       null, 'galeria', '  ', null) $$,
+  $$ select public.register_entity('commercial', 'B97000060', 'Sin respuestas', 't1', 'p1', true,
+       p_venue_activity => 'galeria', p_what_for_whom => '  ') $$,
   'P0001', 'answers_required', 'venue senza risposte: answers_required'
 );
 
