@@ -119,12 +119,16 @@ Updated by the agent at the end of every session. Newest first.
   (`docs/operations.md`); prima di mostrarla rilanciare la seed se gli eventi singoli sono finiti; riga in `memberships`.
 - Sessione 7: caricamento del logo con `reencodeLogo` e `updateTag(ORGANIZATIONS_TAG)`; sessione 6: `updateTag(EVENTS_TAG)`.
 
-## Domande aperte (sessione 5)
-- **Espacio gestito da un autonomo con solo NIF personale** (DNI/NIE): oggi non può iscriversi, perché il NIF accetta solo il
-  formato degli enti. Come entra? (es. solo con invito, o come `professional`, o con un altro documento non personale).
-- Associazione fuori dall'elenco del Comune e senza invito: entra con o senza avviso al fondatore
-  (`register_entity`, commento `DA DECIDERE (sessione 5)`; nessuna migrazione serve oltre a quella riga).
-- Categoria del Comune "Comerciantes, empresarios, profesionales y autónomos": come trattarla all'import.
+## Bloccante per il pilota
+- **Servizio email** (da decidere con il dominio, prima del pilota): oggi non si invia nessuna email nostra. L'email standard di
+  Supabase manda i link magici **solo agli indirizzi del team del progetto** (e circa 2 all'ora): utenti veri non possono entrare
+  finché non c'è un SMTP nostro. Lo stesso servizio servirà per gli avvisi al fondatore (`FOUNDER_NOTIFICATION_EMAIL`, variabile
+  server) e per le motivazioni DSA di `moderate_organization`.
+
+## Domande della sessione 5 — risolte il 29-30 ottobre (`docs/decisioni/2026-10-29-iscrizione.md`)
+- Autonomo con solo NIF personale: artisti → "Gente que hace cosas"; bar o libreria → "Actividad comercial" senza NIF (con avviso).
+- Associazione fuori elenco e senza invito: entra subito, con avviso (`flag_reason = 'not_in_registry'`).
+- Categoria "Comerciantes, empresarios, profesionales y autónomos": non si importa, quindi risulta fuori elenco.
 
 ## Regole per la sessione 5 (decise dal fondatore)
 - L'email restituita da `moderate_organization` serve **solo** all'action per inviare la motivazione all'organizzazione:

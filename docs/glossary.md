@@ -8,6 +8,9 @@
 | modo di ingresso | — | `entry_method` |
 | sospensione | suspensión | `organizations.status = 'suspended'` |
 | professionista / collettivo / chi ha progetti | Gente que hace cosas | organization with `kind = 'professional'` |
+| forma giuridica (risposta a "¿Qué sois?") | Asociación · Fundación · Cooperativa · Entidad pública · Actividad comercial · Gente que hace cosas | `entity_type`: `association`, `foundation`, `cooperative`, `public_entity`, `commercial`, `informal` |
+| attività commerciale (bar, libreria, galleria…) | actividad comercial | `entity_type = 'commercial'` → `kind = 'venue'` |
+| avviso al fondatore | — | `flagged_for_review` + `flag_reason` |
 | organizzazione (entrambe) | entidad | `organization` |
 | scheda | ficha | `profile` (route `/a/[slug]`) |
 | evento | evento | `event` |

@@ -2,7 +2,8 @@
 
 Fonte di verità del database. Lo schema si crea SOLO con le migrazioni in `supabase/migrations/`.
 Questo documento dice cosa deve esistere; le migrazioni dicono come. Se non sono d'accordo, fermarsi e chiedere.
-Decisioni del fondatore sull'iscrizione: `docs/decisioni/2026-10-iscrizione.md` (già riportate qui).
+Decisioni del fondatore sull'iscrizione: `docs/decisioni/2026-10-iscrizione.md` e `docs/decisioni/2026-10-29-iscrizione.md`
+(già riportate qui; la seconda prevale sulla prima).
 
 Convenzioni: `snake_case`; `id uuid primary key default gen_random_uuid()`; `created_at`/`updated_at timestamptz default now()`
 (`updated_at` mantenuto da un trigger); tutti i tempi `timestamptz`; ogni funzione `security definer` imposta `search_path = ''`
@@ -13,6 +14,10 @@ Le tabelle in `public` partono con `revoke all from anon, authenticated` e ricev
 
 ## Enum
 - `org_kind`: `association`, `venue`, `professional`
+- `entity_type` (sessione 5, risposta a "¿Qué sois?"): `association`, `foundation`, `cooperative`, `public_entity`, `commercial`, `informal`.
+  Mappatura verso `org_kind` in un solo posto, `private.kind_for_entity_type()`: i primi quattro → `association`,
+  `commercial` → `venue`, `informal` → `professional`.
+- `flag_reason` (sessione 5, motivo dell'avviso al fondatore): `not_in_registry`, `public_entity`, `no_nif`, `doubtful_activity`
 - `entry_method`: `municipal_registry`, `invite`, `self_declared`, `email_only`
 - `venue_activity`: tranquille `libreria`, `sala_pequena`, `centro_cultural`, `galeria`, `taller_estudio`, `cafe_cultural`;
   dubbie `discoteca_club`, `bar_nocturno`, `otro`. La lista "dubbia" vive **solo** in `is_doubtful_activity()`: TypeScript non la ripete.
@@ -47,39 +52,52 @@ Le tabelle in `public` partono con `revoke all from anon, authenticated` e ricev
 
 ### Chi entra e come
 
-| Chi | Come entra | Revisione | `entry_method` |
-|---|---|---|---|
-| Associazione nell'elenco del Comune (NIF in `municipal_associations`) | subito | nessuna | `municipal_registry` |
-| Chiunque con un invito valido di un'associazione attiva, di qualunque tipo | subito | nessuna | `invite` |
-| Espacio (`venue`) con attività tranquilla | email + NIF + attività + domande | nessuna | `self_declared` |
-| Espacio (`venue`) con attività dubbia, senza invito | subito | `flagged_for_review = true` | `self_declared` |
-| Professionista o collettivo | solo email | nessuna | `email_only` |
-| Associazione fuori elenco e senza invito | subito; **DA DECIDERE (sessione 5)** se con avviso | per ora nessuna | `self_declared` |
+Tutti entrano subito. L'avviso al fondatore è `flagged_for_review = true` con il suo `flag_reason`.
 
-Lo schema permette entrambe le scelte dell'ultimo caso: cambia solo se `register_entity()` mette `flagged_for_review = true`.
+| Chi (`entity_type`) | NIF | `entry_method` | Avviso (`flag_reason`) |
+|---|---|---|---|
+| Chiunque con un invito valido di un'associazione attiva, di qualunque tipo | come il suo tipo | `invite` | mai |
+| `association`, `foundation`, `cooperative` con NIF nell'elenco del Comune | obbligatorio (G, G, F) | `municipal_registry` (`verified = true`) | no |
+| `association`, `foundation`, `cooperative` fuori elenco | obbligatorio (G, G, F) | `self_declared` | `not_in_registry` |
+| `public_entity` | obbligatorio (P, Q, S), riusabile | `self_declared` | **sempre** `public_entity` |
+| `commercial` senza NIF | — | `self_declared` | `no_nif` |
+| `commercial` con NIF e attività dubbia | facoltativo (A, B, E, J) | `self_declared` | `doubtful_activity` |
+| `commercial` con NIF e attività tranquilla | facoltativo (A, B, E, J) | `self_declared` | no |
+| `informal` ("Gente que hace cosas") | nessuno | `email_only` | no |
+
+Le associazioni della categoria del Comune "Comerciantes, empresarios, profesionales y autónomos" non si importano: risultano fuori elenco.
 
 ### municipal_associations (privata)
 `cif text primary key` (normalizzato: maiuscolo, senza spazi né simboli; formato da ente), `name text not null`, `registry_number text`,
 `district text`, `neighborhood text`, `category text`, `imported_at timestamptz default now()`.
 - RLS attiva, **nessuna policy**. Si legge solo tramite `lookup_municipal_association()` e `register_entity()`.
 - Si importano **solo** `CIF`, `Razon_Social`, `Num_Inscripcion`, `Distrito`, `Barrio`, `Categoria`. **Mai** telefono, email,
-  indirizzo, numero soci. Righe con lo stesso CIF unite in una. Si importa anche la categoria "Comerciantes, empresarios,
-  profesionales y autónomos" (come trattarla: sessione 5). Script `scripts/import-municipal-associations.ts` (sessione 5);
-  nella seed solo 5 righe fittizie.
+  indirizzo, numero soci. Righe con lo stesso CIF unite in una. La categoria "Comerciantes, empresarios, profesionales y
+  autónomos" **non si importa** (decisione del 29 ottobre: non va riconosciuta dal NIF, quindi tenerla sarebbe un dato in più
+  senza scopo). Script `scripts/import-municipal-associations.ts` (sessione 5); nella seed solo 5 righe fittizie.
 - Fonte: "Entidades de participación ciudadana. Asociaciones (Sección 1ª)", CSV `;`, UTF-8 con BOM, CC BY 4.0 (attribuzione in `/legal`).
 
 ### organization_verifications (privata)
-`organization_id uuid primary key references organizations on delete cascade`, `nif text unique not null`, `verified_at timestamptz default now()`.
-- RLS attiva, nessuna policy. Un NIF = un solo account.
-- Il NIF è obbligatorio per `association` e `venue`, qualunque sia il modo di ingresso (anche con invito).
+`organization_id uuid primary key references organizations on delete cascade`, `nif text not null`, `verified_at timestamptz default now()`.
+- RLS attiva, nessuna policy. Un NIF = un solo account (indice unico parziale), **tranne** i NIF di enti pubblici (P, Q, S):
+  molti centri culturali e biblioteche municipali usano il NIF del Comune.
+- Il NIF è obbligatorio per tutti i tipi con `kind = 'association'` (anche con invito); facoltativo per `commercial`; i professionisti
+  non lo danno. Senza NIF non c'è una riga qui.
 - Il NIF si normalizza con `private.normalize_nif()` (maiuscolo, solo lettere e cifre) e accetta **solo il formato degli enti**:
-  `^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$`. Mai DNI o NIE (cifra iniziale o X/Y/Z): niente documenti personali.
+  `^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$`. Mai DNI o NIE (cifra iniziale o X/Y/Z) né K/L/M: niente documenti personali
+  (`private.is_personal_nif()` → errore `personal_nif`).
+- Lettera iniziale per tipo (`private.nif_allowed_for(entity_type, nif)`): `association` e `foundation` G; `cooperative` F;
+  `public_entity` P, Q o S; `commercial` A, B, E o J.
 
 ### organization_answers (privata)
-`organization_id uuid primary key references organizations on delete cascade`, `what_for_whom text (≤500)`, `how_sustained text (≤500)`, `updated_at`.
-- Domande: "¿Qué hacéis y para quién?" (`what_for_whom`), "¿Cómo se sostiene el proyecto?" (`how_sustained`).
-  Il tipo di attività è `organizations.venue_activity`; "Web o red social" è `organizations.contact_url`.
-- **Obbligatorie per i `venue`, facoltative per le `association`**; i professionisti non le compilano.
+`organization_id uuid primary key references organizations on delete cascade`, `what_for_whom text (≤500)`, `how_sustained text (≤500)`,
+`what_they_offer text (≤500)` (sessione 5), `updated_at`.
+- Associazioni (tutti i tipi con `kind = 'association'`), facoltative: "¿Qué hacéis y para quién?" (`what_for_whom`),
+  "¿Cómo se sostiene el proyecto?" (`how_sustained`).
+- `commercial` (`venue`), obbligatorie: "¿Quiénes sois?" (`what_for_whom`), "¿Qué ofrecéis a nivel cultural?" (`what_they_offer`).
+  `how_sustained` resta per le associazioni: niente expand/contract.
+  Il tipo di attività è `organizations.venue_activity`; "Web o red social" (e il link pubblico facoltativo di chi non ha NIF) è `organizations.contact_url`.
+- I professionisti non le compilano.
 - RLS: `select`/`update` solo dai membri. Inserita da `register_entity()`. Gli admin la leggono solo tramite `admin_review_list()`.
 
 ### terms_acceptances (privata dell'utente)
@@ -94,22 +112,30 @@ RLS: `select` delle proprie righe. Inserita solo da `register_entity()` / `creat
 `usual_category event_category`, `seeking_offering text (≤200)` (professionisti), `indexable boolean default true`
 (professionisti: "Mostrar mi perfil en Google"; associazioni e espacios sempre true), `verified boolean default false`,
 `entry_method entry_method not null`, `venue_activity venue_activity`, `status org_status not null default 'active'`,
+`entity_type entity_type not null` (sessione 5; privata), `flag_reason flag_reason` (sessione 5; privata),
 `flagged_for_review boolean not null default false`, `last_reviewed_at timestamptz`,
 `last_activity_at timestamptz default now()`, `created_at`, `updated_at`,
 `logo_path text` (sessione 4: null oppure esattamente `{id}/logo.webp`, check), `story text (≤1000)` ("Nuestra historia", solo testo).
 - Vincoli: `kind = 'professional'` ⇒ `location is null` (i professionisti non hanno un punto proprio);
-  `venue_activity` obbligatoria se `kind = 'venue'`, nulla altrimenti.
+  `venue_activity` obbligatoria se `kind = 'venue'`, nulla altrimenti;
+  `kind = private.kind_for_entity_type(entity_type)`; `flag_reason` non nullo ⇒ `flagged_for_review`.
+- `entity_type` è un dato interno: non è nella `grant select` pubblica né nella `grant update`, e non compare mai come etichetta
+  sulla mappa. Le funzioni lo passano sempre; un `insert` diretto senza (seed, test) riceve dal trigger il tipo di base del
+  `kind` (`association`, `commercial`, `informal`).
 - `verified = true` solo per `entry_method = 'municipal_registry'`.
 - In tutta la UI `venue` si chiama "Espacio" (sezione "Espacios"). Conflitto di nome con la tabella `spaces`: il nome delle due sezioni
   si decide nella sessione 9, lo schema non cambia.
 - RLS `select` (`anon`, `authenticated`): `status = 'active'` **oppure** l'utente è membro (vede la propria organizzazione anche sospesa,
   per leggere la motivazione e scaricare i dati). Nessuna policy `insert` (solo funzioni). `update` solo dai membri.
 - Privilegi per colonna: `grant update (name, one_liner, when_to_visit, contact_email, contact_phone, contact_url, address, location,
-  usual_category, seeking_offering, indexable, venue_activity, logo_path, story)`; `logo_path` e `story` sono anche nella `grant select` pubblica. L'utente non cambia mai `kind`, `slug`, `verified`, `entry_method`,
-  `status`, `flagged_for_review`, `last_reviewed_at`, `last_activity_at`.
-- Trigger: `slug` generato all'inserimento; `neighborhood_id` da `location` (`ST_Covers` su `neighborhoods.boundary`);
+  usual_category, seeking_offering, indexable, venue_activity, logo_path, story, neighborhood_id)`; `logo_path` e `story` sono anche nella `grant select` pubblica. L'utente non cambia mai `kind`, `entity_type`, `slug`, `verified`, `entry_method`,
+  `status`, `flagged_for_review`, `flag_reason`, `last_reviewed_at`, `last_activity_at`.
+- Trigger: `slug` generato all'inserimento; `neighborhood_id` da `location` (`ST_Covers` su `neighborhoods.boundary`) per associazioni
+  ed espacios, a ogni scrittura (così il `neighborhood_id` scritto a mano viene sempre ricalcolato); per i professionisti, che non hanno
+  un punto, resta il barrio scelto (sessione 5);
   `last_activity_at` aggiornato quando cambia la scheda (logo e storia compresi); se cambia `venue_activity` verso un'attività dubbia e l'ente non è entrato
-  con invito, `flagged_for_review = true` (il trigger non lo rimette mai a false: lo fa solo `mark_reviewed()`).
+  con invito, `flagged_for_review = true` e, se non era già segnalato, `flag_reason = 'doubtful_activity'` (il trigger non lo
+  rimette mai a false: lo fa solo `mark_reviewed()`, che azzera anche `flag_reason`).
 
 ### memberships
 `user_id uuid references auth.users on delete cascade`, `organization_id uuid references organizations on delete cascade`,
@@ -236,19 +262,21 @@ Il file lo carica solo l'action di "Mi ficha" (sessione 7) dopo `reencodeLogo` (
 | `is_doubtful_activity(p_activity)` | immutable | `true` per `discoteca_club`, `bar_nocturno`, `otro`. Unico posto della lista. |
 | `is_admin()` | security definer, stable | Esiste una riga in `app_admins` per `auth.uid()`. |
 | `lookup_municipal_association(p_nif)` | security definer, solo `service_role` | Restituisce solo `found` + `name` ufficiale, per "¿Sois *nombre*?". L'action chiama prima `check_rate_limit` (max 10 al giorno per connessione) e poi questa con il client admin. |
-| `register_entity(p_kind, p_nif, p_name, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token default null, p_venue_activity default null, p_what_for_whom default null, p_how_sustained default null)` | security definer | Per `association` e `venue`. Richiede `auth.uid()`. Normalizza e controlla il NIF; decide `entry_method` (invito valido → `invite`; `association` con NIF in elenco → `municipal_registry`; altrimenti `self_declared`); `flagged_for_review = true` se `venue` + attività dubbia + nessun invito (associazione fuori elenco senza invito: per ora `false`, `-- DA DECIDERE (sessione 5)`). Crea organizzazione (slug unico), verifica, membership, accettazione, risposte; segna l'invito come usato. Tutto o niente. Restituisce `(slug, flagged)`. Errori: `not_authenticated`, `invalid_kind`, `already_member`, `terms_required`, `invalid_name`, `invalid_nif`, `already_claimed`, `venue_activity_required`, `answers_required`, `invalid_invite`. |
-| `create_professional(p_name, p_one_liner, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token default null)` | security definer | Stesso schema per i professionisti; `entry_method` = `invite` con invito valido, altrimenti `email_only`. Restituisce lo slug. |
+| `register_entity(p_entity_type, p_nif, p_name, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_venue_activity, p_what_for_whom, p_how_sustained, p_what_they_offer, p_one_liner, p_when_to_visit, p_contact_email, p_contact_phone, p_contact_url, p_usual_category, p_address, p_lng, p_lat)` (dal 7° in poi `default null`) | security definer | Sessione 5. Per tutti i tipi tranne `informal`. Richiede `auth.uid()`. Normalizza il NIF: rifiuta i documenti personali e le lettere sbagliate per il tipo; obbligatorio tranne per `commercial`; unico tranne P/Q/S. Decide `entry_method` e avviso secondo la tabella "Chi entra e come". `commercial`: attività, le due risposte (`what_for_whom`, `what_they_offer`), indirizzo e punto obbligatori. Crea in una sola transazione organizzazione (slug unico, scheda completa), verifica (se c'è il NIF), membership, accettazione, risposte; segna l'invito come usato. Restituisce `(slug, flagged, flag_reason)`. Errori: `not_authenticated`, `invalid_kind`, `already_member`, `terms_required`, `invalid_name`, `nif_required`, `personal_nif`, `invalid_nif`, `already_claimed`, `venue_activity_required`, `answers_required`, `answer_too_long`, `address_required`, `invalid_location`, `invalid_invite`. |
+| `create_professional(p_name, p_one_liner, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_neighborhood_slug, p_contact_email, p_contact_phone, p_contact_url, p_seeking_offering, p_indexable)` (dal 6° in poi con default) | security definer | Stesso schema per i professionisti (`entity_type = 'informal'`); `entry_method` = `invite` con invito valido, altrimenti `email_only`. Barrio scelto per slug (`invalid_neighborhood` se non esiste). Restituisce lo slug. |
 | `get_invite(p_token)` | security definer | Restituisce solo nome e slug dell'organizzazione che invita, se il token è valido, non usato, non scaduto e l'organizzazione è attiva. |
 | `export_my_data()` | security definer | `jsonb` con email dell'utente, membership, accettazioni, organizzazione, NIF, risposte, eventi, organizzatori, fili, inviti, spazi e `moderation_actions` sulla propria organizzazione. |
 | `delete_my_account()` | security definer | Elimina l'organizzazione dell'utente se ne è l'unico membro (a cascata: eventi, organizzatori, fili, inviti, spazi, verifica, risposte), poi la riga di `auth.users`. L'action cancella prima i file di Storage. Restano solo le `moderation_actions` (senza riferimenti all'utente). |
-| `admin_review_list()` | security definer | Se `is_admin()`: per **tutte** le organizzazioni `id, slug, name, kind, entry_method, venue_activity, neighborhood_name, contact_url, what_for_whom, how_sustained, status, flagged_for_review, created_at, last_reviewed_at`. **Mai** NIF, email, telefono, user id. Altrimenti `forbidden`. |
+| `admin_review_list()` | security definer | Se `is_admin()`: per **tutte** le organizzazioni `id, slug, name, kind, entity_type, entry_method, venue_activity, neighborhood_name, contact_url, what_for_whom, how_sustained, what_they_offer, status, flagged_for_review, flag_reason, created_at, last_reviewed_at`. **Mai** NIF, email, telefono, user id. Altrimenti `forbidden`. La legge la pagina `/revision` (sessione 5: sola lettura, solo le segnalate). |
 | `moderate_organization(p_org, p_action, p_reason)` | security definer | Se `is_admin()`: `suspend`/`reactivate` cambiano `status`; `delete` elimina l'organizzazione (stessa cascata di `delete_my_account`, senza toccare `auth.users`). Scrive sempre `moderation_actions`. Motivo obbligatorio. Restituisce all'action l'email a cui mandare la motivazione (`contact_email`, altrimenti l'email di accesso del membro). Errori: `forbidden`, `reason_required`, `not_found`. |
-| `mark_reviewed(p_org)` | security definer | Se `is_admin()`: `last_reviewed_at = now()`, `flagged_for_review = false`. |
+| `mark_reviewed(p_org)` | security definer | Se `is_admin()`: `last_reviewed_at = now()`, `flagged_for_review = false`, `flag_reason = null`. |
 | `check_rate_limit(p_key, p_max, p_window)` | security definer, solo `service_role` | Incrementa il contatore della finestra corrente e restituisce `false` oltre il limite. Solo `service_role`, così nessuno può consumare il limite di un altro via RPC. |
 | `private.make_unique_slug(p_text, p_table)` | security definer | `unaccent`, minuscolo, trattini, max 60 caratteri, suffisso numerico in caso di collisione. Solo alla creazione. |
 
-L'avviso al fondatore per gli espacios dubbi lo manda l'**action** (non il database), alla mail `founderNotificationEmail` in
-`src/config/brand.ts` (sessione 5), con nome, tipo, attività, web, risposte. **Mai il NIF né l'email di chi si iscrive.**
+L'avviso al fondatore (sessione 5) resta **solo nel database**: `flagged_for_review` + `flag_reason`, letti dalla pagina privata
+`/revision` tramite `admin_review_list()`. L'invio per email si decide con il dominio, prima del pilota: lo farà l'**action**
+(non il database), alla variabile server `FOUNDER_NOTIFICATION_EMAIL` (mai in `brand.ts`: il repository è pubblico), con nome,
+tipo, attività, barrio, web, risposte e motivo. **Mai il NIF né l'email di chi si iscrive.**
 
 ## Test che devono esistere (pgTAP, `supabase/tests/`)
 1. `anon` non legge `municipal_associations`, `organization_verifications`, `terms_acceptances`, `geocode_cache`, `rate_limits`.
@@ -271,6 +299,11 @@ L'avviso al fondatore per gli espacios dubbi lo manda l'**action** (non il datab
     estranei no; `story` oltre 1000 e `logo_path` di un'altra organizzazione rifiutati.
 18. (sessione 4, file 15) `upcoming_events`, `event_schedule`, `neighborhood_pages` e `neighborhood_neighbors` non mostrano enti
     sospesi né i loro eventi; un barrio vuoto ha `has_content = false`.
+19. (sessione 5, file 16) Tipi di entità: lettera del NIF per tipo; documenti personali → `personal_nif`; NIF obbligatorio tranne
+    `commercial`; NIF P/Q/S riusabile, gli altri no; avviso secondo la tabella (fuori elenco, ente pubblico sempre, commercial senza
+    NIF, commercial con attività dubbia, commercial con NIF e attività tranquilla no, invito mai); `commercial` senza indirizzo →
+    `address_required`; `entity_type` e `flag_reason` non leggibili da anon né modificabili dal membro; `mark_reviewed` azzera il motivo;
+    `create_professional` salva barrio e contatti.
 
 I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
 (`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,

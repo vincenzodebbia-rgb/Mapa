@@ -4,6 +4,7 @@
 > Identificatori nel codice in inglese, testi dell'interfaccia in spagnolo (`messages/es.json`).
 > **Nome, logo, copertina e stile visivo NON sono decisi.** Si costruisce con segnaposto neutri (`src/config/brand.ts`, token in `src/app/globals.css`). Vedi `docs/DESIGN_HANDOFF.md`.
 > Revisione del fondatore del 21 ottobre 2026 applicata: `docs/decisioni/2026-10-revisione-sezioni.md`.
+> Decisioni sull'iscrizione del 29 ottobre 2026 applicate: `docs/decisioni/2026-10-29-iscrizione.md`.
 
 **Principio.** La mappa non deve mai ingannare: mostra cose che succedono davvero. Chi esiste ma non fa eventi si vede altrove (mappa Conexiones, scheda, pagina di barrio).
 
@@ -14,19 +15,19 @@ Una mappa di Madrid che mostra **cosa fanno oggi** le piccole associazioni, i co
 
 | Tipo (`organizations.kind`) | Come entra | Sulla mappa | Cosa può fare |
 |---|---|---|---|
-| `association` (terzo settore) | Email + NIF dell'ente. Se il NIF è nell'elenco del Comune entra subito, verificata (§8). Un NIF = un solo account | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, fili (dopo il lancio), home privata, Invita, annunci nella bacheca Profesionales |
-| `venue` — nella UI "Espacio" (librerie, sale piccole, centri culturali, gallerie, studi, caffè culturali, locali notturni…) | Email + NIF dell'ente + tipo di attività + domande (§8). Indirizzo obbligatorio | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede | Pubblicare eventi, annunci "Ofrezco espacio" nella bacheca, home privata. Niente fili né inviti |
+| `association` — nella UI "Asociación", "Fundación", "Cooperativa" o "Entidad pública" (terzo settore ed enti pubblici: centri culturali municipali, biblioteche) | Email + NIF dell'ente, obbligatorio, col formato del suo tipo (§8). Se il NIF è nell'elenco del Comune entra subito, verificata. Un NIF = un solo account (tranne gli enti pubblici) | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, fili (dopo il lancio), home privata, Invita, annunci nella bacheca Profesionales |
+| `venue` — nella UI "Actividad comercial" (bar, librerie, gallerie, studi, caffè culturali, sale piccole, locali notturni…); la sezione resta "Espacios" | Email + NIF d'impresa **facoltativo** + tipo di attività + domande (§8). Indirizzo obbligatorio | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede | Pubblicare eventi, annunci "Ofrezco espacio" nella bacheca, home privata. Niente fili né inviti |
 | `professional` — nella UI **"Gente que hace cosas"** (collettivi, artisti, persone con progetti) | Iscrizione libera con email | **Nessun punto proprio.** Compare solo tramite i suoi eventi, nel luogo dell'evento | Pubblicare eventi in qualsiasi luogo, annunci nella bacheca Profesionales |
 | Luoghi non registrati (bar, studi) | Non si registrano | Solo il giorno di un evento, come "dove succede" | Niente: sono un indirizzo dentro l'evento |
 | Cittadini | Nessun account | Vedono tutto il pubblico | Solo condividere un evento |
 
-Nella UI `venue` si chiama "Espacio" e `professional` si chiama "Gente que hace cosas"; i valori nel codice non cambiano. Gli ex "Espacios disponibles" diventano annunci di tipo "Ofrezco espacio" nella bacheca Profesionales (§10): la parola "Espacios" indica solo i `venue`.
+Nella UI `venue` si chiama "Espacio" (all'iscrizione "Actividad comercial") e `professional` si chiama "Gente que hace cosas"; i valori nel codice non cambiano. La forma giuridica scelta all'iscrizione ("¿Qué sois?", §8) si salva in `organizations.entity_type`: è un dato interno, **mai** mostrato come etichetta o "banda" sulla mappa né nei suoi riquadri (sul telefono meno elementi = più chiarezza). Il filtro "Quién organiza" usa `kind`. Gli ex "Espacios disponibles" diventano annunci di tipo "Ofrezco espacio" nella bacheca Profesionales (§10): la parola "Espacios" indica solo i `venue`.
 
 Accesso: **link magico via email** (Supabase Auth), nessuna password. Chi crea un account dichiara di avere almeno 18 anni (da confermare con l'avvocato, vedi PRIVACY).
 
 Protezione da spam: conferma email, Cloudflare Turnstile sui moduli di iscrizione e invito, limite di frequenza sulle azioni di pubblicazione. **Nessun sistema di segnalazione tra organizzazioni.** Esiste solo un indirizzo email pubblico per segnalare contenuti illegali (obbligo DSA), nella pagina `/legal`.
 
-**Revisione del fondatore (minima).** Non c'è moderazione prima della pubblicazione: tutti entrano subito. Il fondatore riceve un avviso solo per gli espacios con attività "dubbia" entrati senza invito, e ogni 2-3 mesi rilegge tutti i profili in una pagina privata (`admin_review_list`: nome, tipo, attività, barrio, web, risposte; mai NIF né email). Può sospendere, riattivare o eliminare un'organizzazione, sempre con una motivazione che le arriva per email (DSA). Un'organizzazione sospesa sparisce dal pubblico con tutti i suoi contenuti; i suoi membri la vedono ancora. Non è una dashboard: niente statistiche né contatori.
+**Revisione del fondatore (minima).** Non c'è moderazione prima della pubblicazione: tutti entrano subito. Alcune iscrizioni senza invito ricevono un **avviso al fondatore** (`flagged_for_review` + `flag_reason`, tabella in §8): associazioni, fondazioni e cooperative fuori dall'elenco del Comune, enti pubblici (sempre), attività commerciali senza NIF o con attività "dubbia". Ogni 2-3 mesi il fondatore rilegge tutti i profili in una pagina privata (`admin_review_list`: nome, tipo, attività, barrio, web, risposte, motivo dell'avviso; mai NIF né email). Nella sessione 5 l'avviso resta **solo nel database**, letto da una pagina privata minima in sola lettura (solo `is_admin()`) con le organizzazioni segnalate; l'invio per email (a `FOUNDER_NOTIFICATION_EMAIL`, variabile server, mai in `brand.ts`) si decide con il dominio, prima del pilota. Può sospendere, riattivare o eliminare un'organizzazione, sempre con una motivazione che le arriva per email (DSA). Un'organizzazione sospesa sparisce dal pubblico con tutti i suoi contenuti; i suoi membri la vedono ancora. Non è una dashboard: niente statistiche né contatori.
 
 ## 3. Pagine (URL in spagnolo)
 
@@ -40,11 +41,12 @@ Protezione da spam: conferma email, Cloudflare Turnstile sui moduli di iscrizion
 | `/que-es` | tutti | Testo breve "qué es" + manifesto (segnaposto in `messages/es.json`) |
 | `/legal` | tutti | Aviso legal, privacidad, condiciones, email contenuti illegali, link al codice sorgente, attribuzioni open data |
 | `/entrar` | tutti | Login con link magico |
-| `/registro` | tutti | Scelta tra tre percorsi: asociación / espacio / "Gente que hace cosas" (§8; testi esatti in `messages/es.json`) |
+| `/registro` | tutti | Prima domanda "¿Qué sois?" con sei opzioni (§8; testi esatti in `messages/es.json`) |
 | `/invitacion/[token]` | tutti | Atterraggio da un invito, con il nome di chi invita (§9) |
 | `/panel` | loggati | Home privata (§9) |
 | `/panel/eventos/nuevo`, `/panel/eventos/[id]` | loggati | Modulo evento (§5) |
 | `/profesionales` | solo loggati | Bacheca annunci Busco / Ofrezco (§10) |
+| `/revision` | solo admin (`is_admin()`) | Pagina privata di revisione del fondatore (§2). Sessione 5: sola lettura, solo le organizzazioni segnalate |
 
 Nessuna pagina "tutte le associazioni" ordinata per popolarità. Una vista elenco esiste solo come alternativa accessibile alla mappa (stessi dati e stessi filtri; su Hoy ordinati per orario).
 
@@ -119,33 +121,41 @@ Minima, senza numeri né contatori: logo piccolo (facoltativo); nome; `one_liner
 - **"Nuestra historia":** campo testuale facoltativo (max 1000 caratteri, solo testo), modificabile da "Mi ficha". Colonna `story`, migrazione nella sessione 4 o 7. Nessuna sezione separata di storie.
 
 ## 8. Registrazione `/registro`
-**Chi entra e come** (in parole semplici):
+Prima: email → link magico. Poi la **prima domanda: "¿Qué sois?"**. Il NIF e le domande dipendono dalla risposta.
 
-| Chi | Cosa succede |
-|---|---|
-| Associazione che sta nell'elenco del Comune (cerchiamo il suo NIF) | Entra subito, con il segno "verificata". Le chiediamo "¿Sois *nombre*?" con il nome ufficiale |
-| Chiunque arrivi con un invito valido di un'associazione già sulla mappa | Entra subito, qualunque tipo scelga, senza controlli |
-| Espacio con un'attività tranquilla (libreria, sala pequeña, centro cultural, galería, taller/estudio, café cultural) | Entra subito |
-| Espacio con un'attività "dubbia" (discoteca/club, bar nocturno, otro) senza invito | Entra subito, ma il fondatore riceve un avviso e la guarda |
-| "Gente que hace cosas" (collettivo, artista, progetto) | Solo email, nessun punto fisso |
-| Associazione che non sta nell'elenco e non ha invito | Entra; se con o senza avviso al fondatore **si decide nella sessione 5** |
+| Opzione (UI) | Esempi | `entity_type` → `kind` | NIF | Avviso al fondatore (senza invito) |
+|---|---|---|---|---|
+| Asociación | culturali, vicinali, ONG | `association` → `association` | **obbligatorio**, lettera G | no se è nell'elenco del Comune; **sì** se è fuori elenco |
+| Fundación | fondazioni culturali o sociali | `foundation` → `association` | **obbligatorio**, lettera G | come le associazioni |
+| Cooperativa | cooperative culturali o di lavoro | `cooperative` → `association` | **obbligatorio**, lettera F | come le associazioni |
+| Entidad pública | centro cultural municipal, biblioteca | `public_entity` → `association` | **obbligatorio**, lettera P, Q o S; **riusabile** (molti centri usano il NIF del Comune) | **sì, sempre**, anche al primo uso (il NIF di un ente pubblico è pubblico: non prova niente) |
+| Actividad comercial | bar, librería, galería, estudio, café cultural | `commercial` → `venue` | **facoltativo**, solo NIF d'impresa: lettera A, B, E o J | **sì** se senza NIF o con attività "dubbia"; no se ha il NIF e un'attività "tranquilla" |
+| Gente que hace cosas | artisti, collettivi senza forma giuridica | `informal` → `professional` | nessuno | no |
 
-**Inviti facoltativi:** nessuno è obbligato a usarli. La **revisione automatica minima** vale per tutti: NIF da ente con controllo del formato, un NIF = un account, conferma email, anti-robot (Turnstile), limiti di frequenza, avviso al fondatore per gli espacios "dubbi" senza invito.
+- Fundación, cooperativa ed entidad pública hanno gli stessi diritti di un'associazione (fili, inviti, filtro "Asociaciones").
+- **Un invito valido** fa sempre entrare **senza avviso**, qualunque tipo.
+- Associazione (o fondazione, cooperativa) **nell'elenco del Comune**: entra subito con il segno "verificata"; le chiediamo "¿Sois *nombre*?" con il nome ufficiale. **Fuori elenco e senza invito** (es. appena nata): entra subito, con avviso.
+- Le associazioni della categoria del Comune **"Comerciantes, empresarios, profesionales y autónomos"** non vengono riconosciute dal NIF (non si importano): se si iscrivono sono fuori elenco, quindi con avviso.
+- **Mai documenti personali:** qualunque NIF in formato DNI/NIE (o K/L/M) si rifiuta, anche nel campo facoltativo dell'Actividad comercial. Sotto quel campo, una riga di aiuto: *"Si tu NIF es tu DNI personal o eres autónomo/a, no lo pongas."*
+- **Autonomi soli:** nessuna strada propria. Gli artisti entrano come "Gente que hace cosas"; un bar o una libreria gestiti da un autonomo entrano come "Actividad comercial" senza NIF.
+- Se il NIF è già usato (tranne gli enti pubblici): messaggio con l'email di contatto del progetto.
+- L'avviso resta nel database (`flagged_for_review` + `flag_reason`: `not_in_registry`, `public_entity`, `no_nif`, `doubtful_activity`) e si legge in `/revision`. Non contiene mai NIF né email di chi si iscrive.
 
-**Associazione ed Espacio:** email → link magico → NIF dell'ente (solo formato da ente, mai DNI/NIE). Se il NIF è già usato: messaggio con l'email di contatto del progetto. Poi il nome (precompilato con il nome ufficiale se è nell'elenco, modificabile) e le domande.
+**Inviti facoltativi:** nessuno è obbligato a usarli. La **revisione automatica minima** vale per tutti: formato del NIF secondo il tipo, un NIF = un account (tranne gli enti pubblici), conferma email, anti-robot (Turnstile), limiti di frequenza, avviso al fondatore secondo la tabella.
 
-**Espacios** — domande ridotte a chi sono, dove sono, cosa offrono (tutte obbligatorie):
+**Asociación, Fundación, Cooperativa, Entidad pública:** NIF → nome (precompilato con il nome ufficiale se è nell'elenco, modificabile) → domande facoltative (decisione del 18 ottobre): "¿Qué hacéis y para quién?" (max 500, `what_for_whom`) e "¿Cómo se sostiene el proyecto?" (max 500, `how_sustained`); indirizzo facoltativo (con pin).
+
+**Actividad comercial** — tre domande, tutte obbligatorie, più l'indirizzo:
 1. "¿Quiénes sois?" (max 500) → colonna `what_for_whom`
 2. Tipo de actividad: Librería · Sala pequeña · Centro cultural · Galería · Taller o estudio · Café cultural · Discoteca o club · Bar nocturno · Otro
-3. "¿Qué ofrecéis?" (max 500) → nuova colonna `what_they_offer`, che sostituisce `how_sustained` (migrazione nella sessione 5; aggiornare `admin_review_list`)
-4. Indirizzo (con pin): obbligatorio, perché sono un luogo.
-
-**Associazioni** — domande facoltative (decisione del 18 ottobre): "¿Qué hacéis y para quién?" (max 500) e "¿Cómo se sostiene el proyecto?" (max 500); indirizzo facoltativo (con pin).
+3. "¿Qué ofrecéis a nivel cultural?" (max 500) → colonna `what_they_offer` (le associazioni continuano a usare `how_sustained`)
+4. Indirizzo (con pin): obbligatorio, perché è un luogo.
+- NIF facoltativo (vedi tabella). Chi non mette il NIF può indicare un **link pubblico** che mostri che il luogo esiste (web, Instagram, Google Maps): **facoltativo** (un bar di quartiere può non avere né web né social). È lo stesso campo "Web o red social" (`contact_url`, pubblico) e compare nella pagina di revisione.
 
 Per tutti c'è il campo facoltativo **"Web o red social"** (pubblico, `contact_url`).
-Poi: one_liner, when_to_visit, contatto, categoria abituale.
+Poi: one_liner, when_to_visit, contatto, categoria abituale. Tutto si salva in una sola chiamata (`register_entity`).
 
-**"Gente que hace cosas"** (`professional`): email → link magico → nome, cosa fa, barrio, contatto, "Web o red social", una riga "Busco / Ofrezco".
+**"Gente que hace cosas"** (`professional`): nome, cosa fa, barrio, contatto, "Web o red social", una riga "Busco / Ofrezco".
 
 In entrambi: casella obbligatoria con 3 regole brevi (realtà vera, nessuna vendita di prodotti, attività reali) + accettazione di condiciones e privacidad. Si salvano versione dei testi e data dell'accettazione.
 
@@ -202,7 +212,7 @@ I **fili** (§6) sono costruiti prima del lancio ma restano spenti (flag `thread
 | `/e/[slug]` evento | sì fino alla fine | 7 giorni dopo la fine dell'ultima occorrenza → redirect permanente alla scheda dell'organizzatore (308 di Next.js, che Google tratta come 301; decisione della sessione 4) |
 | `/barrio/[slug]` | solo con contenuto | `noindex` finché non ha almeno un'associazione o un evento futuro |
 | `/`, `/conexiones`, `/que-es`, `/legal` | sì | |
-| `/panel`, `/profesionales`, `/entrar`, `/registro`, `/invitacion/*` | no | `noindex`, fuori dalla sitemap |
+| `/panel`, `/profesionales`, `/entrar`, `/registro`, `/invitacion/*`, `/revision` | no | `noindex`, fuori dalla sitemap |
 
 **Pagine di barrio.** Elenco ufficiale dei barrios di Madrid (open data del Comune, con confini) importato in `neighborhoods`. Organizzazioni ed eventi ricevono il barrio in automatico dalle coordinate. La pagina mostra: "Qué pasa en [Barrio]", mappa centrata, prossimi eventi, associazioni, barrios vicini. Nessuna classifica.
 
