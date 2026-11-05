@@ -12,7 +12,7 @@ function readField(form: HTMLFormElement | null, name: string): HTMLInputElement
   return element instanceof HTMLInputElement ? element : null;
 }
 
-/** "Comprobar" → "¿Sois <nombre>?" with the official name of the Comune list. Optional: without JS it is skipped. */
+/** "Comprobar" → "¿Sois <nombre>?" con il nome ufficiale dell'elenco del Comune. Facoltativo: senza JS si salta. */
 export function NifLookup({ entityType, texts }: NifLookupProps) {
   const [result, setResult] = useState<LookupResult | null>(null);
   const [pending, startTransition] = useTransition();

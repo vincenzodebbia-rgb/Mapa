@@ -9,7 +9,7 @@ import { INITIAL_SIGN_IN_STATE, type SignInFormTexts } from "../types";
 
 type SignInFormProps = { texts: SignInFormTexts; turnstileSiteKey: string | undefined };
 
-/** Email → magic link. Texts come from the server page (client components never read messages). */
+/** Email → link magico. I testi arrivano dalla pagina sul server (i componenti client non leggono mai i messaggi). */
 export function SignInForm({ texts, turnstileSiteKey }: SignInFormProps) {
   const [state, formAction, pending] = useActionState(requestMagicLink, INITIAL_SIGN_IN_STATE);
 

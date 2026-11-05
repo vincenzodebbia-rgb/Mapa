@@ -12,7 +12,7 @@ import {
   type Ring,
 } from "./import-neighborhoods";
 
-// Tiny binary fixtures built in memory: the tests never download anything.
+// Piccoli file binari di prova costruiti in memoria: i test non scaricano mai niente.
 
 function zipOf(files: Record<string, Buffer>): Buffer {
   const locals: Buffer[] = [];
@@ -98,7 +98,7 @@ function shpOf(shapes: Ring[][]): Buffer {
   return Buffer.concat([header, ...records]);
 }
 
-// Clockwise square (outer ring in a shapefile) and a counter-clockwise hole inside it.
+// Quadrato in senso orario (anello esterno in uno shapefile) e un buco antiorario dentro.
 const outer: Ring = [[0, 0], [0, 10], [10, 10], [10, 0], [0, 0]];
 const hole: Ring = [[2, 2], [4, 2], [4, 4], [2, 4], [2, 2]];
 const otherOuter: Ring = [[20, 0], [20, 5], [25, 5], [25, 0], [20, 0]];

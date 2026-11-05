@@ -3,7 +3,7 @@ import type { LightState, MapFeatureCollection, MapEvent, MapPlace } from "./typ
 
 type PointInput = { key: string; lng: number; lat: number; light: LightState };
 
-// Numeric feature ids: MapLibre needs them for feature state. Popup content is looked up by `key`.
+// Id numerici degli elementi: servono a MapLibre per il feature state. Il contenuto del popup si cerca per `key`.
 function toFeatureCollection(points: PointInput[]): MapFeatureCollection {
   return {
     type: "FeatureCollection",
@@ -22,7 +22,7 @@ export function eventsToGeoJson(events: MapEvent[], now: Date): MapFeatureCollec
   );
 }
 
-/** The barrio map: its events (pulse/lit) and its places (lit), in one collection with unique ids. */
+/** La mappa del barrio: i suoi eventi (pulse/lit) e i suoi luoghi (lit), in una sola raccolta con id unici. */
 export function neighborhoodToGeoJson(events: MapEvent[], places: MapPlace[], now: Date): MapFeatureCollection {
   return toFeatureCollection([
     ...events.map((event) => ({ key: event.key, lng: event.lng, lat: event.lat, light: getLightState(event, now) })),
@@ -30,7 +30,7 @@ export function neighborhoodToGeoJson(events: MapEvent[], places: MapPlace[], no
   ]);
 }
 
-/** Places on the Conexiones map are all `lit`: being there is enough. */
+/** I luoghi della mappa Conexiones sono tutti `lit`: esserci basta. */
 export function placesToGeoJson(places: MapPlace[]): MapFeatureCollection {
   return toFeatureCollection(places.map((place) => ({ key: place.id, lng: place.lng, lat: place.lat, light: "lit" })));
 }

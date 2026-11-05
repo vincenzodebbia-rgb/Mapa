@@ -2,7 +2,7 @@ import "server-only";
 import type { SignInFormTexts } from "@/features/auth/types";
 import { t } from "@/lib/i18n/t";
 
-/** Texts of the sign-in form, shared by /entrar and /registro (anonymous visitor). */
+/** Testi del modulo di accesso, comuni a /entrar e /registro (visitatore anonimo). */
 export function getSignInFormTexts(): SignInFormTexts {
   return {
     emailLabel: t("auth.emailLabel"),

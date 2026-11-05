@@ -11,15 +11,15 @@ const linkClass = "underline underline-offset-2 focus-visible:outline-2 focus-vi
 
 type EventDetailsProps = {
   event: EventPage;
-  /** Absolute URL of this page on the site's domain: JSON-LD, and the share link until the browser knows its own. */
+  /** URL assoluto di questa pagina sul dominio del sito: JSON-LD, e link da condividere finché il browser non sa il suo. */
   url: string;
-  /** Site origin, for the organizers' absolute URLs in JSON-LD. */
+  /** Origine del sito, per gli URL assoluti degli organizzatori nel JSON-LD. */
   siteUrl: string;
-  /** false once the last occurrence is over (the page lives 7 more days, then redirects). */
+  /** false quando l'ultima occorrenza è finita (la pagina vive altri 7 giorni, poi reindirizza). */
   upcoming: boolean;
 };
 
-/** The event page /e/[slug] (docs/SPEC.md §5). Text from the database is always rendered as text. */
+/** La pagina evento /e/[slug] (docs/SPEC.md §5). Il testo del database si mostra sempre come testo. */
 export function EventDetails({ event, url, siteUrl, upcoming }: EventDetailsProps) {
   const date = describeEventDate(event);
   const hours = describeEventHours(event);

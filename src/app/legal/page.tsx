@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: { title: t("legal.metaTitle"), description: t("legal.metaDescription"), url: "/legal" },
 };
 
-// Licenses of the open data and map we use (docs/DATA_MODEL.md, docs/SPEC.md §12).
+// Licenze dei dati aperti e della mappa che usiamo (docs/DATA_MODEL.md, docs/SPEC.md §12).
 const CC_BY_4 = "https://creativecommons.org/licenses/by/4.0/deed.es";
 const attributions: { key: TranslationKey; sources: string[] }[] = [
   { key: "legal.attributions.osm", sources: ["https://www.openstreetmap.org/copyright"] },
@@ -32,7 +32,7 @@ function Section({ heading, children }: { heading: string; children: ReactNode }
   );
 }
 
-// Placeholder legal texts until a lawyer reviews them (docs/BUILD_PLAN.md, before launch).
+// Testi legali provvisori finché non li rivede un avvocato (docs/BUILD_PLAN.md, prima del lancio).
 export default function LegalPage() {
   return (
     <ContentPage {...getContentPageTexts()}>

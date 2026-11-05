@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
 // Alla fine si cancellano organizzazioni e utenti creati qui. Servono, nell'ambiente locale del fondatore,
 // NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY e le chiavi di prova di Turnstile (passano sempre).
 
-// The keys stay in the founder's local file: read by Node, never printed.
+// Le chiavi restano nel file locale del fondatore: le legge Node, non si stampano mai.
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -39,7 +39,7 @@ test.afterAll(async () => {
   }
 });
 
-/** New confirmed user + session in the browser through /auth/confirm (the same route as the email link). */
+/** Utente nuovo confermato + sessione nel browser tramite /auth/confirm (la stessa rotta del link dell'email). */
 async function signInAsNewUser(page: Page): Promise<string> {
   const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.org`;
   const created = await admin.auth.admin.createUser({ email, email_confirm: true });
@@ -65,7 +65,7 @@ async function fillAssociation(page: Page, nif: string) {
 }
 
 async function submit(page: Page) {
-  // Turnstile test keys pass on their own: wait for the token before sending.
+  // Le chiavi di prova di Turnstile passano da sole: si aspetta il token prima di inviare.
   await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", { timeout: 15_000 });
   await page.getByRole("button", { name: "Registrarnos" }).click();
 }
@@ -76,7 +76,7 @@ async function getOrganizationOf(userId: string) {
     .select("organization:organizations(name, verified, flagged_for_review, flag_reason, entry_method)")
     .eq("user_id", userId)
     .maybeSingle();
-  // Without this, "no organization" could pass on a failed query.
+  // Senza questo controllo, "nessuna organizzazione" potrebbe passare con una query fallita.
   expect(error).toBeNull();
   return data?.organization as
     | { name: string; verified: boolean; flagged_for_review: boolean; flag_reason: string | null; entry_method: string }
@@ -103,7 +103,7 @@ test("una asociación del registro del Ayuntamiento se registra y llega a /panel
     entry_method: "municipal_registry",
   });
 
-  // Back to /registro with an organization: straight to /panel.
+  // Di nuovo su /registro con un'organizzazione: dritti a /panel.
   await page.goto("/registro");
   await expect(page).toHaveURL(/\/panel$/);
 });

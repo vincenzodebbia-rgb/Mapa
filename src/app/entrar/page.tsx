@@ -8,7 +8,7 @@ import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { getContentPageTexts } from "../content-page-texts";
 import { getSignInFormTexts } from "../sign-in-form-texts";
 
-// Reads the session: blocking on purpose, so a logged-in visitor gets a real redirect.
+// Legge la sessione: bloccante di proposito, così chi ha già fatto l'accesso riceve un redirect vero.
 export const instant = false;
 
 export const metadata: Metadata = { title: t("auth.metaTitle"), robots: { index: false, follow: false } };

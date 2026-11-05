@@ -14,13 +14,13 @@ import { toAbsoluteUrl } from "@/lib/site-url";
 import { getContentPageTexts } from "../../content-page-texts";
 import { STATIC_PARAMS_PLACEHOLDER } from "../../static-params";
 
-// The whole page is static (cached data), so a missing profile answers a real 404, not a streamed one.
+// Tutta la pagina è statica (dati in cache), così una scheda che non esiste risponde con un 404 vero, non in streaming.
 export const ensureStatic = "navigation";
-// Blocking on purpose: params are read before rendering so the status can be decided. Once generated,
-// the page is static and served from cache.
+// Bloccante di proposito: i params si leggono prima del rendering, così si può decidere lo stato. Una volta generata,
+// la pagina è statica e si serve dalla cache.
 export const instant = false;
 
-// Pages are generated on first visit; the build never reads the database (the placeholder is not a valid slug).
+// Le pagine si generano alla prima visita; il build non legge mai il database (il segnaposto non è uno slug valido).
 export function generateStaticParams() {
   return [{ slug: STATIC_PARAMS_PLACEHOLDER }];
 }
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps<"/a/[slug]">): Prom
     title: organization.name,
     description,
     alternates: { canonical: path },
-    // "Mostrar mi perfil en Google" turned off (professionals only): out of search engines (docs/SPEC.md §14).
+    // "Mostrar mi perfil en Google" spento (solo professionisti): fuori dai motori di ricerca (docs/SPEC.md §14).
     robots: getPageRobots(organization.indexable),
     openGraph: { title: organization.name, description, url: path, type: "profile" },
   };

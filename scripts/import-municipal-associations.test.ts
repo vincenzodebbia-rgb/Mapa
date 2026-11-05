@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildAssociations, isExcludedCategory, parseCsv } from "./import-municipal-associations";
 
-// Invented rows only (never real associations in tests or seed). Same columns as the Comune file.
+// Solo righe inventate (mai associazioni vere nei test o nella seed). Stesse colonne del file del Comune.
 const HEADER =
   '"Num_Inscripcion";"Razon_Social";"Tipo_Via";"Calle";"Numero";"Aproximacion";"Cod_Postal";"Poblacion";"Barrio";"Distrito";"CIF";"Fecha_Registro";"Fecha_IPM";"Primer_Tlfn";"Email";"Internet";"Categoria";"Ambito";"Num_Socios";"NumInscripcion_Fed_Vinculada";"RazonSocial_Fed_Vinculada";"FX_Carga"';
 

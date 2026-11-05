@@ -2,10 +2,10 @@ import { getMadridDateKey } from "@/lib/dates";
 import type { LightState } from "./types";
 
 /**
- * The Hoy map shows only events, in two states (docs/SPEC.md §4):
- * - `pulse`: happening today in Madrid and not over yet (an event that started yesterday and is still on counts);
- * - `lit`: in the next 7 days.
- * Ended events never reach this function: the view and filterEvents drop them.
+ * La mappa Hoy mostra solo eventi, in due stati (docs/SPEC.md §4):
+ * - `pulse`: succede oggi a Madrid e non è ancora finito (conta anche un evento iniziato ieri e ancora in corso);
+ * - `lit`: nei prossimi 7 giorni.
+ * Gli eventi finiti non arrivano mai a questa funzione: li scartano la vista e filterEvents.
  */
 export function getLightState(event: { startsAt: string; endsAt: string }, now: Date): LightState {
   const startsBeforeTomorrow = getMadridDateKey(event.startsAt) <= getMadridDateKey(now);

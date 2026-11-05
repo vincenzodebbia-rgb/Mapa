@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { signOut } from "../actions";
 
-/** "Salir": a plain form, works without JavaScript. */
+/** "Salir": un modulo semplice, funziona senza JavaScript. */
 export function SignOutButton({ label }: { label: string }) {
   return (
     <form action={signOut}>

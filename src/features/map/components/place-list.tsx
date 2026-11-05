@@ -2,7 +2,7 @@ import Link from "next/link";
 import { t } from "@/lib/i18n/t";
 import type { MapPlace } from "../types";
 
-/** List view of the Conexiones map: the same associations and venues, sorted by name. */
+/** Vista elenco della mappa Conexiones: le stesse associazioni ed espacios, in ordine di nome. */
 export function PlaceList({ places }: { places: MapPlace[] }) {
   const heading = t("conexiones.list.heading");
 

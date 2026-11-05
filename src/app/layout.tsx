@@ -6,7 +6,7 @@ import { getPageRobots } from "@/lib/seo/robots";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-// Text-only Open Graph: no image until the visual identity exists (docs/SPEC.md §5, §11).
+// Open Graph solo testo: nessuna immagine finché non esiste l'identità visiva (docs/SPEC.md §5, §11).
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
   title: { default: brand.appName, template: `%s · ${brand.appName}` },

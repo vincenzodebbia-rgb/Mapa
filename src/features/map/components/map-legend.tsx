@@ -1,6 +1,6 @@
 import { t } from "@/lib/i18n/t";
 
-/** Small, closable legend with the two light states of the Hoy map. */
+/** Legenda piccola, che si può chiudere, con i due stati di luce della mappa Hoy. */
 export function MapLegend() {
   return (
     <details open className="max-w-60 rounded-card border border-line bg-night/90 p-2 text-xs">

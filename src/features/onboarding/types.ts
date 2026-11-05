@@ -1,6 +1,6 @@
 import type { EntityType } from "@/lib/domain/nif";
 
-/** "¿Qué sois?": value in the URL (`/registro?tipo=…`) → entity_type. Mapping to `kind` lives only in SQL. */
+/** "¿Qué sois?": valore nell'URL (`/registro?tipo=…`) → entity_type. La mappatura verso `kind` sta solo in SQL. */
 export const REGISTRATION_TYPES = {
   asociacion: "association",
   fundacion: "foundation",
@@ -14,7 +14,7 @@ export type RegistrationTypeSlug = keyof typeof REGISTRATION_TYPES;
 
 export const REGISTRATION_TYPE_SLUGS = Object.keys(REGISTRATION_TYPES) as RegistrationTypeSlug[];
 
-/** Same values as the enum public.venue_activity (the action's typed RPC call fails to compile if they drift). */
+/** Stessi valori dell'enum public.venue_activity (se divergono, la chiamata RPC tipizzata dell'action non compila). */
 export const VENUE_ACTIVITIES = [
   "libreria",
   "sala_pequena",
@@ -29,12 +29,12 @@ export const VENUE_ACTIVITIES = [
 
 export type VenueActivity = (typeof VENUE_ACTIVITIES)[number];
 
-/** Same values as the enum public.event_category. */
+/** Stessi valori dell'enum public.event_category. */
 export const EVENT_CATEGORIES = ["musica", "teatro_danza", "arte", "talleres", "encuentros", "comunidad", "otros"] as const;
 
 export type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
-/** Registry lookups ("¿Sois …?") only make sense for the types the Comune lists. */
+/** Le ricerche nell'elenco ("¿Sois …?") hanno senso solo per i tipi che il Comune elenca. */
 export const LOOKUP_ENTITY_TYPES = ["association", "foundation", "cooperative"] as const satisfies readonly EntityType[];
 
 export type RegistrationField =
@@ -71,7 +71,7 @@ export type FormError = "robot" | "tooMany" | "alreadyClaimed" | "invalidInvite"
 
 export type FieldErrors = Partial<Record<RegistrationField, FieldError>>;
 
-/** State of the registration form. `values` refill the fields after an error (React resets the form). */
+/** Stato del modulo d'iscrizione. `values` riempie di nuovo i campi dopo un errore (React azzera il modulo). */
 export type RegistrationState = {
   attempt: number;
   formError: FormError | null;
@@ -95,7 +95,7 @@ export type TypeOption = { slug: RegistrationTypeSlug; label: string; descriptio
 
 export type TypePickerTexts = { legend: string; submit: string };
 
-/** Every text of the registration form, read on the server and passed as props. */
+/** Tutti i testi del modulo d'iscrizione, letti sul server e passati come props. */
 export type RegistrationFormTexts = {
   changeType: string;
   required: string;

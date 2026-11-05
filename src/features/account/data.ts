@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
 import type { ReviewItem } from "./types";
 
-/** Whether the logged-in user is in app_admins (checked in SQL, never in user_metadata). */
+/** Se l'utente che ha fatto l'accesso è in app_admins (controllato in SQL, mai in user_metadata). */
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const supabase = await createSupabaseServerClient();
   return unwrap(await supabase.rpc("is_admin")) === true;
@@ -20,8 +20,8 @@ function toSafeHttpUrl(value: string | null): string | null {
 }
 
 /**
- * Flagged organizations, newest first, as the admin themselves: admin_review_list() raises for anyone else.
- * The function returns no NIF and no email by design; this read keeps only the columns the page shows.
+ * Organizzazioni con avviso, dalla più recente, lette come l'admin stesso: admin_review_list() dà errore per chiunque altro.
+ * La funzione non restituisce né NIF né email per costruzione; questa lettura tiene solo le colonne che la pagina mostra.
  */
 export async function getFlaggedOrganizations(): Promise<ReviewItem[]> {
   const supabase = await createSupabaseServerClient();

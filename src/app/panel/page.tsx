@@ -8,8 +8,8 @@ import { t } from "@/lib/i18n/t";
 import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { getContentPageTexts } from "../content-page-texts";
 
-// Provisional panel (session 5): name, public profile and "Salir". The real home arrives with sessions 6-7.
-// Private, per request: blocking on purpose so the redirects are real.
+// Panel provvisorio (sessione 5): nome, scheda pubblica e "Salir". La home vera arriva con le sessioni 6-7.
+// Privata, a ogni richiesta: bloccante di proposito, così i redirect sono veri.
 export const instant = false;
 
 export const metadata: Metadata = { title: t("panel.metaTitle"), robots: { index: false, follow: false } };

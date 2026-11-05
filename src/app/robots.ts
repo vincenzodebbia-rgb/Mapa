@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { flags } from "@/config/flags";
 import { toAbsoluteUrl } from "@/lib/site-url";
 
-// Private areas stay out of search engines (docs/SPEC.md §14). The pages also carry noindex themselves.
+// Le aree private restano fuori dai motori di ricerca (docs/SPEC.md §14). Anche le pagine stesse hanno il noindex.
 const PRIVATE_PATHS = ["/panel", "/profesionales", "/entrar", "/registro", "/invitacion/"];
 
 export default function robots(): MetadataRoute.Robots {

@@ -45,7 +45,7 @@ export type ImportReport = {
   skippedNoName: number;
 };
 
-/** CSV parser for `;`-separated files with quoted fields, doubled quotes and line breaks inside quotes. */
+/** Lettore CSV per file separati da `;`, con campi tra virgolette, virgolette doppie e a capo dentro le virgolette. */
 export function parseCsv(text: string, separator = ";"): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -85,12 +85,12 @@ export function parseCsv(text: string, separator = ";"): string[][] {
   return rows;
 }
 
-/** Same as private.normalize_nif. */
+/** Come private.normalize_nif. */
 export function normalizeNif(value: string): string {
   return value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
 }
 
-/** Same as private.is_entity_nif (the column check): never a DNI/NIE. */
+/** Come private.is_entity_nif (il vincolo sulla colonna): mai un DNI/NIE. */
 export function isEntityNif(nif: string): boolean {
   return /^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$/.test(nif);
 }
@@ -114,7 +114,7 @@ const clean = (value: string | undefined, max: number): string | null => {
   return text ? text.slice(0, max) : null;
 };
 
-/** CSV text → rows for municipal_associations, plus what was skipped and why. */
+/** Testo CSV → righe per municipal_associations, più ciò che si è saltato e perché. */
 export function buildAssociations(csv: string): { associations: MunicipalAssociation[]; report: ImportReport } {
   const [header, ...records] = parseCsv(csv);
   if (!header) throw new Error("Empty CSV");
@@ -163,7 +163,7 @@ export function buildAssociations(csv: string): { associations: MunicipalAssocia
     }
     const existing = byCif.get(cif);
     if (existing) {
-      // Same CIF twice (re-registrations): keep the first name and data, add a new category if any.
+      // Lo stesso CIF due volte (nuove iscrizioni): si tengono il primo nome e i primi dati, si aggiunge l'eventuale categoria nuova.
       report.merged++;
       if (category && !existing.category?.split(" | ").includes(category)) {
         existing.category = existing.category ? `${existing.category} | ${category}`.slice(0, 500) : category;
@@ -212,7 +212,7 @@ async function writeAssociations(associations: MunicipalAssociation[], prune: bo
   }
 
   if (prune) {
-    // Rows not in this file kept their old imported_at: they left the registry.
+    // Le righe che non sono in questo file hanno tenuto il vecchio imported_at: sono uscite dall'elenco.
     const { error, count } = await supabase
       .from("municipal_associations")
       .delete({ count: "exact" })

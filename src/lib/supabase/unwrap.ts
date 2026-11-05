@@ -11,8 +11,8 @@ export class SupabaseQueryError extends Error {
 }
 
 /**
- * Turns a Supabase `{ data, error }` result into data or a thrown error, so no call can ignore `error`.
- * Remember: an RLS-denied SELECT is not an error, it returns an empty list.
+ * Trasforma un risultato Supabase `{ data, error }` nei dati oppure in un errore lanciato, così nessuna chiamata può
+ * ignorare `error`. Attenzione: una SELECT negata dalla RLS non è un errore, restituisce un elenco vuoto.
  */
 export function unwrap<T>(result: { data: T; error: SupabaseErrorLike | null }): T {
   if (result.error) {

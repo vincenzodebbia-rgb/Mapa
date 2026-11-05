@@ -2,7 +2,7 @@ import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
 
-/** Whether the logged-in user already manages an organization (v1: one per user). RLS: own memberships only. */
+/** Se l'utente con accesso gestisce già un'organizzazione (v1: una per utente). RLS: solo le proprie membership. */
 export async function hasOrganization(userId: string): Promise<boolean> {
   const supabase = await createSupabaseServerClient();
   const row = unwrap(

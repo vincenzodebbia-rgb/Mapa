@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import type { TypeOption, TypePickerTexts } from "../types";
 
-/** "¿Qué sois?": a GET form (`/registro?tipo=…`), so it works without JavaScript and survives a reload. */
+/** "¿Qué sois?": un modulo GET (`/registro?tipo=…`), così funziona senza JavaScript e resiste a un ricaricamento. */
 export function TypePicker({ options, texts }: { options: TypeOption[]; texts: TypePickerTexts }) {
   return (
     <form method="get" action="/registro" className="flex flex-col gap-4">

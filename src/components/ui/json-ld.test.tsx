@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildBreadcrumbList, type JsonLdObject } from "@/lib/seo/json-ld";
 import { JsonLd } from "./json-ld";
 
-// Text that tries everything: quotes, ampersands, apostrophes, a closing script tag and an HTML payload.
+// Un testo che prova di tutto: virgolette, &, apostrofi, un tag script di chiusura e un pezzo di HTML.
 const hostile = `Concierto "en el patio" & más 'raro' </script><img src=x onerror=alert(1)> <!-- fin`;
 
 function renderScriptText(data: JsonLdObject): string {

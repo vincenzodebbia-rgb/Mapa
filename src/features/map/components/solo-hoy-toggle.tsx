@@ -2,7 +2,7 @@ import Link from "next/link";
 import { t } from "@/lib/i18n/t";
 import { buildMapHref, type MapFilters } from "../schema";
 
-/** The "Solo hoy" switch. A link, so it works without JS and the state stays in the URL (?solo=hoy). */
+/** L'interruttore "Solo hoy". È un link, così funziona senza JS e lo stato resta nell'URL (?solo=hoy). */
 export function SoloHoyToggle({ filters }: { filters: MapFilters }) {
   const on = filters.soloHoy;
   return (

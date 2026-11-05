@@ -1,4 +1,4 @@
-/** Safety net for what ESLint sees poorly: cycles. Run: npx depcruise src --config .dependency-cruiser.cjs */
+/** Rete di sicurezza per ciò che ESLint vede male: i cicli. Si lancia con: npx depcruise src --config .dependency-cruiser.cjs */
 module.exports = {
   forbidden: [
     { name: "features-not-to-features", severity: "error",

@@ -16,7 +16,7 @@ import { addressSchema, lookupSchema, mapRegistrationDbError, parseRegistration,
 import type { FieldErrors, GeocodeOutcome, LookupResult, RegistrationField, RegistrationState } from "./types";
 
 const REGISTRATIONS_PER_USER_PER_HOUR = 5;
-// DATA_MODEL: max 10 lookups a day per connection, against NIF enumeration of the registry.
+// DATA_MODEL: al massimo 10 ricerche al giorno per connessione, contro chi prova i NIF uno a uno sull'elenco.
 const LOOKUPS_PER_CONNECTION_PER_DAY = 10;
 const GEOCODES_PER_USER_PER_HOUR = 30;
 
@@ -51,8 +51,8 @@ function readValues(formData: FormData): RegistrationState["values"] {
 type Point = { lng: number; lat: number } | null;
 
 /**
- * The point of the place: the pin if it came from the map (it must be inside the Comunidad de Madrid), otherwise
- * the address geocoded here, so the form also works without JavaScript. Unknown address: no point.
+ * Il punto del luogo: il pin se arriva dalla mappa (deve stare dentro la Comunidad de Madrid), altrimenti l'indirizzo
+ * geocodificato qui, così il modulo funziona anche senza JavaScript. Indirizzo sconosciuto: nessun punto.
  */
 async function resolvePoint(address: string | null, lng: number | null, lat: number | null): Promise<Point | "outside"> {
   if (lng !== null && lat !== null) return isInsideMadridRegion(lng, lat) ? { lng, lat } : "outside";
@@ -61,7 +61,7 @@ async function resolvePoint(address: string | null, lng: number | null, lat: num
   return result ? { lng: result.lng, lat: result.lat } : null;
 }
 
-/** "¿Qué sois?" form. Order: zod → user without organization → Turnstile → rate limit → one SQL call. */
+/** Modulo "¿Qué sois?". Ordine: zod → utente senza organizzazione → Turnstile → limite → una sola chiamata SQL. */
 export async function registerOrganization(previous: RegistrationState, formData: FormData): Promise<RegistrationState> {
   const attempt = previous.attempt + 1;
   const values = readValues(formData);
@@ -100,7 +100,7 @@ export async function registerOrganization(previous: RegistrationState, formData
 
   const supabase = await createSupabaseServerClient();
   const terms = { p_terms_version: TERMS_VERSION, p_privacy_version: PRIVACY_VERSION, p_age_confirmed: true };
-  // Invites (/invitacion/[token]) arrive with session 7: until then no token is sent.
+  // Gli inviti (/invitacion/[token]) arrivano con la sessione 7: fino ad allora non si manda nessun token.
   const { error } =
     parsed.value.kind === "informal"
       ? await supabase.rpc("create_professional", {
@@ -137,7 +137,7 @@ export async function registerOrganization(previous: RegistrationState, formData
   if (error) {
     const outcome = mapRegistrationDbError(error.message);
     if (outcome.type === "alreadyMember") redirect("/panel");
-    // Only the code: never the NIF or the contact data.
+    // Solo il codice: mai il NIF né i dati di contatto.
     if (outcome.type === "form" && outcome.error === "generic") console.warn("Registration failed:", error.code);
     if (outcome.type === "field") {
       const fieldErrors: FieldErrors = { [outcome.field]: outcome.error };
@@ -150,7 +150,7 @@ export async function registerOrganization(previous: RegistrationState, formData
   redirect("/panel");
 }
 
-/** "¿Sois <nombre>?": official name from the Comune list. Logged-in users only, 10 a day per connection. */
+/** "¿Sois <nombre>?": nome ufficiale dall'elenco del Comune. Solo utenti con accesso, 10 al giorno per connessione. */
 export async function lookupAssociation(entityType: string, nif: string): Promise<LookupResult> {
   const parsed = lookupSchema.safeParse({ entityType, nif });
   if (!parsed.success) return { status: "invalid" };
@@ -159,7 +159,7 @@ export async function lookupAssociation(entityType: string, nif: string): Promis
     if (!(await isWithinRateLimit(await getConnectionKey("registry-lookup"), LOOKUPS_PER_CONNECTION_PER_DAY, "1 day"))) {
       return { status: "tooMany" };
     }
-    // lookup_municipal_association is service_role only (anti-enumeration): it returns only found + name.
+    // lookup_municipal_association è solo per service_role (contro chi prova i NIF): restituisce solo found + nome.
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.rpc("lookup_municipal_association", { p_nif: parsed.data.nif });
     if (error) return { status: "error" };
@@ -170,7 +170,7 @@ export async function lookupAssociation(entityType: string, nif: string): Promis
   }
 }
 
-/** Address → point for the pin. Logged-in users only, with a limit (Nominatim is a shared, free service). */
+/** Indirizzo → punto per il pin. Solo utenti con accesso, con un limite (Nominatim è un servizio gratuito e condiviso). */
 export async function locateAddress(address: string): Promise<GeocodeOutcome> {
   const parsed = addressSchema.safeParse(address);
   if (!parsed.success) return { ok: false, error: "invalid" };

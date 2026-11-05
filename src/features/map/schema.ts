@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { EventCategory, OrganizationKind } from "./types";
 
-// Map filters live in the URL (docs/SPEC.md §4), so they survive a reload, a shared link and a page without JS.
-// Unknown or malformed values are ignored, never an error: a typo in a URL still shows the map.
+// I filtri della mappa stanno nell'URL (docs/SPEC.md §4), così resistono a un ricaricamento, a un link condiviso e alla pagina senza JS.
+// Valori sconosciuti o malformati si ignorano, mai un errore: con un refuso nell'URL la mappa si vede lo stesso.
 
 export const EVENT_CATEGORIES = [
   "musica",
@@ -16,7 +16,7 @@ export const EVENT_CATEGORIES = [
 
 export const PRICE_FILTERS = ["gratis", "pago"] as const;
 
-/** URL value → organization kind ("Quién organiza"). */
+/** Valore nell'URL → tipo di organizzazione ("Quién organiza"). */
 export const ORGANIZER_FILTERS = {
   asociaciones: "association",
   espacios: "venue",
@@ -66,7 +66,7 @@ export function parseMapFilters(params: RawSearchParams): MapFilters {
   };
 }
 
-/** Link to a map page with these filters. Empty filters are left out, so the plain map is just the path. */
+/** Link a una pagina della mappa con questi filtri. I filtri vuoti si tralasciano, così la mappa semplice è solo il percorso. */
 export function buildMapHref(pathname: string, filters: Partial<MapFilters>): string {
   const query = new URLSearchParams();
   if (filters.precio) query.set("precio", filters.precio);

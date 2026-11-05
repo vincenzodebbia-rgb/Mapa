@@ -7,8 +7,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
 import type { MapEvent, MapNeighborhood, MapPlace, NeighborhoodMapItems, NeighborhoodPage } from "./types";
 
-// Reads the views map_items and map_neighborhoods (security_invoker: RLS hides suspended organizations).
-// View columns (and data) are all nullable in the generated types: rows missing a required value are skipped.
+// Legge le viste map_items e map_neighborhoods (security_invoker: la RLS nasconde le organizzazioni sospese).
+// Nei tipi generati le colonne delle viste (e i dati) possono essere tutte nulle: le righe senza un valore necessario si saltano.
 
 type MapItemRow = Database["public"]["Views"]["map_items"]["Row"];
 type NeighborhoodRow = Database["public"]["Views"]["map_neighborhoods"]["Row"];
@@ -18,7 +18,7 @@ const EVENT_COLUMNS =
 const PLACE_COLUMNS = "id, slug, name, organization_kind, address, lng, lat, neighborhood_slug";
 const NEIGHBORHOOD_COLUMNS = "slug, name, district, center_lng, center_lat, west, south, east, north";
 
-/** Occurrences of events that have not ended, from now to 7 days ahead, sorted by start. */
+/** Occorrenze di eventi non finiti, da adesso a 7 giorni, in ordine di inizio. */
 export async function getUpcomingEvents(): Promise<MapEvent[]> {
   const supabase = await createSupabaseServerClient();
   const rows = unwrap(
@@ -30,7 +30,7 @@ export async function getUpcomingEvents(): Promise<MapEvent[]> {
   });
 }
 
-/** Active associations and venues with an address (the Conexiones map), sorted by name. */
+/** Associazioni ed espacios attivi con un indirizzo (la mappa Conexiones), in ordine di nome. */
 export async function getPlaces(): Promise<MapPlace[]> {
   const supabase = await createSupabaseServerClient();
   const rows = unwrap(
@@ -51,11 +51,11 @@ export async function getNeighborhoods(): Promise<MapNeighborhood[]> {
   });
 }
 
-// Barrio pages (/barrio/[slug]): public reads as anon, cached so the page is static and answers a real 404.
-// Events and organizations change them: their writes refresh these tags.
+// Pagine dei barrios (/barrio/[slug]): letture pubbliche come anon, in cache così la pagina è statica e dà un 404 vero.
+// Eventi e organizzazioni le cambiano: le loro scritture aggiornano questi tag.
 const NEIGHBORHOOD_TAGS = ["neighborhoods", "events", ORGANIZATIONS_TAG];
 
-/** The barrio with its center and box, whether it has content (indexable) and its neighbors. */
+/** Il barrio con centro e riquadro, se ha contenuti (indicizzabile) e i barrios vicini. */
 export async function getNeighborhoodPage(slug: string): Promise<NeighborhoodPage | null> {
   "use cache";
   cacheLife("minutes");
@@ -80,8 +80,8 @@ export async function getNeighborhoodPage(slug: string): Promise<NeighborhoodPag
 }
 
 /**
- * What lights up on the barrio map: events of the next 7 days and the associations and venues there.
- * `now` is the time of this cached read (light states are computed against it, not at prerender time).
+ * Cosa si accende sulla mappa del barrio: gli eventi dei prossimi 7 giorni e le associazioni ed espacios del barrio.
+ * `now` è l'ora di questa lettura in cache (gli stati di luce si calcolano rispetto a lei, non all'ora del prerender).
  */
 export async function getNeighborhoodMapItems(slug: string): Promise<NeighborhoodMapItems> {
   "use cache";
@@ -100,7 +100,7 @@ export async function getNeighborhoodMapItems(slug: string): Promise<Neighborhoo
   };
 }
 
-/** Barrios with at least one association, venue or future event: the only ones in the sitemap. */
+/** Barrios con almeno un'associazione, un espacio o un evento futuro: gli unici nella sitemap. */
 export async function getNeighborhoodSlugsWithContent(): Promise<string[]> {
   "use cache";
   cacheLife("minutes");
@@ -135,7 +135,7 @@ function toMapEvent(
   if (!id || !slug || !name || !category || !price_type || !occ_start || !occ_end || lng === null || lat === null) {
     return null;
   }
-  // PostgREST returns timestamptz with an offset; normalize to ISO UTC so sorting and comparisons are plain.
+  // PostgREST restituisce i timestamptz con uno scarto orario; si portano in ISO UTC così ordinare e confrontare è semplice.
   const startsAt = new Date(occ_start).toISOString();
   return {
     key: `${id}:${startsAt}`,

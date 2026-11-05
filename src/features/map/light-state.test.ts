@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getLightState } from "./light-state";
 
-// July: Madrid is UTC+2. "now" is Thursday 16 July 2026, 18:00 in Madrid.
+// Luglio: Madrid è UTC+2. "now" è giovedì 16 luglio 2026, 18:00 a Madrid.
 const now = new Date("2026-07-16T16:00:00Z");
 
 describe("getLightState", () => {
@@ -18,7 +18,7 @@ describe("getLightState", () => {
   });
 
   it("uses the Madrid day, not the UTC day: 00:30 tomorrow in Madrid is not today", () => {
-    // 22:30 UTC on the 16th = 00:30 on the 17th in Madrid.
+    // Le 22:30 UTC del 16 = le 00:30 del 17 a Madrid.
     expect(getLightState({ startsAt: "2026-07-16T22:30:00Z", endsAt: "2026-07-17T00:30:00Z" }, now)).toBe("lit");
   });
 

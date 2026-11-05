@@ -3,9 +3,9 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 
-// Cloudflare Turnstile (anti-robot) on public forms. Third-party script already allowed by the CSP
-// (script-src and frame-src challenges.cloudflare.com): no cookies of ours, no tracking. The token lands in a hidden
-// input named `cf-turnstile-response` inside the enclosing form and is checked on the server (src/lib/turnstile.ts).
+// Cloudflare Turnstile (anti-robot) sui moduli pubblici. Script di terzi già ammesso dalla CSP
+// (script-src e frame-src challenges.cloudflare.com): nessun cookie nostro, nessun tracciamento. Il token finisce in un
+// campo nascosto `cf-turnstile-response` dentro il modulo e si verifica sul server (src/lib/turnstile.ts).
 
 type TurnstileApi = {
   render: (container: HTMLElement, options: Record<string, unknown>) => string;
@@ -23,7 +23,7 @@ const SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render
 
 type TurnstileWidgetProps = {
   siteKey: string | undefined;
-  /** Change it after every submit: a token works only once, so the widget asks for a new one. */
+  /** Da cambiare dopo ogni invio: un token vale una volta sola, così il widget ne chiede uno nuovo. */
   resetSignal: unknown;
 };
 

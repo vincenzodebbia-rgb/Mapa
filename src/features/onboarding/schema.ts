@@ -14,9 +14,9 @@ import {
   type RegistrationTypeSlug,
 } from "./types";
 
-// Validation of the registration form, before the database. Same limits as the columns and as register_entity /
-// create_professional: the database stays the final judge, this only gives clear messages early.
-// Issue messages are FieldError codes; the page turns them into Spanish texts.
+// Validazione del modulo d'iscrizione, prima del database. Stessi limiti delle colonne e di register_entity /
+// create_professional: il database resta l'arbitro finale, qui si danno solo messaggi chiari prima.
+// I messaggi degli errori sono codici FieldError; la pagina li trasforma in testi spagnoli.
 
 export function parseRegistrationTypeSlug(value: unknown): RegistrationTypeSlug | null {
   return REGISTRATION_TYPE_SLUGS.find((slug) => slug === value) ?? null;
@@ -40,7 +40,7 @@ const optionalEmail = optionalText(254).refine(
   "invalidEmail",
 );
 
-/** Only http/https links from users (AGENTS.md). Same rule as the column check. */
+/** Dagli utenti solo link http/https (AGENTS.md). Stessa regola del vincolo sulla colonna. */
 export function isHttpUrl(value: string): boolean {
   if (/\s/.test(value)) return false;
   try {
@@ -90,7 +90,7 @@ function checkNif(entityType: EntityType, required: boolean) {
   };
 }
 
-/** Asociación, Fundación, Cooperativa, Entidad pública: NIF required, answers and address optional. */
+/** Asociación, Fundación, Cooperativa, Entidad pública: NIF obbligatorio, risposte e indirizzo facoltativi. */
 export function entitySchema(entityType: EntityType) {
   return z
     .object({
@@ -104,7 +104,7 @@ export function entitySchema(entityType: EntityType) {
     .superRefine(checkNif(entityType, true));
 }
 
-/** Actividad comercial: NIF optional (company letters only), activity, two answers and address required. */
+/** Actividad comercial: NIF facoltativo (solo lettere d'impresa); attività, due risposte e indirizzo obbligatori. */
 export const commercialSchema = z
   .object({
     ...common,
@@ -117,7 +117,7 @@ export const commercialSchema = z
   })
   .superRefine(checkNif("commercial", false));
 
-/** Gente que hace cosas: no NIF, no point; barrio from the list. */
+/** Gente que hace cosas: niente NIF, niente punto; barrio dall'elenco. */
 export const informalSchema = z.object({
   ...common,
   oneLiner: requiredText(120),
@@ -171,7 +171,7 @@ function toFieldErrors(issues: z.core.$ZodIssue[]): FieldErrors {
   const errors: FieldErrors = {};
   for (const issue of issues) {
     const field = String(issue.path[0] ?? "");
-    // lng/lat come from the map pin: a bad value is an address problem for the person.
+    // lng/lat vengono dal pin della mappa: un valore sbagliato, per la persona, è un problema dell'indirizzo.
     const target = field === "lng" || field === "lat" ? "address" : field;
     if (!FIELDS.has(target)) continue;
     const code = FIELD_ERRORS.has(issue.message) ? (issue.message as FieldError) : "invalidOption";
@@ -198,7 +198,7 @@ export function parseRegistration(
     : { ok: false, fieldErrors: toFieldErrors(parsed.error.issues) };
 }
 
-/** NIF of a registry lookup: only for the types the Comune lists, and never a personal document. */
+/** NIF di una ricerca nell'elenco: solo per i tipi che il Comune elenca, e mai un documento personale. */
 export const lookupSchema = z
   .object({ entityType: z.enum(LOOKUP_ENTITY_TYPES), nif: z.preprocess((value) => normalizeNif(asString(value)), z.string()) })
   .refine((value) => findNifProblem(value.entityType, value.nif) === null);
@@ -210,7 +210,7 @@ export type DbErrorOutcome =
   | { type: "form"; error: FormError }
   | { type: "alreadyMember" };
 
-/** Errors raised by register_entity / create_professional (raise exception '<code>') → what the person sees. */
+/** Errori di register_entity / create_professional (raise exception '<codice>') → ciò che la persona vede. */
 export function mapRegistrationDbError(message: string): DbErrorOutcome {
   switch (message) {
     case "already_member":

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getServerEnv } from "./server-env";
 
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-// Cloudflare documents a maximum of 2048 characters for a token.
+// Cloudflare indica un massimo di 2048 caratteri per un token.
 const MAX_TOKEN_LENGTH = 2048;
 const TIMEOUT_MS = 5000;
 
@@ -12,8 +12,8 @@ const siteverifyResponseSchema = z.object({ success: z.boolean() });
 type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 /**
- * Checks a Turnstile token with Cloudflare. Fails closed: any problem (no token, timeout, bad answer) = false.
- * The visitor's IP is NOT sent: Cloudflare does not need it to validate the token (minimum data).
+ * Verifica un token Turnstile con Cloudflare. Nel dubbio dice no: qualsiasi problema (niente token, tempo scaduto,
+ * risposta strana) = false. L'IP del visitatore NON si invia: a Cloudflare non serve per verificare il token (dati minimi).
  */
 export async function checkTurnstileToken(token: unknown, secret: string, fetchImpl: FetchLike = fetch): Promise<boolean> {
   if (typeof token !== "string" || token.length === 0 || token.length > MAX_TOKEN_LENGTH) return false;

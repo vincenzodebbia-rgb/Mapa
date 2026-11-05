@@ -32,7 +32,7 @@ async function readCache(query: string): Promise<{ hit: boolean; result: Geocode
   );
   if (!row) return { hit: false, result: null };
   const point = parseEwkbPoint(row.location);
-  // A cached row without a point means "Nominatim found nothing": do not ask again.
+  // Una riga in cache senza punto vuol dire "Nominatim non ha trovato niente": non si chiede di nuovo.
   return { hit: true, result: point ? { lng: point[0], lat: point[1], displayName: row.display_name ?? "" } : null };
 }
 
@@ -48,8 +48,8 @@ async function writeCache(query: string, result: GeocodeResult | null): Promise<
 }
 
 /**
- * Point of an address in the Comunidad de Madrid, or null if not found.
- * Throws when Nominatim or the cache fail (the caller shows a generic error): a failure is never cached.
+ * Punto di un indirizzo nella Comunidad de Madrid, oppure null se non si trova.
+ * Lancia un errore quando Nominatim o la cache falliscono (chi chiama mostra un errore generico): un fallimento non va mai in cache.
  */
 export async function geocodeAddress(address: string): Promise<GeocodeResult | null> {
   const query = normalizeGeocodeQuery(address);

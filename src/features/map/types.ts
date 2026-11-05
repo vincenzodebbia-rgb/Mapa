@@ -1,13 +1,13 @@
-// DTOs of the map block. They mirror the enums of the database without importing its generated types.
+// DTO del blocco map. Riprendono gli enum del database senza importarne i tipi generati.
 
 export type OrganizationKind = "association" | "venue" | "professional";
 export type EventCategory = "musica" | "teatro_danza" | "arte" | "talleres" | "encuentros" | "comunidad" | "otros";
 export type PriceType = "free" | "donation" | "paid";
 export type LightState = "pulse" | "lit";
 
-/** One occurrence of an event that has not ended yet, in the next 7 days. Times are ISO instants. */
+/** Un'occorrenza di un evento non ancora finito, nei prossimi 7 giorni. Gli orari sono istanti ISO. */
 export type MapEvent = {
-  key: string; // event id + occurrence start: a weekly event can appear twice in the window
+  key: string; // id dell'evento + inizio dell'occorrenza: un evento settimanale può comparire due volte nella finestra
   id: string;
   slug: string;
   title: string;
@@ -25,7 +25,7 @@ export type MapEvent = {
   organizerKinds: OrganizationKind[];
 };
 
-/** An active association or venue with an address: a point on the Conexiones map. */
+/** Un'associazione o un espacio attivo con un indirizzo: un punto sulla mappa Conexiones. */
 export type MapPlace = {
   id: string;
   slug: string;
@@ -45,20 +45,20 @@ export type MapNeighborhood = {
   bounds: [west: number, south: number, east: number, north: number];
 };
 
-/** A barrio page (/barrio/[slug]): noindex while it has no content (docs/SPEC.md §14). */
+/** Una pagina di barrio (/barrio/[slug]): noindex finché non ha contenuti (docs/SPEC.md §14). */
 export type NeighborhoodPage = MapNeighborhood & {
   hasContent: boolean;
   neighbors: { slug: string; name: string }[];
 };
 
-/** What lights up on a barrio map. `now` is the time of the cached read (ISO), for the light states. */
+/** Cosa si accende sulla mappa di un barrio. `now` è l'ora della lettura in cache (ISO), per gli stati di luce. */
 export type NeighborhoodMapItems = {
   events: MapEvent[];
   places: MapPlace[];
   now: string;
 };
 
-/** What a popup shows, already formatted on the server. The client only turns it into DOM text. */
+/** Cosa mostra un popup, già formattato sul server. Il client lo trasforma solo in testo del DOM. */
 export type PopupContent = {
   title: string;
   lines: string[];

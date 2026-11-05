@@ -27,7 +27,7 @@ function getEmptyMessage(filters: MapFilters): string {
   return hasEventFilters(filters) ? t("hoy.empty.filtered") : t("hoy.empty.week");
 }
 
-/** The Hoy map (`/`): only events, `pulse` today and `lit` in the next 7 days (docs/SPEC.md §4). */
+/** La mappa Hoy (`/`): solo eventi, `pulse` oggi e `lit` nei prossimi 7 giorni (docs/SPEC.md §4). */
 export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
   const mapEvents = filterEvents(events, filters, now, { byNeighborhood: false });
   const listEvents = filterEvents(events, filters, now, { byNeighborhood: true });

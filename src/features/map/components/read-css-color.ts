@@ -1,5 +1,5 @@
-// MapLibre needs real color values and may not parse oklch(): the tokens in globals.css are oklch.
-// Paint the element's computed color on a 1×1 canvas and read it back as rgba, which every renderer accepts.
+// MapLibre ha bisogno di colori veri e può non capire oklch(): i token in globals.css sono oklch.
+// Si dipinge il colore calcolato dell'elemento su un canvas 1×1 e lo si rilegge come rgba, che ogni renderer accetta.
 export function readCssColor(element: HTMLElement): string | null {
   const canvas = document.createElement("canvas");
   canvas.width = 1;

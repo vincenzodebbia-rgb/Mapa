@@ -9,14 +9,14 @@ import { verifyTurnstileToken } from "@/lib/turnstile";
 import { emailLinkSchema, signInSchema, type EmailLinkParams } from "./schema";
 import type { SignInState } from "./types";
 
-// Limits for sending a magic link: per connection and per email (both as daily HMAC, never in clear).
+// Limiti per l'invio del link magico: per connessione e per email (tutte e due come HMAC giornaliero, mai in chiaro).
 const LINKS_PER_CONNECTION_PER_HOUR = 5;
 const LINKS_PER_EMAIL_PER_HOUR = 3;
 
 /**
- * Where the email link comes back: the site the person is using (localhost, a Vercel preview, production) + the
- * confirm route, with no query string (the email template appends `?token_hash=…&type=email`). Supabase sends
- * the link only if this URL is in its Redirect URLs allow list.
+ * Dove torna il link dell'email: il sito che la persona sta usando (localhost, un'anteprima Vercel, la produzione) + la
+ * rotta di conferma, senza parametri (il template dell'email aggiunge `?token_hash=…&type=email`). Supabase manda
+ * il link solo se questo URL è nell'elenco dei Redirect URL.
  */
 async function getEmailRedirectUrl(): Promise<string> {
   const origin = (await headers()).get("origin");
@@ -26,13 +26,13 @@ async function getEmailRedirectUrl(): Promise<string> {
       const url = new URL(origin);
       if (url.protocol === "https:" || url.protocol === "http:") base = new URL(url.origin);
     } catch {
-      // Not a URL: keep the site URL.
+      // Non è un URL: si tiene l'URL del sito.
     }
   }
   return new URL("/auth/confirm", base).toString();
 }
 
-/** Sends a magic link. Public: Turnstile + rate limits. The answer is the same whether or not the email exists. */
+/** Manda un link magico. Pubblica: Turnstile + limiti di frequenza. La risposta è la stessa che l'email esista o no. */
 export async function requestMagicLink(previous: SignInState, formData: FormData): Promise<SignInState> {
   const attempt = previous.attempt + 1;
   const parsed = signInSchema.safeParse({
@@ -41,7 +41,7 @@ export async function requestMagicLink(previous: SignInState, formData: FormData
   });
   if (!parsed.success) return { ok: false, sent: false, error: "invalidEmail", attempt };
 
-  // No user to check: this is the way in. Anti-robot first, then the limits.
+  // Nessun utente da controllare: questa è la porta d'ingresso. Prima l'anti-robot, poi i limiti.
   if (!(await verifyTurnstileToken(parsed.data.turnstileToken))) {
     return { ok: false, sent: false, error: "robot", attempt };
   }
@@ -59,7 +59,7 @@ export async function requestMagicLink(previous: SignInState, formData: FormData
     options: { emailRedirectTo: await getEmailRedirectUrl(), shouldCreateUser: true },
   });
   if (error) {
-    // Never log the email: only the error code.
+    // Mai l'email nei log: solo il codice dell'errore.
     console.warn("signInWithOtp failed:", error.code ?? error.name);
     if (error.code === "over_email_send_rate_limit" || error.status === 429) {
       return { ok: false, sent: false, error: "tooMany", attempt };
@@ -71,8 +71,8 @@ export async function requestMagicLink(previous: SignInState, formData: FormData
 }
 
 /**
- * Exchanges the link of the email for a session cookie. Called by src/app/auth/confirm/route.ts, which redirects.
- * Accepts the token_hash of our email template and the `code` of the default Supabase link (PKCE).
+ * Scambia il link dell'email con un cookie di sessione. La chiama src/app/auth/confirm/route.ts, che poi reindirizza.
+ * Accetta il token_hash del nostro template email e il `code` del link standard di Supabase (PKCE).
  */
 export async function confirmEmailLink(params: EmailLinkParams): Promise<{ ok: boolean }> {
   const parsed = emailLinkSchema.safeParse(params);

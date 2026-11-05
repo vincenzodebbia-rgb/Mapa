@@ -1,10 +1,10 @@
-// PostgREST returns PostGIS geography columns as hex EWKB ("0101000020E6100000…").
-// The views compute lng/lat in SQL; tables (events.location) need this small decoder.
+// PostgREST restituisce le colonne geography di PostGIS in EWKB esadecimale ("0101000020E6100000…").
+// Le viste calcolano lng/lat in SQL; le tabelle (events.location) hanno bisogno di questo piccolo decodificatore.
 
 const WKB_POINT = 1;
 const EWKB_SRID_FLAG = 0x20000000;
 
-/** [lng, lat] of a hex (E)WKB Point, or null for anything else. */
+/** [lng, lat] di un Point in (E)WKB esadecimale, oppure null per qualsiasi altra cosa. */
 export function parseEwkbPoint(hex: unknown): [lng: number, lat: number] | null {
   if (typeof hex !== "string" || !/^[0-9a-fA-F]+$/.test(hex) || hex.length % 2 !== 0) return null;
   const bytes = Uint8Array.from(hex.match(/../g) ?? [], (byte) => parseInt(byte, 16));

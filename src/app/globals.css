@@ -1,34 +1,34 @@
 @import "tailwindcss";
 
 /*
- * DESIGN TOKENS — the ONLY place where colors, fonts, radii and shadows are defined.
- * Values below are NEUTRAL PLACEHOLDERS until the name and visual identity are chosen.
- * `--color-*: initial` removes Tailwind's default palette: only these tokens exist,
- * so `bg-blue-500` silently produces nothing. Use semantic names, never brand names.
- * MapLibre reads --color-light, --color-faint and --color-thread-* at runtime.
+ * TOKEN DEL DESIGN — l'UNICO posto in cui si definiscono colori, font, raggi e ombre.
+ * I valori qui sotto sono SEGNAPOSTO NEUTRI finché non si scelgono il nome e l'identità visiva.
+ * `--color-*: initial` toglie la tavolozza predefinita di Tailwind: esistono solo questi token,
+ * quindi `bg-blue-500` in silenzio non produce niente. Nomi per funzione, mai nomi del marchio.
+ * MapLibre legge --color-light, --color-faint e --color-thread-* durante l'esecuzione.
  */
 @theme {
   --color-*: initial;
   --font-*: initial;
 
-  /* surfaces and text */
+  /* superfici e testo */
   --color-night: oklch(0.18 0.01 60);
   --color-surface: oklch(0.23 0.01 60);
   --color-ink: oklch(0.95 0.01 80);
   --color-muted: oklch(0.72 0.01 70);
   --color-line: oklch(0.35 0.01 60);
 
-  /* map light states */
+  /* stati di luce della mappa */
   --color-light: oklch(0.75 0.15 60);
   --color-faint: oklch(0.55 0.02 60);
 
-  /* thread colors: aesthetic only, no meaning */
+  /* colori dei fili: solo estetici, nessun significato */
   --color-thread-1: oklch(0.78 0.14 60);
   --color-thread-2: oklch(0.75 0.12 200);
   --color-thread-3: oklch(0.72 0.14 330);
   --color-thread-4: oklch(0.80 0.13 120);
 
-  /* feedback */
+  /* messaggi di esito */
   --color-danger: oklch(0.65 0.2 25);
   --color-ok: oklch(0.72 0.14 150);
 

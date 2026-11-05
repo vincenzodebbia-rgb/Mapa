@@ -3,7 +3,7 @@ import { formatMadridDate, formatMadridTime, getMadridDateKey } from "@/lib/date
 import { t } from "@/lib/i18n/t";
 import type { MapEvent, MapPlace, PopupContent } from "./types";
 
-// Turns DTOs into the texts people read, on the server: the same words in the popup and in the list view.
+// Trasforma i DTO nei testi che le persone leggono, sul server: le stesse parole nel popup e nella vista elenco.
 
 const euroFormat = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 

@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import type { MapViewProps } from "./map-view";
 
-// MapLibre needs the browser: load it only on the client. dynamic(..., { ssr: false }) is not allowed in
-// Server Components, hence this small client wrapper.
+// MapLibre ha bisogno del browser: si carica solo sul client. dynamic(..., { ssr: false }) non è ammesso nei
+// Server Component, da qui questo piccolo involucro client.
 const MapView = dynamic(() => import("./map-view").then((module) => module.MapView), { ssr: false });
 
 type MapViewLoaderProps = MapViewProps & { loadingLabel: string };

@@ -14,7 +14,7 @@ export type LocationPickerMapProps = {
   label: string;
 };
 
-// The map cannot leave the Comunidad de Madrid, so the pin cannot either (same box as private.make_org_point).
+// La mappa non può uscire dalla Comunidad de Madrid, quindi nemmeno il pin (stesso riquadro di private.make_org_point).
 const MAX_BOUNDS: [number, number, number, number] = [
   MADRID_REGION_BOX.west,
   MADRID_REGION_BOX.south,
@@ -22,11 +22,11 @@ const MAX_BOUNDS: [number, number, number, number] = [
   MADRID_REGION_BOX.north,
 ];
 
-/** Second MapLibre component of the block: one draggable pin for the address of a place. */
+/** Secondo componente MapLibre del blocco: un pin trascinabile per l'indirizzo di un luogo. */
 export function LocationPickerMap({ styleUrl, point, onMove, label }: LocationPickerMapProps) {
   const mapRef = useRef<MapRef>(null);
 
-  // A new point from the address search: follow it. After a drag the pin is already in view.
+  // Un punto nuovo dalla ricerca dell'indirizzo: la mappa lo segue. Dopo un trascinamento il pin è già in vista.
   useEffect(() => {
     mapRef.current?.easeTo({ center: [point.lng, point.lat], duration: 300 });
   }, [point.lng, point.lat]);

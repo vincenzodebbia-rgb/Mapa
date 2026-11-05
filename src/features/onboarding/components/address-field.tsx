@@ -19,8 +19,8 @@ type AddressFieldProps = {
 type Status = "idle" | "found" | "notFound" | "failed";
 
 /**
- * Address + "Buscar en el mapa": puts the pin (shared PointField) on the address; the pin can then be dragged.
- * Without JavaScript the server geocodes the address on submit.
+ * Indirizzo + "Buscar en el mapa": mette il pin (PointField condiviso) sull'indirizzo; poi il pin si può trascinare.
+ * Senza JavaScript il server geocodifica l'indirizzo all'invio.
  */
 export function AddressField({ id, defaultValue, required, describedBy, invalid, texts }: AddressFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,7 +54,7 @@ export function AddressField({ id, defaultValue, required, describedBy, invalid,
         defaultValue={defaultValue}
         aria-describedby={describedBy}
         aria-invalid={invalid || undefined}
-        // A new address makes the old pin wrong: the server will geocode it again unless the person searches.
+        // Un indirizzo nuovo rende sbagliato il pin vecchio: il server lo geocodificherà di nuovo, se la persona non cerca.
         onChange={() => {
           setPoint(null);
           setStatus("idle");

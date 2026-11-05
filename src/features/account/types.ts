@@ -12,8 +12,8 @@ export type ReviewVenueActivity =
   | "otro";
 
 /**
- * A flagged organization for the founder's review (/revision). Only what admin_review_list returns:
- * never NIF, email, phone or user id (docs/PRIVACY_AND_OWNERSHIP.md §13).
+ * Un'organizzazione con avviso per la revisione del fondatore (/revision). Solo ciò che restituisce admin_review_list:
+ * mai NIF, email, telefono o id utente (docs/PRIVACY_AND_OWNERSHIP.md §13).
  */
 export type ReviewItem = {
   id: string;
@@ -22,7 +22,7 @@ export type ReviewItem = {
   entityType: ReviewEntityType | null;
   venueActivity: ReviewVenueActivity | null;
   neighborhoodName: string | null;
-  /** Only http/https, otherwise null. */
+  /** Solo http/https, altrimenti null. */
   contactUrl: string | null;
   whatForWhom: string | null;
   howSustained: string | null;
@@ -32,7 +32,7 @@ export type ReviewItem = {
   createdAt: string;
 };
 
-/** Texts of the review list, read on the server. */
+/** Testi dell'elenco di revisione, letti sul server. */
 export type ReviewListTexts = {
   empty: string;
   none: string;

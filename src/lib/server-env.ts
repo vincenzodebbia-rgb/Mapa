@@ -11,8 +11,9 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 let cachedServerEnv: ServerEnv | undefined;
 
-// Vercel system variables (set by Vercel at build and run time, without protocol). Not secrets, never required:
-// missing, empty or invalid = not set, so local builds and CI keep working. Used by src/lib/site-url.ts.
+// Variabili di sistema di Vercel (impostate da Vercel al build e all'esecuzione, senza protocollo). Non sono segreti e
+// non sono mai obbligatorie: mancanti, vuote o non valide = non impostate, così build locali e CI continuano a funzionare.
+// Le usa src/lib/site-url.ts.
 const deploymentEnvSchema = z.object({
   VERCEL_PROJECT_PRODUCTION_URL: z.string().min(1).optional().catch(undefined),
   VERCEL_URL: z.string().min(1).optional().catch(undefined),
@@ -27,7 +28,7 @@ export function getDeploymentEnv(): DeploymentEnv {
   });
 }
 
-/** Validated lazily, so `next build` in CI works with only the public variables set. */
+/** Validate solo al primo uso, così `next build` in CI funziona con le sole variabili pubbliche. */
 export function getServerEnv(): ServerEnv {
   cachedServerEnv ??= serverEnvSchema.parse({
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,

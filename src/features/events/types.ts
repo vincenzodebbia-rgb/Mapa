@@ -1,4 +1,4 @@
-// DTOs of the events block. They mirror the enums of the database without importing its generated types.
+// DTO del blocco events. Riprendono gli enum del database senza importarne i tipi generati.
 
 export type OrganizationKind = "association" | "venue" | "professional";
 export type EventCategory = "musica" | "teatro_danza" | "arte" | "talleres" | "encuentros" | "comunidad" | "otros";
@@ -12,7 +12,7 @@ export type EventOrganizer = {
   isOwner: boolean;
 };
 
-/** Everything the event page shows. Times are ISO instants; display them with src/lib/dates.ts. */
+/** Tutto ciò che mostra la pagina evento. Gli orari sono istanti ISO; si mostrano con src/lib/dates.ts. */
 export type EventPage = {
   id: string;
   slug: string;
@@ -22,29 +22,29 @@ export type EventPage = {
   priceType: PriceType;
   priceAmount: number | null;
   recurrence: Recurrence;
-  /** Next occurrence that has not ended; the last one if the event is over. */
+  /** Prossima occorrenza non finita; l'ultima se l'evento è finito. */
   startsAt: string;
   endsAt: string;
-  /** End of the last occurrence: drives indexing and the 7-day redirect. */
+  /** Fine dell'ultima occorrenza: decide l'indicizzazione e il redirect dopo 7 giorni. */
   lastEndsAt: string;
   venueName: string | null;
   address: string;
   lng: number;
   lat: number;
   neighborhood: { slug: string; name: string } | null;
-  /** Owner first. */
+  /** Prima il titolare. */
   organizers: EventOrganizer[];
 };
 
-/** What the event page shows: the event, a permanent redirect 7 days after the end, or a 404. */
+/** Cosa mostra la pagina evento: l'evento, un redirect permanente 7 giorni dopo la fine, oppure un 404. */
 export type EventPageResult =
   | { status: "found"; event: EventPage; indexable: boolean }
   | { status: "redirect"; organizerSlug: string }
   | { status: "missing" };
 
-/** One upcoming occurrence in a list (organization profile, neighborhood page). */
+/** Una prossima occorrenza in un elenco (scheda dell'organizzazione, pagina del barrio). */
 export type UpcomingEvent = {
-  key: string; // event id + occurrence start
+  key: string; // id dell'evento + inizio dell'occorrenza
   slug: string;
   title: string;
   category: EventCategory;

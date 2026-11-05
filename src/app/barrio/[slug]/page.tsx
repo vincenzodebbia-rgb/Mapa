@@ -17,10 +17,10 @@ import { toAbsoluteUrl } from "@/lib/site-url";
 import { getContentPageTexts } from "../../content-page-texts";
 import { STATIC_PARAMS_PLACEHOLDER } from "../../static-params";
 
-// The whole page is static (cached data), so an unknown barrio answers a real 404.
+// Tutta la pagina è statica (dati in cache), così un barrio sconosciuto risponde con un 404 vero.
 export const ensureStatic = "navigation";
-// Blocking on purpose: params are read before rendering so the status can be decided. Once generated,
-// the page is static and served from cache.
+// Bloccante di proposito: i params si leggono prima del rendering, così si può decidere lo stato. Una volta generata,
+// la pagina è statica e si serve dalla cache.
 export const instant = false;
 
 export function generateStaticParams() {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: PageProps<"/barrio/[slug]">):
     title,
     description,
     alternates: { canonical: path },
-    // noindex until it has an association, a venue or a future event (docs/SPEC.md §14).
+    // noindex finché non ha un'associazione, un espacio o un evento futuro (docs/SPEC.md §14).
     robots: getPageRobots(neighborhood.hasContent),
     openGraph: { title, description, url: path, type: "website" },
   };

@@ -8,7 +8,7 @@ import { t } from "@/lib/i18n/t";
 import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { getContentPageTexts } from "../content-page-texts";
 
-// Private, per request. Anyone who is not an admin gets a 404: the page does not reveal it exists.
+// Privata, a ogni richiesta. Chi non è admin riceve un 404: la pagina non rivela di esistere.
 export const instant = false;
 
 export const metadata: Metadata = { title: t("revision.metaTitle"), robots: { index: false, follow: false } };

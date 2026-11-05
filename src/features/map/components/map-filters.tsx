@@ -15,8 +15,8 @@ type MapFiltersFormProps = {
 };
 
 /**
- * GET form: filters go into the URL. next/form navigates on the client when JS is there,
- * and stays a plain form without it. Categories have no colors (docs/SPEC.md §4).
+ * Modulo GET: i filtri vanno nell'URL. next/form naviga sul client quando c'è JS,
+ * e senza resta un modulo semplice. Le categorie non hanno colori (docs/SPEC.md §4).
  */
 export function MapFiltersForm({ filters, neighborhoods }: MapFiltersFormProps) {
   const fieldClass = "flex flex-col gap-1 text-sm";
@@ -26,7 +26,7 @@ export function MapFiltersForm({ filters, neighborhoods }: MapFiltersFormProps) 
       <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-2 focus-visible:outline-light">
         {t("hoy.filters.title")}
       </summary>
-      {/* key: a new URL remounts the form, so the selects show the active filters after navigation. */}
+      {/* key: un URL nuovo ricrea il modulo, così i menu mostrano i filtri attivi dopo la navigazione. */}
       <Form key={buildMapHref("/", filters)} action="/" className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className={fieldClass}>
           {t("hoy.filters.price")}

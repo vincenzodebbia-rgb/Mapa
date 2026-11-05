@@ -1,8 +1,8 @@
-// DTOs of the organizations block. They mirror the enums of the database without importing its generated types.
+// DTO del blocco organizations. Riprendono gli enum del database senza importarne i tipi generati.
 
 export type OrganizationKind = "association" | "venue" | "professional";
 
-/** The public profile /a/[slug] (docs/SPEC.md §7). Only what the organization chose to make public. */
+/** La scheda pubblica /a/[slug] (docs/SPEC.md §7). Solo ciò che l'organizzazione ha scelto di rendere pubblico. */
 export type OrganizationProfile = {
   id: string;
   slug: string;
@@ -12,23 +12,23 @@ export type OrganizationProfile = {
   whenToVisit: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
-  /** Already checked: http/https only. */
+  /** Già controllato: solo http/https. */
   contactUrl: string | null;
-  /** Never for "Gente que hace cosas" (professional). */
+  /** Mai per "Gente que hace cosas" (professional). */
   address: string | null;
   neighborhood: { slug: string; name: string } | null;
   story: string | null;
-  /** Absolute public URL of the WebP logo in Storage, or null. */
+  /** URL pubblico assoluto del logo WebP nello Storage, oppure null. */
   logoUrl: string | null;
   verified: boolean;
-  /** false only for professionals who turned off "Mostrar mi perfil en Google". */
+  /** false solo per i professionisti che hanno spento "Mostrar mi perfil en Google". */
   indexable: boolean;
 };
 
-/** An indexable profile in the sitemap. */
+/** Una scheda indicizzabile nella sitemap. */
 export type OrganizationSitemapEntry = { slug: string; updatedAt: string };
 
-/** An organization in a list (neighborhood page). */
+/** Un'organizzazione in un elenco (pagina del barrio). */
 export type OrganizationSummary = {
   slug: string;
   kind: OrganizationKind;
@@ -36,5 +36,5 @@ export type OrganizationSummary = {
   oneLiner: string | null;
 };
 
-/** The organization the logged-in user manages (private panel). */
+/** L'organizzazione che gestisce l'utente con accesso (panel privato). */
 export type MyOrganization = { slug: string; name: string; status: "active" | "suspended" };

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// End-to-end tests start in session 3. Mobile first: the default project is a phone.
+// I test end-to-end partono dalla sessione 3. Prima il telefono: il progetto predefinito è un telefono.
 export default defineConfig({
   testDir: "./e2e",
   // Il sito demo ha bisogno di un server suo con NEXT_PUBLIC_DEMO=1: npm run e2e:demo (playwright.demo.config.ts).

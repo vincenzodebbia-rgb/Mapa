@@ -23,7 +23,7 @@ import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { getContentPageTexts } from "../content-page-texts";
 import { getSignInFormTexts } from "../sign-in-form-texts";
 
-// Reads the session: blocking on purpose, so redirects are real (to /panel when the user already has an organization).
+// Legge la sessione: bloccante di proposito, così i redirect sono veri (a /panel se l'utente ha già un'organizzazione).
 export const instant = false;
 
 export const metadata: Metadata = { title: t("registro.metaTitle"), robots: { index: false, follow: false } };
@@ -78,7 +78,7 @@ function getFormTexts(entityType: EntityType): RegistrationFormTexts {
     lookup: {
       button: t("registro.lookup.button"),
       checking: t("registro.lookup.checking"),
-      // {name} is filled in the browser with the official name of the registry.
+      // {name} si riempie nel browser con il nome ufficiale dell'elenco.
       found: t("registro.lookup.found", { name: "{name}" }),
       useName: t("registro.lookup.useName"),
       notFound: t("registro.lookup.notFound"),

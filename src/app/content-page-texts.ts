@@ -1,7 +1,7 @@
 import "server-only";
 import { t } from "@/lib/i18n/t";
 
-/** Texts of the shared shell of the text pages, read once on the server. */
+/** Testi del guscio comune delle pagine di testo, letti una volta sul server. */
 export function getContentPageTexts() {
   return {
     backLabel: t("page.backToMap"),

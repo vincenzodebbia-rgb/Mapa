@@ -8,7 +8,7 @@ type OrganizationListProps = {
   organizations: OrganizationSummary[];
 };
 
-/** Associations and venues in a list (barrio page), by name. No ranking, no counters. */
+/** Associazioni ed espacios in un elenco (pagina del barrio), per nome. Nessuna classifica, nessun contatore. */
 export function OrganizationList({ heading, emptyMessage, organizations }: OrganizationListProps) {
   return (
     <section className="flex flex-col gap-3">

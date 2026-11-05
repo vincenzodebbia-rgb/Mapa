@@ -12,7 +12,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-/** Read-only list for the founder. Text from the database is rendered as text only. */
+/** Elenco in sola lettura per il fondatore. Il testo del database si mostra solo come testo. */
 export function ReviewList({ items, texts }: { items: ReviewItem[]; texts: ReviewListTexts }) {
   if (items.length === 0) return <p className="text-muted">{texts.empty}</p>;
   const orNone = (value: string | null) => value ?? texts.none;

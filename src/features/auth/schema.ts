@@ -5,12 +5,12 @@ export const signInSchema = z.object({
   turnstileToken: z.string().max(2048).optional(),
 });
 
-// Link types the confirm route accepts: magic link and first sign-up both arrive as "email" (template with
-// token_hash); "magiclink" and "signup" are the older names Supabase may still send.
+// Tipi di link che la rotta di conferma accetta: link magico e prima iscrizione arrivano tutti e due come "email"
+// (template con token_hash); "magiclink" e "signup" sono i nomi vecchi che Supabase può ancora mandare.
 export const emailLinkSchema = z.union([
   z.object({ tokenHash: z.string().min(1).max(2048), type: z.enum(["email", "magiclink", "signup"]) }),
   z.object({ code: z.string().min(1).max(2048) }),
 ]);
 
-/** Raw query parameters of the email link, validated by emailLinkSchema inside the action. */
+/** Parametri grezzi del link dell'email, validati da emailLinkSchema dentro l'action. */
 export type EmailLinkParams = { tokenHash: string | null; type: string | null; code: string | null };

@@ -5,12 +5,12 @@ type FormFieldProps = {
   label: string;
   hint?: string;
   error?: string;
-  /** "(opcional)" / "(obligatorio)" next to the label. */
+  /** "(opcional)" / "(obligatorio)" accanto all'etichetta. */
   marker: string;
   children: (describedBy: string | undefined, invalid: boolean) => ReactNode;
 };
 
-/** Label + control + hint + error, wired with aria-describedby. */
+/** Etichetta + campo + aiuto + errore, collegati con aria-describedby. */
 export function FormField({ id, label, hint, error, marker, children }: FormFieldProps) {
   const describedBy = [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(" ") || undefined;
   return (

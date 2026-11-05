@@ -6,12 +6,13 @@ import { unwrap } from "./supabase/unwrap";
 import { getServerEnv } from "./server-env";
 
 /**
- * Rate limits on top of public.check_rate_limit (service_role only, hence the admin client).
- * Keys never hold personal data in clear: an IP or an email becomes an HMAC with a salt that changes every day
- * (UTC), derived from the secret key. Nobody can reverse it, and yesterday's keys cannot be linked to today's.
+ * Limiti di frequenza sopra public.check_rate_limit (solo service_role, per questo il client admin).
+ * Le chiavi non contengono mai dati personali in chiaro: un IP, un'email o un id utente diventano un HMAC con un sale
+ * che cambia ogni giorno (UTC), ricavato dalla chiave secret. Nessuno può risalire al valore, e le chiavi di ieri non si
+ * possono collegare a quelle di oggi.
  */
 
-/** HMAC-SHA256 of `value` with a daily salt. Pure, for tests. */
+/** HMAC-SHA256 di `value` con un sale giornaliero. Pura, per i test. */
 export function hashForRateLimit(value: string, secret: string, day: string): string {
   return createHmac("sha256", secret).update(`${day}|${value.trim().toLowerCase()}`).digest("hex");
 }
@@ -20,34 +21,34 @@ function todayUtc(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
-/** First address of x-forwarded-for (set by Vercel), else x-real-ip. Pure, for tests. */
+/** Primo indirizzo di x-forwarded-for (lo imposta Vercel), altrimenti x-real-ip. Pura, per i test. */
 export function readClientIp(headerList: Pick<Headers, "get">): string {
   const forwarded = headerList.get("x-forwarded-for")?.split(",")[0]?.trim();
   return forwarded || headerList.get("x-real-ip")?.trim() || "unknown";
 }
 
-/** Rate-limit key for this connection: `<scope>:ip:<hmac>`. The IP itself is never stored or logged. */
+/** Chiave del limite per questa connessione: `<ambito>:ip:<hmac>`. L'IP non si salva né si scrive mai nei log. */
 export async function getConnectionKey(scope: string): Promise<string> {
   const ip = readClientIp(await headers());
   return `${scope}:ip:${hashForRateLimit(ip, getServerEnv().SUPABASE_SECRET_KEY, todayUtc())}`;
 }
 
-/** Rate-limit key for a personal value (an email, a user id): `<scope>:h:<hmac>`. */
+/** Chiave del limite per un valore personale (un'email, un id utente): `<ambito>:h:<hmac>`. */
 export function getHashedKey(scope: string, value: string): string {
   return `${scope}:h:${hashForRateLimit(value, getServerEnv().SUPABASE_SECRET_KEY, todayUtc())}`;
 }
 
-/** Rate-limit key for something that is not personal (an organization id). Never a user id: use getHashedKey. */
+/** Chiave del limite per qualcosa che non è personale (un id di organizzazione). Mai un id utente: usare getHashedKey. */
 export function getIdKey(scope: string, id: string): string {
   return `${scope}:id:${id}`;
 }
 
 /**
- * Counts one attempt and says whether it is still within `max` per `window` (a Postgres interval, e.g. '1 hour').
- * Throws if the database fails: the caller answers with a generic error, never lets the attempt through silently.
+ * Conta un tentativo e dice se si è ancora entro `max` per `window` (un intervallo di Postgres, per esempio '1 hour').
+ * Lancia un errore se il database fallisce: chi chiama risponde con un errore generico, non lascia mai passare in silenzio.
  */
 export async function isWithinRateLimit(key: string, max: number, window: string): Promise<boolean> {
   const supabase = createSupabaseAdminClient();
-  // null would mean "no answer": treat it as over the limit (fail closed).
+  // null vorrebbe dire "nessuna risposta": si tratta come limite superato (si chiude per sicurezza).
   return unwrap(await supabase.rpc("check_rate_limit", { p_key: key, p_max: max, p_window: window })) === true;
 }

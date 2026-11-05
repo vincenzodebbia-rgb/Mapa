@@ -1,12 +1,12 @@
 import type { JsonLdObject } from "@/lib/seo/json-ld";
 import type { EventPage } from "./types";
 
-// schema.org Event for the event page (docs/SPEC.md §14). Pure: the page passes absolute URLs.
-// No image: v1 has no event photos (docs/SPEC.md §5).
+// Event di schema.org per la pagina evento (docs/SPEC.md §14). Puro: la pagina passa gli URL assoluti.
+// Nessuna immagine: la v1 non ha foto degli eventi (docs/SPEC.md §5).
 
 type EventJsonLdUrls = {
   event: string;
-  /** Absolute profile URL by organizer slug. */
+  /** URL assoluto della scheda per slug dell'organizzatore. */
   organizer: (slug: string) => string;
 };
 
@@ -39,7 +39,7 @@ export function buildEventJsonLd(event: EventPage, urls: EventJsonLdUrls): JsonL
       name: organizer.name,
       url: urls.organizer(organizer.slug),
     })),
-    // Donation ("aportación voluntaria") is free to attend: no price offer.
+    // Con l'offerta libera ("aportación voluntaria") si entra gratis: nessuna offerta di prezzo.
     offers:
       event.priceType === "donation"
         ? undefined

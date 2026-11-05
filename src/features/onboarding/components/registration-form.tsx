@@ -29,14 +29,14 @@ type RegistrationFormProps = {
   venueActivityOptions: Option[];
   categoryOptions: Option[];
   neighborhoodOptions: Option[];
-  /** Draggable pin from the map block, composed by the page (blocks never import each other). */
+  /** Pin trascinabile del blocco map, composto dalla pagina (i blocchi non si importano mai a vicenda). */
   locationPicker: ReactNode;
 };
 
 const textareaClass =
   "min-h-24 w-full rounded-card border border-line bg-surface p-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-light";
 
-/** Registration after "¿Qué sois?": fields depend on the entity type (docs/SPEC.md §8). Saved in one SQL call. */
+/** Iscrizione dopo "¿Qué sois?": i campi dipendono dal tipo (docs/SPEC.md §8). Si salva con una sola chiamata SQL. */
 export function RegistrationForm(props: RegistrationFormProps) {
   return (
     <PointFieldProvider>
@@ -145,8 +145,8 @@ function RegistrationFormBody({
   );
 
   return (
-    // key: after every attempt the form is recreated with the values sent back (React resets it after an action),
-    // and the Turnstile widget asks for a new token (each token works once).
+    // key: dopo ogni tentativo il modulo si ricrea con i valori rimandati indietro (React lo azzera dopo un'action),
+    // e il widget Turnstile chiede un token nuovo (ogni token vale una volta).
     <form key={state.attempt} action={formAction} className="flex flex-col gap-6" noValidate>
       <input type="hidden" name="tipo" value={typeSlug} />
       <p>

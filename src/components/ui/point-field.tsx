@@ -24,7 +24,7 @@ export function usePointField(): PointFieldValue {
   return value;
 }
 
-/** Hidden inputs with the current point, to put inside the form. */
+/** Campi nascosti con il punto attuale, da mettere dentro il modulo. */
 export function PointFieldInputs() {
   const { point } = usePointField();
   return (

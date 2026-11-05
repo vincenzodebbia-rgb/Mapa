@@ -1,13 +1,13 @@
 import { z } from "zod";
 
 /**
- * Public environment variables (safe in the browser).
- * Server-only secrets live in src/lib/server-env.ts so they can never be bundled for the client.
+ * Variabili d'ambiente pubbliche (sicure nel browser).
+ * I segreti solo server stanno in src/lib/server-env.ts, così non possono mai finire nel bundle del client.
  */
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
-  // Never blocks build or CI: missing, empty or invalid = not set. The fallback chain lives in src/lib/site-url.ts.
+  // Non blocca mai build né CI: mancante, vuota o non valida = non impostata. La catena di riserva sta in src/lib/site-url.ts.
   NEXT_PUBLIC_SITE_URL: z.url().optional().catch(undefined),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
 });
@@ -18,7 +18,7 @@ let cachedPublicEnv: PublicEnv | undefined;
 
 export function getPublicEnv(): PublicEnv {
   cachedPublicEnv ??= publicEnvSchema.parse({
-    // Listed one by one: Next.js inlines NEXT_PUBLIC_* in the browser bundle only when referenced literally.
+    // Una per una: Next.js mette le NEXT_PUBLIC_* nel bundle del browser solo quando sono scritte per esteso.
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,

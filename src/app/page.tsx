@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   description: t("hoy.metaDescription"),
 };
 
-// Filters are in the URL and events change every minute: the content renders per request, inside Suspense,
-// so the static shell (fallback) ships first (Cache Components).
+// I filtri sono nell'URL e gli eventi cambiano ogni minuto: il contenuto si genera a ogni richiesta, dentro Suspense,
+// così il guscio statico (fallback) parte per primo (Cache Components).
 export default function HoyPage({ searchParams }: PageProps<"/">) {
   return (
     <Suspense fallback={<p className="grid h-app place-items-center text-muted">{t("map.loading")}</p>}>

@@ -10,13 +10,13 @@ const linkClass = "underline underline-offset-2 break-words focus-visible:outlin
 
 type OrganizationProfileProps = {
   organization: OrganizationProfileData;
-  /** Absolute URL of this page, for JSON-LD. */
+  /** URL assoluto di questa pagina, per il JSON-LD. */
   url: string;
-  /** Upcoming events, composed by the page from the events block (a block never imports another). */
+  /** Prossimi eventi, composti dalla pagina con il blocco events (un blocco non ne importa mai un altro). */
   upcoming: ReactNode;
 };
 
-/** The public profile /a/[slug] (docs/SPEC.md §7): minimal, no numbers or counters. Text is rendered as text. */
+/** La scheda pubblica /a/[slug] (docs/SPEC.md §7): minima, senza numeri né contatori. Il testo si mostra come testo. */
 export function OrganizationProfile({ organization, url, upcoming }: OrganizationProfileProps) {
   const phoneHref = organization.contactPhone ? `tel:${organization.contactPhone.replace(/[^\d+]/g, "")}` : null;
   const hasContact = organization.contactEmail || organization.contactPhone || organization.contactUrl;
@@ -26,7 +26,7 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
       <JsonLd data={buildOrganizationJsonLd(organization, url)} />
       <header className="flex items-start gap-4">
         {organization.logoUrl && (
-          // Already a small WebP re-encoded on upload: no optimization needed (and no image service).
+          // È già un piccolo WebP ricodificato al caricamento: non serve ottimizzarlo (e nessun servizio di immagini).
           <Image
             src={organization.logoUrl}
             alt={t("organization.logoAlt", { name: organization.name })}

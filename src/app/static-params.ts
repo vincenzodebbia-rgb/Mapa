@@ -1,4 +1,4 @@
-// ensureStatic = 'navigation' needs generateStaticParams with at least one value. This one is not a valid slug:
-// the page answers notFound() before any query, so `next build` never needs the database.
-// Real pages are generated, completely, on their first visit.
+// ensureStatic = 'navigation' vuole generateStaticParams con almeno un valore. Questo non è uno slug valido:
+// la pagina risponde notFound() prima di ogni query, così `next build` non ha mai bisogno del database.
+// Le pagine vere si generano, complete, alla loro prima visita.
 export const STATIC_PARAMS_PLACEHOLDER = "__";

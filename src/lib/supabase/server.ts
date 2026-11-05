@@ -5,8 +5,8 @@ import type { Database } from "@/lib/database.types";
 import { getPublicEnv } from "@/lib/env";
 
 /**
- * Supabase client for Server Components, Server Actions and Route Handlers, acting as the current user.
- * Create one per request. Check the user with `auth.getClaims()`, never `auth.getSession()`.
+ * Client Supabase per Server Component, Server Action e Route Handler, come l'utente attuale.
+ * Uno per richiesta. L'utente si controlla con `auth.getClaims()`, mai con `auth.getSession()`.
  */
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
@@ -19,7 +19,7 @@ export async function createSupabaseServerClient() {
         try {
           cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         } catch {
-          // Server Components cannot write cookies. Safe to ignore: src/proxy.ts refreshes the session.
+          // I Server Component non possono scrivere cookie. Si può ignorare: src/proxy.ts aggiorna la sessione.
         }
       },
     },
