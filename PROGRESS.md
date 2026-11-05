@@ -223,8 +223,6 @@ Updated by the agent at the end of every session. Newest first.
   (link magici, lookup 10 al giorno) sono condivisi tra le prove. Su Vercel l'header c'è sempre.
 - L'e2e dell'iscrizione legge le chiavi dal file locale del fondatore con `process.loadEnvFile` (non le stampa) e chiama
   Nominatim vero una volta (poi resta in cache). Gli e2e restano fuori dalla CI.
-- `.env.example` ha ancora come esempio di `NOMINATIM_USER_AGENT` un'email finta (`hola@example.org`): da cambiare a mano
-  con il valore deciso (`mapa-madrid/0.1 (+https://github.com/vincenzodebbia-rgb/Mapa)`); l'agente non tocca i file `.env*`.
 - Il modulo d'iscrizione dopo un errore ricrea i campi con i valori inviati; la casella "Mostrar mi perfil en Google"
   torna però sempre selezionata.
 - Inviti: `register_entity` / `create_professional` accettano il token, ma il modulo non lo manda ancora (sessione 7).
