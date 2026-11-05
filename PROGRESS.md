@@ -3,11 +3,45 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 5 a metà** sul ramo `feat/onboarding` (pushato, nessuna PR ancora). Fatti: documenti, protezioni,
-  migrazioni (applicate a mapa-dev dal fondatore il 30/10), tipi, test pgTAP. Manca tutto il codice: `/entrar`, callback,
-  `/registro`, `/revision`, `/panel` provvisorio (vedi "Next").
+- Fase: **sessione 5 finita nel codice** sul ramo `feat/onboarding` (commit locali, **non pushati**: serve l'ok del
+  fondatore). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link magico ricevuto per
+  email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
 
 ## Done
+### 2026-11-04/05 — Sessione 5 (seconda parte): accesso, iscrizione, revisione
+- `src/lib`: `domain/nif.ts` (copia di `normalize_nif`, `is_personal_nif`, `nif_allowed_for`: un DNI/NIE non parte mai
+  verso il database), `turnstile.ts` (fallisce chiuso, non invia l'IP a Cloudflare), `rate-limit.ts` (chiavi HMAC-SHA256
+  con sale giornaliero ricavato dalla chiave secret: IP ed email mai in chiaro; nessuna variabile nuova),
+  `geocode.ts` + `domain/geocode.ts` (Nominatim, User-Agent del progetto, cache in `geocode_cache`, 1 richiesta al secondo
+  per processo, solo Comunidad de Madrid), `supabase/current-user.ts` (`getClaims()` + `connection()`),
+  `legal-versions.ts` (`2026-11-provisional`), `cache-tags.ts` (`ORGANIZATIONS_TAG` condiviso).
+- `components/ui`: `TurnstileWidget` (render esplicito, nuovo token a ogni tentativo) e `PointFieldProvider`
+  (il punto lng/lat condiviso tra l'indirizzo del blocco onboarding e il pin del blocco map, senza import tra blocchi).
+- **auth**: `/entrar` (Turnstile + 5 link all'ora per connessione + 3 all'ora per email; stessa risposta per ogni email),
+  `/auth/confirm` (`token_hash` del template nuovo e `code` del link standard; poi sempre `/panel`, nessun `next`, nessun
+  redirect aperto), "Salir". Il link torna sul sito che si sta usando (`origin` della richiesta + `/auth/confirm`).
+- **onboarding**: `/registro` → anonimo: modulo email; con organizzazione: `/panel`; "¿Qué sois?" (form GET `?tipo=`,
+  funziona senza JS); campi per tipo come SPEC §8; "¿Sois *nombre*?" (lookup 10 al giorno per connessione, client admin);
+  "Buscar en el mapa" (30 all'ora per utente) e, senza JS, geocodifica all'invio; 5 tentativi all'ora per utente;
+  una sola chiamata SQL; errori SQL tradotti in messaggi (`mapRegistrationDbError`). Inviti non ancora (sessione 7).
+- **map**: secondo componente MapLibre `location-picker-map.tsx` (pin trascinabile, mappa limitata alla Comunidad de
+  Madrid), passato come slot; worker in `maplibre-worker.ts`; CLAUDE.md del blocco aggiornato (due componenti).
+- **account**: `/revision` solo per admin (gli altri ricevono 404), sola lettura, righe segnalate di `admin_review_list`
+  con motivo, tipo, attività, barrio, web, risposte. Mai NIF né email. `noindex`.
+- **organizations**: `getOrganizationForUser` per `/panel` provvisorio (nome, link alla scheda, Salir).
+- `scripts/import-municipal-associations.ts`: CSV del Comune (dataset 206117), parser CSV a mano (virgolette doppie),
+  solo 6 colonne, CIF uniti (categorie unite con ` | `), categoria Comerciantes saltata, CIF personali o malformati saltati.
+  Prova a secco di default; `--write` (e `--prune`) solo con le chiavi di produzione: **rifiuta mapa-dev**.
+  Prova a secco sul file del 24/10/2026: 3283 righe → 2986 associazioni, 109 unite, 157 Comerciantes, 27 senza CIF, 4 CIF non validi.
+- Test: Vitest 142/142 (nuovi: NIF, Turnstile, rate limit, geocode, schema di auth e onboarding, script). Playwright
+  19/19 con `workers: 1` (nuovi 6: associazione in elenco verificata fino a `/panel`; NIF già usato, personale, di un
+  altro tipo; fuori elenco con avviso; commerciale senza NIF con pin e avviso `no_nif`; pagine private senza sessione;
+  link non valido). Utenti creati con l'admin e cancellati a fine test; nessuna email inviata.
+- `@architecture-reviewer`: prima STOP per 3 punti, tutti corretti: (1) l'e2e ora controlla `error` su ogni chiamata
+  admin; (2) anche l'id utente nelle chiavi dei limiti passa per l'HMAC (DATA_MODEL `rate_limits` aggiornato);
+  (3) l'e2e si rifiuta di girare se il progetto non è mapa-dev. Dopo le correzioni: check, deps, build, e2e verdi.
+
+## Done (prima parte)
 ### 2026-10-30 — Sessione 5 (prima parte): iscrizione, schema
 - Decisioni del 29 ottobre applicate a SPEC, DATA_MODEL, PRIVACY, glossary, BUILD_PLAN; documento in
   `docs/decisioni/2026-10-29-iscrizione.md` con le scelte del fondatore sul piano (A–F).
@@ -141,21 +175,22 @@ Updated by the agent at the end of every session. Newest first.
 - ADR 0007 records the CSP `'unsafe-inline'` decision.
 
 ## Next
-- **Sessione 5, seconda parte (ramo `feat/onboarding`)** — il piano approvato il 29-30/10:
-  - `auth`: `/entrar` (email + Turnstile + rate limit per IP con hash HMAC giornaliero dalla chiave secret),
-    `src/app/auth/confirm/route.ts` (sia `code` sia `token_hash`), logout, utente con `getClaims()`.
-  - `onboarding`: `/registro` (link magico se anonimo; con organizzazione → `/panel`); "¿Qué sois?" e campi per tipo;
-    "¿Sois *nombre*?" (lookup con rate limit 10/giorno); NIF validato con zod prima del database (mai DNI/NIE inviati);
-    caselle regole + condiciones + privacidad + 18 anni (versioni in `src/lib/legal-versions.ts`); Turnstile.
-  - `src/lib/turnstile.ts`, `src/lib/rate-limit.ts`, `src/lib/domain/geocode.ts` (Nominatim, cache, 1 richiesta/s:
-    anticipato dalla sessione 6 per l'indirizzo obbligatorio dei commercial); pin trascinabile nel blocco `map`,
-    passato come slot dalla pagina.
-  - `/revision` (blocco `account`): solo `is_admin()`, sola lettura, organizzazioni segnalate da `admin_review_list`
-    con motivo; mai NIF né email. `noindex`.
-  - `/panel` provvisorio (nome + "Salir"). Script `scripts/import-municipal-associations.ts` (6 colonne, CIF doppi uniti,
-    categoria "Comerciantes…" saltata). Test Vitest + Playwright (utente creato con `generateLink` dell'admin, poi cancellato).
-  - Fondatore: Supabase → Auth → URL Configuration con `http://localhost:3000/**` e il dominio Vercel tra i Redirect URL;
-    chiavi Turnstile vere su Vercel.
+- **Chiudere la sessione 5** (fondatore): ok al push di `feat/onboarding` → PR con CI verde → dall'anteprima Vercel sul
+  telefono: `/registro`, email, link, "¿Qué sois?" → Asociación con un NIF fittizio libero (`G99000045` o `G99000052`)
+  → `/panel`. Prima servono:
+  - Supabase mapa-dev → Auth → Redirect URLs: `http://localhost:3000/**`, `https://<progetto-mapa>.vercel.app/**`,
+    `https://<progetto-mapa-demo>.vercel.app/**`, `https://*-<slug-del-team>.vercel.app/**`.
+  - Template "Magic Link" **e** "Confirm signup" con il link `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+  - Vercel (Preview e Production di `mapa`, `mapa-demo`): `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`
+    (chiavi vere di Cloudflare con i domini Vercel; quelle di prova solo in locale), `NOMINATIM_USER_AGENT`
+    (`mapa-madrid/0.1 (+https://github.com/vincenzodebbia-rgb/Mapa)`), `SUPABASE_SECRET_KEY`.
+  - Dopo il primo accesso: riga in `app_admins` (SQL in fondo a questa sezione) per vedere `/revision`.
+  - Ricorda: l'email standard di Supabase arriva solo agli indirizzi del team del progetto (vedi "Bloccante per il pilota").
+- Produzione (quando ci sarà mapa-prod con le migrazioni): import dell'elenco del Comune con
+  `node --env-file=<file con le chiavi di produzione> scripts/import-municipal-associations.ts --write` (prima senza
+  `--write` per vedere i conteggi). Il nome del file del Comune cambia a ogni aggiornamento: passare l'URL nuovo.
+- SQL `app_admins` (una volta per progetto, dopo il primo accesso):
+  `insert into public.app_admins (user_id) select id from auth.users where email = 'TUA_EMAIL_QUI' on conflict (user_id) do nothing;`
 - Fondatore: PR di `feat/public-pages` con CI verde (anche `db-test` con i test 14-15), `@architecture-reviewer`,
   anteprima Vercel dal telefono (`/a/…`, `/e/…`, `/barrio/opanel`, `/sitemap.xml`).
 - `NEXT_PUBLIC_SITE_URL`: Vercel `mapa` Production = `https://<dominio>` quando ci sarà (fino ad allora vuota va bene,
@@ -182,6 +217,25 @@ Updated by the agent at the end of every session. Newest first.
   definitivo, **mai** da un'email personale.
 
 ## Known issues
+- Nominatim: il ritmo di 1 richiesta al secondo vale per processo; su Vercel più istanze possono superarlo di poco.
+  Lo frenano la cache e il limite di 30 ricerche all'ora per utente. Se servirà, un limite globale con `check_rate_limit`.
+- In locale (senza `x-forwarded-for`) tutte le richieste hanno la stessa chiave di connessione: i limiti per connessione
+  (link magici, lookup 10 al giorno) sono condivisi tra le prove. Su Vercel l'header c'è sempre.
+- L'e2e dell'iscrizione legge le chiavi dal file locale del fondatore con `process.loadEnvFile` (non le stampa) e chiama
+  Nominatim vero una volta (poi resta in cache). Gli e2e restano fuori dalla CI.
+- `.env.example` ha ancora come esempio di `NOMINATIM_USER_AGENT` un'email finta (`hola@example.org`): da cambiare a mano
+  con il valore deciso (`mapa-madrid/0.1 (+https://github.com/vincenzodebbia-rgb/Mapa)`); l'agente non tocca i file `.env*`.
+- Il modulo d'iscrizione dopo un errore ricrea i campi con i valori inviati; la casella "Mostrar mi perfil en Google"
+  torna però sempre selezionata.
+- Inviti: `register_entity` / `create_professional` accettano il token, ma il modulo non lo manda ancora (sessione 7).
+- Il link dell'email si costruisce dall'header `Origin` della richiesta: è sicuro finché Next controlla l'origine delle
+  action e i Redirect URL di Supabase non hanno jolly larghi (mai `https://*.vercel.app/**`, solo `*-<slug-del-team>`).
+- `confirmEmailLink` sta in `auth/actions.ts` (`'use server'`), quindi è chiamabile anche come action: rischio basso
+  (fa solo ciò che fa il link). Si può spostare in un helper server-only se il blocco ne avrà bisogno.
+- Molti commenti del codice nuovo (come di quello delle sessioni precedenti) sono in inglese; AGENTS.md li vuole in
+  italiano. Da uniformare in un passaggio dedicato.
+- PR: spiegare nel testo Turnstile (script Cloudflare, già nella CSP), Nominatim (indirizzi dei luoghi) e l'uso della
+  chiave secret negli e2e locali (R9).
 - `moderate_organization` restituisce come destinatario della motivazione il `contact_email` pubblico o, se manca,
   l'email di accesso di un membro: è un dato personale che arriva solo all'action dell'admin (obbligo DSA).
 - `protect-commands.sh` legge solo il testo del comando: non vede dentro script lanciati da file (`bash x.sh`).

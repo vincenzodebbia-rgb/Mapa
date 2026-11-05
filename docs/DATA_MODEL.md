@@ -217,11 +217,14 @@ La motivazione arriva all'organizzazione per email dall'action (testo standard i
 
 ### geocode_cache
 `query_normalized text primary key`, `location geography(Point,4326)`, `display_name text`, `created_at`.
-RLS attiva, nessuna policy. Letta/scritta solo da `src/lib/domain/geocode.ts` (server-only, chiave secret).
+RLS attiva, nessuna policy. Letta/scritta solo da `src/lib/geocode.ts` (server-only, chiave secret); le parti pure
+(chiave della cache, URL, lettura della risposta) stanno in `src/lib/domain/geocode.ts`.
 
 ### rate_limits
 `key text`, `window_start timestamptz`, `count int`, primary key (`key`, `window_start`). RLS attiva, nessuna policy.
-Le chiavi non sono mai dati personali in chiaro: id di organizzazioni, oppure `sha256(ip || sale_giornaliero)` per i tentativi anonimi.
+Le chiavi non sono mai dati personali in chiaro (`src/lib/rate-limit.ts`): id di organizzazioni, oppure
+`<ambito>:ip:<hmac>` / `<ambito>:h:<hmac>` con HMAC-SHA256 (chiave secret, sale che cambia ogni giorno UTC) dell'IP della
+connessione, dell'email (link magico) o dell'id utente (iscrizione, geocodifica).
 
 ## Storage
 Bucket `event-images`: lettura pubblica, solo `image/webp`, max 5 MB. Path `"{organization_id}/{event_id}.webp"`.

@@ -32,12 +32,12 @@ export async function getConnectionKey(scope: string): Promise<string> {
   return `${scope}:ip:${hashForRateLimit(ip, getServerEnv().SUPABASE_SECRET_KEY, todayUtc())}`;
 }
 
-/** Rate-limit key for a personal value such as an email: `<scope>:h:<hmac>`. */
+/** Rate-limit key for a personal value (an email, a user id): `<scope>:h:<hmac>`. */
 export function getHashedKey(scope: string, value: string): string {
   return `${scope}:h:${hashForRateLimit(value, getServerEnv().SUPABASE_SECRET_KEY, todayUtc())}`;
 }
 
-/** Rate-limit key for something that is not personal (a user id, an organization id). */
+/** Rate-limit key for something that is not personal (an organization id). Never a user id: use getHashedKey. */
 export function getIdKey(scope: string, id: string): string {
   return `${scope}:id:${id}`;
 }

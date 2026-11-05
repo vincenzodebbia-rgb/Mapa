@@ -13,22 +13,29 @@ if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const secretKey = process.env.SUPABASE_SECRET_KEY ?? "";
 
+// Questi test creano e cancellano utenti: solo su mapa-dev (lo stesso progetto di `npm run db:types`), mai in produzione.
+const DEV_PROJECT_REF = "jvthbqxmequhgliofnpb";
+
 let admin: SupabaseClient;
 const createdUserIds: string[] = [];
 
 test.beforeAll(() => {
   expect(supabaseUrl, "NEXT_PUBLIC_SUPABASE_URL").not.toBe("");
   expect(secretKey, "SUPABASE_SECRET_KEY").not.toBe("");
+  expect(new URL(supabaseUrl).hostname, "the e2e tests run only against mapa-dev").toBe(`${DEV_PROJECT_REF}.supabase.co`);
   admin = createClient(supabaseUrl, secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
 });
 
 test.afterAll(async () => {
   for (const userId of createdUserIds) {
-    const { data: memberships } = await admin.from("memberships").select("organization_id").eq("user_id", userId);
-    for (const membership of memberships ?? []) {
-      await admin.from("organizations").delete().eq("id", membership.organization_id);
+    const memberships = await admin.from("memberships").select("organization_id").eq("user_id", userId);
+    expect(memberships.error).toBeNull();
+    for (const membership of memberships.data ?? []) {
+      const deleted = await admin.from("organizations").delete().eq("id", membership.organization_id);
+      expect(deleted.error).toBeNull();
     }
-    await admin.auth.admin.deleteUser(userId);
+    const deletedUser = await admin.auth.admin.deleteUser(userId);
+    expect(deletedUser.error).toBeNull();
   }
 });
 
@@ -64,11 +71,13 @@ async function submit(page: Page) {
 }
 
 async function getOrganizationOf(userId: string) {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("memberships")
     .select("organization:organizations(name, verified, flagged_for_review, flag_reason, entry_method)")
     .eq("user_id", userId)
     .maybeSingle();
+  // Without this, "no organization" could pass on a failed query.
+  expect(error).toBeNull();
   return data?.organization as
     | { name: string; verified: boolean; flagged_for_review: boolean; flag_reason: string | null; entry_method: string }
     | undefined;

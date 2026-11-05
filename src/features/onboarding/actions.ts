@@ -6,7 +6,7 @@ import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import { isInsideMadridRegion } from "@/lib/domain/geocode";
 import { geocodeAddress } from "@/lib/geocode";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal-versions";
-import { getConnectionKey, getIdKey, isWithinRateLimit } from "@/lib/rate-limit";
+import { getConnectionKey, getHashedKey, isWithinRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -85,7 +85,7 @@ export async function registerOrganization(previous: RegistrationState, formData
 
   let point: Point | "outside";
   try {
-    if (!(await isWithinRateLimit(getIdKey("register", userId), REGISTRATIONS_PER_USER_PER_HOUR, "1 hour"))) {
+    if (!(await isWithinRateLimit(getHashedKey("register", userId), REGISTRATIONS_PER_USER_PER_HOUR, "1 hour"))) {
       return fail({ formError: "tooMany" });
     }
     point =
@@ -177,7 +177,7 @@ export async function locateAddress(address: string): Promise<GeocodeOutcome> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: "generic" };
   try {
-    if (!(await isWithinRateLimit(getIdKey("geocode", userId), GEOCODES_PER_USER_PER_HOUR, "1 hour"))) {
+    if (!(await isWithinRateLimit(getHashedKey("geocode", userId), GEOCODES_PER_USER_PER_HOUR, "1 hour"))) {
       return { ok: false, error: "tooMany" };
     }
     const result = await geocodeAddress(parsed.data);
