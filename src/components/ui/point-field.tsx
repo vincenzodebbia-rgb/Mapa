@@ -3,8 +3,9 @@
 import { createContext, use, useState, type ReactNode } from "react";
 
 // Un punto (lng/lat) condiviso dentro un modulo: chi lo cerca (l'indirizzo) e chi lo sposta (il pin sulla mappa)
-// stanno in blocchi diversi, che non si importano a vicenda. Tutti e due usano questo contesto generico, e il modulo
-// riceve il punto nei campi nascosti `lng` e `lat`.
+// stanno in blocchi diversi, che non si importano a vicenda. Tutti e due usano questo contesto generico; il modulo
+// riceve il punto dai campi nascosti `lng` e `lat` di <PointFieldInputs />.
+// Il provider sta fuori dal <form>, così il punto resta anche quando il modulo si ricrea dopo un errore.
 
 export type Point = { lng: number; lat: number };
 
@@ -14,17 +15,22 @@ const PointFieldContext = createContext<PointFieldValue | null>(null);
 
 export function PointFieldProvider({ children }: { children: ReactNode }) {
   const [point, setPoint] = useState<Point | null>(null);
-  return (
-    <PointFieldContext value={{ point, setPoint }}>
-      {children}
-      <input type="hidden" name="lng" value={point ? String(point.lng) : ""} />
-      <input type="hidden" name="lat" value={point ? String(point.lat) : ""} />
-    </PointFieldContext>
-  );
+  return <PointFieldContext value={{ point, setPoint }}>{children}</PointFieldContext>;
 }
 
 export function usePointField(): PointFieldValue {
   const value = use(PointFieldContext);
   if (!value) throw new Error("usePointField must be used inside a PointFieldProvider");
   return value;
+}
+
+/** Hidden inputs with the current point, to put inside the form. */
+export function PointFieldInputs() {
+  const { point } = usePointField();
+  return (
+    <>
+      <input type="hidden" name="lng" value={point ? String(point.lng) : ""} />
+      <input type="hidden" name="lat" value={point ? String(point.lat) : ""} />
+    </>
+  );
 }

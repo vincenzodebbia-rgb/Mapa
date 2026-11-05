@@ -246,5 +246,182 @@
       "tooMany": "Demasiados intentos. Espera un rato y vuelve a probar.",
       "generic": "Algo ha fallado. Inténtalo de nuevo en unos minutos."
     }
+  },
+  "registro": {
+    "metaTitle": "Registro",
+    "title": "Registrarse",
+    "introSignIn": "Primero, tu correo: te enviamos un enlace para entrar. Después nos cuentas qué sois.",
+    "types": {
+      "legend": "¿Qué sois?",
+      "submit": "Continuar",
+      "asociacion": {
+        "label": "Asociación",
+        "description": "Culturales, vecinales, ONG…"
+      },
+      "fundacion": {
+        "label": "Fundación",
+        "description": "Fundaciones culturales o sociales."
+      },
+      "cooperativa": {
+        "label": "Cooperativa",
+        "description": "Cooperativas culturales o de trabajo."
+      },
+      "entidad-publica": {
+        "label": "Entidad pública",
+        "description": "Centro cultural municipal, biblioteca…"
+      },
+      "actividad-comercial": {
+        "label": "Actividad comercial",
+        "description": "Bar, librería, galería, estudio, café cultural…"
+      },
+      "gente": {
+        "label": "Gente que hace cosas",
+        "description": "Artistas, colectivos sin forma jurídica, personas con proyectos."
+      }
+    },
+    "formTitle": "{type}: vuestros datos",
+    "changeType": "Cambiar el tipo",
+    "required": "(obligatorio)",
+    "optional": "(opcional)",
+    "submit": "Registrarnos",
+    "sending": "Guardando…",
+    "noScript": "Para comprobar que no sois un robot hace falta JavaScript.",
+    "choose": "Elige una opción",
+    "checkFields": "Revisa los campos marcados.",
+    "indexable": "Mostrar mi perfil en Google",
+    "legalLink": "Leer las condiciones y la privacidad",
+    "sections": {
+      "identity": "Quiénes sois",
+      "about": "Qué hacéis",
+      "place": "Dónde estáis",
+      "contact": "Contacto público",
+      "legal": "Antes de terminar"
+    },
+    "labels": {
+      "nif": "NIF",
+      "name": "Nombre",
+      "oneLiner": "En una frase, qué hacéis",
+      "whatForWhom": "¿Qué hacéis y para quién?",
+      "howSustained": "¿Cómo se sostiene el proyecto?",
+      "whatTheyOffer": "¿Qué ofrecéis a nivel cultural?",
+      "venueActivity": "Tipo de actividad",
+      "whenToVisit": "Cuándo se os puede visitar",
+      "usualCategory": "Categoría habitual de vuestras actividades",
+      "address": "Dirección",
+      "neighborhoodSlug": "Barrio",
+      "seekingOffering": "Busco / Ofrezco (una línea)",
+      "contactEmail": "Correo de contacto público",
+      "contactPhone": "Teléfono público",
+      "contactUrl": "Web o red social",
+      "accept": "Somos una realidad de verdad, no vendemos productos y publicaremos actividades reales. Aceptamos las condiciones y la privacidad, y quien rellena esto tiene 18 años o más."
+    },
+    "labelsCommercial": {
+      "whatForWhom": "¿Quiénes sois?"
+    },
+    "labelsInformal": {
+      "oneLiner": "¿Qué hacéis?"
+    },
+    "hints": {
+      "nif": "El NIF de la entidad, no el de una persona.",
+      "nifCommercial": "Si tu NIF es tu DNI personal o eres autónomo/a, no lo pongas.",
+      "name": "Lo verá todo el mundo en vuestra ficha.",
+      "address": "Escribe la dirección y pulsa «Buscar en el mapa» para colocar el punto.",
+      "contactUrl": "Empieza por https:// o http://.",
+      "contactEmail": "Es público: no pongas un correo personal si no quieres que se vea.",
+      "neighborhoodSlug": "Para que os encuentren cerca. No se muestra ningún punto en el mapa."
+    },
+    "lookup": {
+      "button": "Comprobar en el registro del Ayuntamiento",
+      "checking": "Comprobando…",
+      "found": "¿Sois «{name}»?",
+      "useName": "Sí, usar este nombre",
+      "notFound": "No aparece en el registro de asociaciones del Ayuntamiento. Podéis registraros igualmente.",
+      "failed": "No hemos podido comprobarlo ahora. Podéis seguir sin comprobar."
+    },
+    "geocode": {
+      "button": "Buscar en el mapa",
+      "searching": "Buscando…",
+      "found": "Punto colocado. Puedes arrastrarlo si no está en el sitio exacto.",
+      "notFound": "No encontramos esa dirección en la Comunidad de Madrid. Revísala.",
+      "failed": "No hemos podido buscarla ahora. Inténtalo en un momento."
+    },
+    "picker": {
+      "label": "Mapa para colocar el punto de la dirección",
+      "hint": "Arrastra el punto para ajustarlo."
+    },
+    "fieldErrors": {
+      "required": "Este campo es obligatorio.",
+      "tooLong": "Es demasiado largo.",
+      "invalidEmail": "Revisa el correo: no parece válido.",
+      "invalidUrl": "Pon un enlace que empiece por https:// o http://.",
+      "invalidNif": "Este NIF no corresponde a este tipo de entidad. Revisa el tipo elegido o el número.",
+      "personalNif": "No aceptamos DNI, NIE ni documentos personales. Usa el NIF de la entidad.",
+      "invalidOption": "Elige una opción de la lista.",
+      "acceptRequired": "Tienes que marcar esta casilla para registraros.",
+      "addressNotFound": "No encontramos esa dirección en la Comunidad de Madrid.",
+      "invalidLocation": "El punto tiene que estar dentro de la Comunidad de Madrid."
+    },
+    "formErrors": {
+      "robot": "No hemos podido comprobar que no sois un robot. Inténtalo otra vez.",
+      "tooMany": "Demasiados intentos. Espera un rato y vuelve a probar.",
+      "alreadyClaimed": "Este NIF ya está registrado. Si es vuestro, escríbenos a {email}.",
+      "invalidInvite": "La invitación no es válida o ha caducado.",
+      "generic": "Algo ha fallado. Inténtalo de nuevo en unos minutos."
+    },
+    "venueActivities": {
+      "libreria": "Librería",
+      "sala_pequena": "Sala pequeña",
+      "centro_cultural": "Centro cultural",
+      "galeria": "Galería",
+      "taller_estudio": "Taller o estudio",
+      "cafe_cultural": "Café cultural",
+      "discoteca_club": "Discoteca o club",
+      "bar_nocturno": "Bar nocturno",
+      "otro": "Otro"
+    }
+  },
+  "panel": {
+    "metaTitle": "Tu panel",
+    "title": "Hola, {name}",
+    "intro": "Esta es vuestra página privada. Pronto podréis publicar eventos desde aquí.",
+    "viewProfile": "Ver vuestra ficha pública"
+  },
+  "revision": {
+    "metaTitle": "Revisión",
+    "title": "Revisión",
+    "intro": "Organizaciones con aviso. Solo lectura: sin NIF ni correos.",
+    "empty": "No hay ninguna organización con aviso.",
+    "created": "Registrada el {date}",
+    "status": {
+      "active": "Activa",
+      "suspended": "Suspendida"
+    },
+    "fields": {
+      "type": "Tipo",
+      "activity": "Actividad",
+      "neighborhood": "Barrio",
+      "web": "Web o red social",
+      "whatForWhom": "Qué hacen y para quién / quiénes son",
+      "howSustained": "Cómo se sostiene",
+      "whatTheyOffer": "Qué ofrecen a nivel cultural",
+      "reason": "Motivo del aviso",
+      "status": "Estado",
+      "profile": "Ficha pública"
+    },
+    "none": "—",
+    "entityTypes": {
+      "association": "Asociación",
+      "foundation": "Fundación",
+      "cooperative": "Cooperativa",
+      "public_entity": "Entidad pública",
+      "commercial": "Actividad comercial",
+      "informal": "Gente que hace cosas"
+    },
+    "reasons": {
+      "not_in_registry": "Fuera del registro del Ayuntamiento",
+      "public_entity": "Entidad pública",
+      "no_nif": "Actividad comercial sin NIF",
+      "doubtful_activity": "Actividad a revisar"
+    }
   }
 }

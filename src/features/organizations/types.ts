@@ -35,3 +35,6 @@ export type OrganizationSummary = {
   name: string;
   oneLiner: string | null;
 };
+
+/** The organization the logged-in user manages (private panel). */
+export type MyOrganization = { slug: string; name: string; status: "active" | "suspended" };

@@ -6,6 +6,7 @@ import { getPublicEnv } from "@/lib/env";
 import { t } from "@/lib/i18n/t";
 import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { getContentPageTexts } from "../content-page-texts";
+import { getSignInFormTexts } from "../sign-in-form-texts";
 
 // Reads the session: blocking on purpose, so a logged-in visitor gets a real redirect.
 export const instant = false;
@@ -25,23 +26,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/entrar">)
           {t("auth.linkError")}
         </p>
       )}
-      <SignInForm
-        turnstileSiteKey={getPublicEnv().NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-        texts={{
-          emailLabel: t("auth.emailLabel"),
-          emailHint: t("auth.emailHint"),
-          submit: t("auth.submit"),
-          sending: t("auth.sending"),
-          sent: t("auth.sent"),
-          noScript: t("auth.noScript"),
-          errors: {
-            invalidEmail: t("auth.errors.invalidEmail"),
-            robot: t("auth.errors.robot"),
-            tooMany: t("auth.errors.tooMany"),
-            generic: t("auth.errors.generic"),
-          },
-        }}
-      />
+      <SignInForm texts={getSignInFormTexts()} turnstileSiteKey={getPublicEnv().NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
     </ContentPage>
   );
 }

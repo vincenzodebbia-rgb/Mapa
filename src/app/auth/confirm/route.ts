@@ -6,15 +6,10 @@ import { confirmEmailLink } from "@/features/auth/actions";
 // ancora un'organizzazione (nessun parametro `next`, quindi nessun redirect aperto).
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const tokenHash = params.get("token_hash");
-  const type = params.get("type");
-  const code = params.get("code");
-
-  const result = tokenHash
-    ? await confirmEmailLink({ tokenHash, type: type as "email" })
-    : code
-      ? await confirmEmailLink({ code })
-      : { ok: false };
-
+  const result = await confirmEmailLink({
+    tokenHash: params.get("token_hash"),
+    type: params.get("type"),
+    code: params.get("code"),
+  });
   redirect(result.ok ? "/panel" : "/entrar?error=enlace");
 }

@@ -2,8 +2,15 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import { createSupabasePublicClient, getPublicStorageUrl } from "@/lib/supabase/public";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
-import type { OrganizationKind, OrganizationProfile, OrganizationSitemapEntry, OrganizationSummary } from "./types";
+import type {
+  MyOrganization,
+  OrganizationKind,
+  OrganizationProfile,
+  OrganizationSitemapEntry,
+  OrganizationSummary,
+} from "./types";
 
 // Public reads, as anon (RLS: no suspended organizations), cached so the public pages are static
 // and can answer a real 404. Every write to an organization (registration, "Mi ficha") calls
@@ -81,4 +88,22 @@ export async function getIndexableOrganizationSlugs(): Promise<OrganizationSitem
   const rows =
     unwrap(await supabase.from("organizations").select("slug, updated_at").eq("indexable", true).order("slug")) ?? [];
   return rows.map((row) => ({ slug: row.slug, updatedAt: row.updated_at }));
+}
+
+/**
+ * The organization managed by this user (v1: at most one), as the user themselves (RLS: own memberships; a member
+ * sees their organization even when suspended). Not cached: it is private and changes with the session.
+ */
+export async function getOrganizationForUser(userId: string): Promise<MyOrganization | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase
+      .from("memberships")
+      .select("organization:organizations(slug, name, status)")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle(),
+  );
+  const organization = row?.organization;
+  return organization ? { slug: organization.slug, name: organization.name, status: organization.status } : null;
 }

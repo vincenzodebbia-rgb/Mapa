@@ -1,16 +1,13 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Popup, setWorkerUrl, type Map as MaplibreMap } from "maplibre-gl";
+import "./maplibre-worker";
+import { Popup, type Map as MaplibreMap } from "maplibre-gl";
 import MapGL, { Layer, Source, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import { useEffect, useRef, useState } from "react";
 import { buildPopup } from "../build-popup";
 import type { MapFeatureCollection, PopupContent } from "../types";
 import { readCssColor } from "./read-css-color";
-
-// MapLibre 6 looks for its worker next to its own file, a path that no longer exists once bundled.
-// new URL(..., import.meta.url) makes the bundler emit the worker file and gives its real, same-origin URL.
-setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href);
 
 export type MapViewProps = {
   styleUrl: string;

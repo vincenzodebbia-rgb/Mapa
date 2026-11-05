@@ -12,4 +12,5 @@ export const emailLinkSchema = z.union([
   z.object({ code: z.string().min(1).max(2048) }),
 ]);
 
-export type EmailLinkInput = z.infer<typeof emailLinkSchema>;
+/** Raw query parameters of the email link, validated by emailLinkSchema inside the action. */
+export type EmailLinkParams = { tokenHash: string | null; type: string | null; code: string | null };

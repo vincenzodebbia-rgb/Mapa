@@ -6,7 +6,7 @@ import { getConnectionKey, getHashedKey, isWithinRateLimit } from "@/lib/rate-li
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
-import { emailLinkSchema, signInSchema, type EmailLinkInput } from "./schema";
+import { emailLinkSchema, signInSchema, type EmailLinkParams } from "./schema";
 import type { SignInState } from "./types";
 
 // Limits for sending a magic link: per connection and per email (both as daily HMAC, never in clear).
@@ -74,8 +74,8 @@ export async function requestMagicLink(previous: SignInState, formData: FormData
  * Exchanges the link of the email for a session cookie. Called by src/app/auth/confirm/route.ts, which redirects.
  * Accepts the token_hash of our email template and the `code` of the default Supabase link (PKCE).
  */
-export async function confirmEmailLink(input: EmailLinkInput): Promise<{ ok: boolean }> {
-  const parsed = emailLinkSchema.safeParse(input);
+export async function confirmEmailLink(params: EmailLinkParams): Promise<{ ok: boolean }> {
+  const parsed = emailLinkSchema.safeParse(params);
   if (!parsed.success) return { ok: false };
   const supabase = await createSupabaseServerClient();
   const { error } =
