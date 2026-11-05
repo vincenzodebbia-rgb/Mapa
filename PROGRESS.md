@@ -3,11 +3,23 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 5 finita nel codice** sul ramo `feat/onboarding` (commit locali, **non pushati**: serve l'ok del
-  fondatore). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link magico ricevuto per
-  email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
+- Fase: **sessione 5 finita nel codice** sul ramo `feat/onboarding` (pushato il 5/11 fino a `3203a77`; i due commit della
+  notte del 5/11 sono **solo locali**). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link
+  magico ricevuto per email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
+- Piano della sessione 6 scritto (senza codice) in `docs/piani/sessione-6.md`, con 13 punti da decidere (D1–D13).
 
 ## Done
+### 2026-11-05 (notte, in autonomia) — Commenti in italiano e piano della sessione 6
+- Tutti i commenti del codice tradotti in italiano (regola di AGENTS.md): `src/`, `scripts/`, `e2e/`, file di configurazione
+  e `globals.css`, 120 file. Codice, nomi e testi dell'interfaccia invariati: verificato file per file ristampando il codice
+  con il compilatore TypeScript senza commenti (identico prima e dopo), per il CSS togliendo i commenti.
+  Non toccati: migrazioni già unite (immutabili; quelle nuove erano già in italiano), `database.types.ts` (generato),
+  hook in `.claude/hooks/` e CI (configurazione protetta), i `CLAUDE.md` dei blocchi (documenti in inglese, non commenti: da
+  decidere se tradurli).
+- check (142 test), deps, build ed e2e (19/19) verdi dopo la traduzione.
+- `docs/piani/sessione-6.md`: piano dettagliato della sessione 6 (pagine, modulo in 4 blocchi, file per blocco, database,
+  test, ordine di lavoro) e i punti da decidere con il fondatore.
+
 ### 2026-11-04/05 — Sessione 5 (seconda parte): accesso, iscrizione, revisione
 - `src/lib`: `domain/nif.ts` (copia di `normalize_nif`, `is_personal_nif`, `nif_allowed_for`: un DNI/NIE non parte mai
   verso il database), `turnstile.ts` (fallisce chiuso, non invia l'IP a Cloudflare), `rate-limit.ts` (chiavi HMAC-SHA256
@@ -230,8 +242,8 @@ Updated by the agent at the end of every session. Newest first.
   action e i Redirect URL di Supabase non hanno jolly larghi (mai `https://*.vercel.app/**`, solo `*-<slug-del-team>`).
 - `confirmEmailLink` sta in `auth/actions.ts` (`'use server'`), quindi è chiamabile anche come action: rischio basso
   (fa solo ciò che fa il link). Si può spostare in un helper server-only se il blocco ne avrà bisogno.
-- Molti commenti del codice nuovo (come di quello delle sessioni precedenti) sono in inglese; AGENTS.md li vuole in
-  italiano. Da uniformare in un passaggio dedicato.
+- I `CLAUDE.md` dei blocchi (`src/features/*/CLAUDE.md`) sono ancora in inglese: sono documenti per l'agente, non commenti;
+  AGENTS.md vuole i documenti in italiano. Da decidere se tradurli.
 - PR: spiegare nel testo Turnstile (script Cloudflare, già nella CSP), Nominatim (indirizzi dei luoghi) e l'uso della
   chiave secret negli e2e locali (R9).
 - `moderate_organization` restituisce come destinatario della motivazione il `contact_email` pubblico o, se manca,
