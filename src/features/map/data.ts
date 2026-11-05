@@ -1,5 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import type { Database } from "@/lib/database.types";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -52,7 +53,7 @@ export async function getNeighborhoods(): Promise<MapNeighborhood[]> {
 
 // Barrio pages (/barrio/[slug]): public reads as anon, cached so the page is static and answers a real 404.
 // Events and organizations change them: their writes refresh these tags.
-const NEIGHBORHOOD_TAGS = ["neighborhoods", "events", "organizations"];
+const NEIGHBORHOOD_TAGS = ["neighborhoods", "events", ORGANIZATIONS_TAG];
 
 /** The barrio with its center and box, whether it has content (indexable) and its neighbors. */
 export async function getNeighborhoodPage(slug: string): Promise<NeighborhoodPage | null> {

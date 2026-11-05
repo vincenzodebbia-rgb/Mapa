@@ -1,12 +1,13 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import { createSupabasePublicClient, getPublicStorageUrl } from "@/lib/supabase/public";
 import { unwrap } from "@/lib/supabase/unwrap";
 import type { OrganizationKind, OrganizationProfile, OrganizationSitemapEntry, OrganizationSummary } from "./types";
 
 // Public reads, as anon (RLS: no suspended organizations), cached so the public pages are static
-// and can answer a real 404. Writes (session 7, "Mi ficha") must call updateTag(ORGANIZATIONS_TAG).
-export const ORGANIZATIONS_TAG = "organizations";
+// and can answer a real 404. Every write to an organization (registration, "Mi ficha") calls
+// updateTag(ORGANIZATIONS_TAG) from src/lib/cache-tags.ts.
 
 const PROFILE_COLUMNS =
   "id, slug, kind, name, one_liner, when_to_visit, contact_email, contact_phone, contact_url, address, story, logo_path, verified, indexable, neighborhood:neighborhoods(slug, name)";

@@ -227,5 +227,24 @@
   },
   "demo": {
     "banner": "Demo · datos de ejemplo"
+  },
+  "auth": {
+    "metaTitle": "Entrar",
+    "title": "Entrar",
+    "intro": "Te enviamos un enlace a tu correo. Sin contraseñas.",
+    "emailLabel": "Tu correo",
+    "emailHint": "Solo lo usamos para que puedas entrar. No se muestra a nadie.",
+    "submit": "Enviarme el enlace",
+    "sending": "Enviando…",
+    "sent": "Si el correo es correcto, te llegará un enlace en unos minutos. Ábrelo en este mismo teléfono u ordenador.",
+    "noScript": "Para comprobar que no eres un robot hace falta JavaScript.",
+    "linkError": "El enlace no es válido o ha caducado. Pide uno nuevo.",
+    "signOut": "Salir",
+    "errors": {
+      "invalidEmail": "Revisa el correo: no parece válido.",
+      "robot": "No hemos podido comprobar que no eres un robot. Inténtalo otra vez.",
+      "tooMany": "Demasiados intentos. Espera un rato y vuelve a probar.",
+      "generic": "Algo ha fallado. Inténtalo de nuevo en unos minutos."
+    }
   }
 }
