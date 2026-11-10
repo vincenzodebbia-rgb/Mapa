@@ -114,4 +114,6 @@ export type RegistrationFormTexts = {
   checkFields: string;
   fieldErrors: Record<FieldError, string>;
   formErrors: Record<FormError, string>;
+  /** "¿Es tu asociación?" sotto l'errore "NIF ya registrado": mailto verso il canale di contatto del progetto. */
+  claim: { label: string; href: string };
 };

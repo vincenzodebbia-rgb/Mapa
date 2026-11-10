@@ -59,11 +59,11 @@ insert into public.organizations
 values
   ('5eed0000-0000-4000-8000-0000000000a1', 'association', 'Colectivo Vecinal La Colmena (ficticio)',
    'Vecinos que se juntan para cuidar el barrio.', 'Los jueves a las 19h', 'https://example.org/colmena',
-   'Calle Inventada 1', pg_temp.spot('vista-alegre', 0, 0), 'comunidad', null, true, true, 'municipal_registry', null, false,
+   'Calle Inventada 1', pg_temp.spot('vista-alegre', 0, 0), 'comunidad', null, true, false, 'municipal_registry', null, false,
    'Empezamos en un garaje prestado, con diez sillas y un termo de café. Hoy organizamos el coro, el cine fórum y las fiestas del barrio. Todo esto es inventado para la demo.'),
   ('5eed0000-0000-4000-8000-0000000000a2', 'association', 'Asociación Cultural El Tendedero (ficticia)',
    'Música y teatro en un patio de vecinos.', 'Viernes por la tarde', null,
-   'Calle de Prueba 22', pg_temp.spot('opanel', 0, 0), 'musica', null, true, true, 'municipal_registry', null, false,
+   'Calle de Prueba 22', pg_temp.spot('opanel', 0, 0), 'musica', null, true, false, 'municipal_registry', null, false,
    'Un patio, unas cuerdas de tender y muchas ganas de hacer música juntos. Historia ficticia.'),
   ('5eed0000-0000-4000-8000-0000000000a3', 'association', 'Ateneo de Prueba Los Girasoles (ficticio)',
    'Charlas, libros y café.', null, null,

@@ -184,6 +184,12 @@
     "share": "Compartir este evento",
     "shareText": "{title} · {date}, {time} · {place}"
   },
+  "claim": {
+    "button": "¿Es tu asociación?",
+    "profileHint": "Si alguien la ha registrado en vuestro nombre, escríbenos a {email} y lo revisamos.",
+    "subjectProfile": "¿Es mi asociación? · {name}",
+    "subjectNifTaken": "Nuestro NIF ya está registrado"
+  },
   "organization": {
     "metaDescriptionFallback": "{name} en el mapa de Madrid.",
     "kinds": {
@@ -191,7 +197,6 @@
       "venue": "Espacio",
       "professional": "Gente que hace cosas"
     },
-    "verified": "Verificada en el registro municipal",
     "logoAlt": "Logo de {name}",
     "whenToVisit": "Cuándo ir",
     "contact": "Contacto",

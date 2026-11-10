@@ -217,6 +217,9 @@ export function mapRegistrationDbError(message: string): DbErrorOutcome {
       return { type: "alreadyMember" };
     case "already_claimed":
       return { type: "form", error: "alreadyClaimed" };
+    // Tetto delle nuove organizzazioni nel database (M5).
+    case "rate_limited":
+      return { type: "form", error: "tooMany" };
     case "personal_nif":
       return { type: "field", field: "nif", error: "personalNif" };
     case "invalid_nif":

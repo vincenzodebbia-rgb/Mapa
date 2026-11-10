@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, getButtonClasses } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PointFieldInputs, PointFieldProvider } from "@/components/ui/point-field";
 import { Select } from "@/components/ui/select";
@@ -261,6 +261,11 @@ function RegistrationFormBody({
         <p role="alert" className="text-danger">
           {texts.formErrors[state.formError]}
         </p>
+      )}
+      {state.formError === "alreadyClaimed" && (
+        <a href={texts.claim.href} className={`${getButtonClasses("secondary")} self-start`}>
+          {texts.claim.label}
+        </a>
       )}
       {Object.keys(state.fieldErrors).length > 0 && !state.formError && (
         <p role="alert" className="text-danger">

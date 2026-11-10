@@ -15,7 +15,7 @@ Una mappa di Madrid che mostra **cosa fanno oggi** le piccole associazioni, i co
 
 | Tipo (`organizations.kind`) | Come entra | Sulla mappa | Cosa può fare |
 |---|---|---|---|
-| `association` — nella UI "Asociación", "Fundación", "Cooperativa" o "Entidad pública" (terzo settore ed enti pubblici: centri culturali municipali, biblioteche) | Email + NIF dell'ente, obbligatorio, col formato del suo tipo (§8). Se il NIF è nell'elenco del Comune entra subito, verificata. Un NIF = un solo account (tranne gli enti pubblici) | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, fili (dopo il lancio), home privata, Invita, annunci nella bacheca Profesionales |
+| `association` — nella UI "Asociación", "Fundación", "Cooperativa" o "Entidad pública" (terzo settore ed enti pubblici: centri culturali municipali, biblioteche) | Email + NIF dell'ente, obbligatorio, col formato del suo tipo (§8). Se il NIF è nell'elenco del Comune entra subito, senza avviso (nessun segno "verificada": decisione del 10 novembre). Un NIF = un solo account (tranne gli enti pubblici) | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede, solo se ha dato un indirizzo | Pubblicare eventi, fili (dopo il lancio), home privata, Invita, annunci nella bacheca Profesionales |
 | `venue` — nella UI "Actividad comercial" (bar, librerie, gallerie, studi, caffè culturali, sale piccole, locali notturni…); la sezione resta "Espacios" | Email + NIF d'impresa **facoltativo** + tipo di attività + domande (§8). Indirizzo obbligatorio | Su **Hoy** solo tramite i suoi eventi. Su **Conexiones** un punto alla sede | Pubblicare eventi, annunci "Ofrezco espacio" nella bacheca, home privata. Niente fili né inviti |
 | `professional` — nella UI **"Gente que hace cosas"** (collettivi, artisti, persone con progetti) | Iscrizione libera con email | **Nessun punto proprio.** Compare solo tramite i suoi eventi, nel luogo dell'evento | Pubblicare eventi in qualsiasi luogo, annunci nella bacheca Profesionales |
 | Luoghi non registrati (bar, studi) | Non si registrano | Solo il giorno di un evento, come "dove succede" | Niente: sono un indirizzo dentro l'evento |
@@ -134,7 +134,7 @@ Prima: email → link magico. Poi la **prima domanda: "¿Qué sois?"**. Il NIF e
 
 - Fundación, cooperativa ed entidad pública hanno gli stessi diritti di un'associazione (fili, inviti, filtro "Asociaciones").
 - **Un invito valido** fa sempre entrare **senza avviso**, qualunque tipo.
-- Associazione (o fondazione, cooperativa) **nell'elenco del Comune**: entra subito con il segno "verificata"; le chiediamo "¿Sois *nombre*?" con il nome ufficiale. **Fuori elenco e senza invito** (es. appena nata): entra subito, con avviso.
+- Associazione (o fondazione, cooperativa) **nell'elenco del Comune**: entra subito, senza avviso e **senza nessun segno "verificada"** (decisione del 10 novembre, `docs/decisioni/2026-11-10-verifica.md`: il NIF nell'elenco è solo un dato interno); le chiediamo "¿Sois *nombre*?" con il nome ufficiale. **Fuori elenco e senza invito** (es. appena nata): entra subito, con avviso.
 - Le associazioni della categoria del Comune **"Comerciantes, empresarios, profesionales y autónomos"** non vengono riconosciute dal NIF (non si importano): se si iscrivono sono fuori elenco, quindi con avviso.
 - **Mai documenti personali:** qualunque NIF in formato DNI/NIE (o K/L/M) si rifiuta, anche nel campo facoltativo dell'Actividad comercial. Sotto quel campo, una riga di aiuto: *"Si tu NIF es tu DNI personal o eres autónomo/a, no lo pongas."*
 - **Autonomi soli:** nessuna strada propria. Gli artisti entrano come "Gente que hace cosas"; un bar o una libreria gestiti da un autonomo entrano come "Actividad comercial" senza NIF.
@@ -225,7 +225,7 @@ I **fili** (§6) sono costruiti prima del lancio ma restano spenti (flag `thread
 
 ## 16. Criteri di accettazione della demo
 1. Aprendo `/` da telefono si vede Madrid con punti `pulse` e `lit` (solo eventi) dai dati di seed; "Solo hoy" lascia solo i `pulse`; `/conexiones` mostra le associazioni e gli espacios attivi con indirizzo.
-2. Un'associazione si registra con un NIF presente in `municipal_associations` ed entra verificata a `/panel`; con un NIF già usato o in formato personale (DNI/NIE) riceve il messaggio di errore.
+2. Un'associazione si registra con un NIF presente in `municipal_associations` ed entra a `/panel` (mai "verificada"); con un NIF già usato o in formato personale (DNI/NIE) riceve il messaggio di errore.
 3. Un evento creato dal telefono con titolo e data (resto precompilato) appare sulla mappa in meno di 1 minuto di lavoro.
 4. Un professionista crea un evento in un bar: il bar compare sulla mappa solo per quell'evento.
 5. Con il flag `threads` acceso (prova su mapa-dev): A propone un filo a B; solo A e B lo vedono in attesa; dopo l'accettazione compare su `/conexiones` e la storia si legge toccandolo.

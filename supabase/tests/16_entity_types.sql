@@ -6,6 +6,12 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 select no_plan();
 
+-- Tetto M5 delle nuove organizzazioni azzerato (solo in questa transazione): il test non dipende dalle iscrizioni
+-- dell'ultima ora su mapa-dev.
+insert into public.rate_limits (key, window_start, count)
+values ('db:new-organizations', to_timestamp(floor(extract(epoch from now()) / 3600) * 3600), 0)
+on conflict (key, window_start) do update set count = 0;
+
 insert into auth.users (id, email) values
   ('00000001-0000-4000-8000-000000000016', 'e1@test.invalid'),
   ('00000002-0000-4000-8000-000000000016', 'e2@test.invalid'),
@@ -92,8 +98,8 @@ select results_eq(
   $$ select o.entry_method::text, o.verified from public.organizations o
      join public.memberships m on m.organization_id = o.id
      where m.user_id = '00000002-0000-4000-8000-000000000016' $$,
-  $$ values ('municipal_registry', true) $$,
-  'cooperativa nell''elenco: municipal_registry e verificata'
+  $$ values ('municipal_registry', false) $$,
+  'cooperativa nell''elenco: municipal_registry, ma non verificata (A1)'
 );
 
 -- u3, u4: enti pubblici con lo stesso NIF ------------------------------------------

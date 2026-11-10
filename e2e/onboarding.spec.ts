@@ -83,7 +83,8 @@ async function getOrganizationOf(userId: string) {
     | undefined;
 }
 
-test("una asociación del registro del Ayuntamiento se registra y llega a /panel verificada", async ({ page }) => {
+// A1 (decisione del 10 novembre): il NIF nell'elenco resta un dato interno, nessuno diventa "verificada".
+test("una asociación del registro del Ayuntamiento se registra y llega a /panel, sin verificada", async ({ page }) => {
   const userId = await signInAsNewUser(page);
   await chooseType(page, "Asociación");
   await page.getByLabel(/^NIF/).fill("G99000037");
@@ -97,7 +98,7 @@ test("una asociación del registro del Ayuntamiento se registra y llega a /panel
   await expect(page).toHaveURL(/\/panel$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hola, ASOCIACION DE PRUEBA NUMERO TRES (FICTICIA)");
   expect(await getOrganizationOf(userId)).toMatchObject({
-    verified: true,
+    verified: false,
     flagged_for_review: false,
     flag_reason: null,
     entry_method: "municipal_registry",
@@ -115,6 +116,10 @@ test("un NIF ya usado o personal no se acepta", async ({ page }) => {
   await fillAssociation(page, "G99000011");
   await submit(page);
   await expect(page.getByText("Este NIF ya está registrado")).toBeVisible();
+  // Il link porta al canale di contatto del progetto, senza il NIF.
+  const claim = page.getByRole("link", { name: "¿Es tu asociación?" });
+  await expect(claim).toHaveAttribute("href", /^mailto:[^?]+\?subject=/);
+  expect(await claim.getAttribute("href")).not.toContain("G99000011");
 
   await fillAssociation(page, "12345678Z");
   await submit(page);

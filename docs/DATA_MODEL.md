@@ -57,7 +57,7 @@ Tutti entrano subito. L'avviso al fondatore è `flagged_for_review = true` con i
 | Chi (`entity_type`) | NIF | `entry_method` | Avviso (`flag_reason`) |
 |---|---|---|---|
 | Chiunque con un invito valido di un'associazione attiva, di qualunque tipo | come il suo tipo | `invite` | mai |
-| `association`, `foundation`, `cooperative` con NIF nell'elenco del Comune | obbligatorio (G, G, F) | `municipal_registry` (`verified = true`) | no |
+| `association`, `foundation`, `cooperative` con NIF nell'elenco del Comune | obbligatorio (G, G, F) | `municipal_registry` (solo dato interno, `verified` resta `false`) | no |
 | `association`, `foundation`, `cooperative` fuori elenco | obbligatorio (G, G, F) | `self_declared` | `not_in_registry` |
 | `public_entity` | obbligatorio (P, Q, S), riusabile | `self_declared` | **sempre** `public_entity` |
 | `commercial` senza NIF | — | `self_declared` | `no_nif` |
@@ -122,7 +122,9 @@ RLS: `select` delle proprie righe. Inserita solo da `register_entity()` / `creat
 - `entity_type` è un dato interno: non è nella `grant select` pubblica né nella `grant update`, e non compare mai come etichetta
   sulla mappa. Le funzioni lo passano sempre; un `insert` diretto senza (seed, test) riceve dal trigger il tipo di base del
   `kind` (`association`, `commercial`, `informal`).
-- `verified = true` solo per `entry_method = 'municipal_registry'`.
+- `verified` è sempre `false` e non è leggibile da `anon` né da `authenticated` (decisione del 10 novembre,
+  `docs/decisioni/2026-11-10-verifica.md`): il NIF nell'elenco del Comune non dà nessun segno né diritto. La colonna resta
+  per la verifica futura con un link all'email ufficiale dell'associazione.
 - In tutta la UI `venue` si chiama "Espacio" (sezione "Espacios"). Conflitto di nome con la tabella `spaces`: il nome delle due sezioni
   si decide nella sessione 9, lo schema non cambia.
 - RLS `select` (`anon`, `authenticated`): `status = 'active'` **oppure** l'utente è membro (vede la propria organizzazione anche sospesa,
@@ -151,8 +153,10 @@ RLS: `select` delle proprie righe. Nessuna policy di scrittura (solo funzioni).
 `image_path text` (path nel bucket `event-images`), `owner_org uuid not null references organizations on delete cascade`,
 `created_at`, `updated_at`.
 - RLS: `select` a `anon, authenticated` se l'organizzazione proprietaria è `active` (archivio compreso), oppure ai suoi membri.
-  `insert` se l'utente è membro di `owner_org` e l'organizzazione è `active`. L'action chiama prima
-  `check_rate_limit('event:' || owner_org, 20, interval '1 day')` (mai dentro una policy: le policy non hanno effetti collaterali).
+  `insert` se l'utente è membro di `owner_org` e l'organizzazione è `active`. Il tetto di 20 eventi al giorno per
+  organizzazione lo applica il trigger `events_rate_limit` (chiave `db:event:<owner_org>`, errore `rate_limited`), così vale
+  anche per gli insert diretti via API (rapporto di sicurezza, M1). Conta solo gli insert riusciti con un utente; seed e
+  `service_role` non contano. Mai dentro una policy: le policy non hanno effetti collaterali.
   `update`/`delete` solo i membri di `owner_org`. `owner_org` e `slug` non si cambiano (grant per colonna).
 - Trigger: `slug` all'inserimento; `neighborhood_id` da `location`; all'inserimento/modifica aggiorna `organizations.last_activity_at`
   di tutti gli organizzatori; all'inserimento aggiunge la riga `owner` in `event_organizers`.
@@ -225,6 +229,9 @@ RLS attiva, nessuna policy. Letta/scritta solo da `src/lib/geocode.ts` (server-o
 Le chiavi non sono mai dati personali in chiaro (`src/lib/rate-limit.ts`): id di organizzazioni, oppure
 `<ambito>:ip:<hmac>` / `<ambito>:h:<hmac>` con HMAC-SHA256 (chiave secret, sale che cambia ogni giorno UTC) dell'IP della
 connessione, dell'email (link magico) o dell'id utente (iscrizione, geocodifica).
+Chiavi usate dal database (sessione 5, rapporto di sicurezza M1/M5), mai personali: `db:event:<owner_org>` (20 eventi al giorno)
+e `db:new-organizations` (60 nuove organizzazioni all'ora, tutte insieme, in `register_entity` e `create_professional`).
+Queste contano solo le scritture riuscite: un'eccezione annulla anche il conteggio.
 
 ## Storage
 Bucket `event-images`: lettura pubblica, solo `image/webp`, max 5 MB. Path `"{organization_id}/{event_id}.webp"`.
@@ -265,8 +272,8 @@ Il file lo carica solo l'action di "Mi ficha" (sessione 7) dopo `reencodeLogo` (
 | `is_doubtful_activity(p_activity)` | immutable | `true` per `discoteca_club`, `bar_nocturno`, `otro`. Unico posto della lista. |
 | `is_admin()` | security definer, stable | Esiste una riga in `app_admins` per `auth.uid()`. |
 | `lookup_municipal_association(p_nif)` | security definer, solo `service_role` | Restituisce solo `found` + `name` ufficiale, per "¿Sois *nombre*?". L'action chiama prima `check_rate_limit` (max 10 al giorno per connessione) e poi questa con il client admin. |
-| `register_entity(p_entity_type, p_nif, p_name, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_venue_activity, p_what_for_whom, p_how_sustained, p_what_they_offer, p_one_liner, p_when_to_visit, p_contact_email, p_contact_phone, p_contact_url, p_usual_category, p_address, p_lng, p_lat)` (dal 7° in poi `default null`) | security definer | Sessione 5. Per tutti i tipi tranne `informal`. Richiede `auth.uid()`. Normalizza il NIF: rifiuta i documenti personali e le lettere sbagliate per il tipo; obbligatorio tranne per `commercial`; unico tranne P/Q/S. Decide `entry_method` e avviso secondo la tabella "Chi entra e come". `commercial`: attività, le due risposte (`what_for_whom`, `what_they_offer`), indirizzo e punto obbligatori. Crea in una sola transazione organizzazione (slug unico, scheda completa), verifica (se c'è il NIF), membership, accettazione, risposte; segna l'invito come usato. Restituisce `(slug, flagged, flag_reason)`. Errori: `not_authenticated`, `invalid_kind`, `already_member`, `terms_required`, `invalid_name`, `nif_required`, `personal_nif`, `invalid_nif`, `already_claimed`, `venue_activity_required`, `answers_required`, `answer_too_long`, `address_required`, `invalid_location`, `invalid_invite`. |
-| `create_professional(p_name, p_one_liner, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_neighborhood_slug, p_contact_email, p_contact_phone, p_contact_url, p_seeking_offering, p_indexable)` (dal 6° in poi con default) | security definer | Stesso schema per i professionisti (`entity_type = 'informal'`); `entry_method` = `invite` con invito valido, altrimenti `email_only`. Barrio scelto per slug (`invalid_neighborhood` se non esiste). Restituisce lo slug. |
+| `register_entity(p_entity_type, p_nif, p_name, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_venue_activity, p_what_for_whom, p_how_sustained, p_what_they_offer, p_one_liner, p_when_to_visit, p_contact_email, p_contact_phone, p_contact_url, p_usual_category, p_address, p_lng, p_lat)` (dal 7° in poi `default null`) | security definer | Sessione 5. Per tutti i tipi tranne `informal`. Richiede `auth.uid()`. Normalizza il NIF: rifiuta i documenti personali e le lettere sbagliate per il tipo; obbligatorio tranne per `commercial`; unico tranne P/Q/S. Decide `entry_method` e avviso secondo la tabella "Chi entra e come". `commercial`: attività, le due risposte (`what_for_whom`, `what_they_offer`), indirizzo e punto obbligatori. Crea in una sola transazione organizzazione (slug unico, scheda completa), verifica (se c'è il NIF), membership, accettazione, risposte; segna l'invito come usato. Restituisce `(slug, flagged, flag_reason)`. Errori: `not_authenticated`, `invalid_kind`, `already_member`, `terms_required`, `invalid_name`, `nif_required`, `personal_nif`, `invalid_nif`, `already_claimed`, `venue_activity_required`, `answers_required`, `answer_too_long`, `address_required`, `invalid_location`, `invalid_invite`, `rate_limited` (oltre 60 nuove organizzazioni all'ora in tutto il sito, anche chiamata via RPC). Non scrive mai `verified`. |
+| `create_professional(p_name, p_one_liner, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_neighborhood_slug, p_contact_email, p_contact_phone, p_contact_url, p_seeking_offering, p_indexable)` (dal 6° in poi con default) | security definer | Stesso schema per i professionisti (`entity_type = 'informal'`); `entry_method` = `invite` con invito valido, altrimenti `email_only`. Barrio scelto per slug (`invalid_neighborhood` se non esiste). Stesso tetto `rate_limited` di `register_entity`. Restituisce lo slug. |
 | `get_invite(p_token)` | security definer | Restituisce solo nome e slug dell'organizzazione che invita, se il token è valido, non usato, non scaduto e l'organizzazione è attiva. |
 | `export_my_data()` | security definer | `jsonb` con email dell'utente, membership, accettazioni, organizzazione, NIF, risposte, eventi, organizzatori, fili, inviti, spazi e `moderation_actions` sulla propria organizzazione. |
 | `delete_my_account()` | security definer | Elimina l'organizzazione dell'utente se ne è l'unico membro (a cascata: eventi, organizzatori, fili, inviti, spazi, verifica, risposte), poi la riga di `auth.users`. L'action cancella prima i file di Storage. Restano solo le `moderation_actions` (senza riferimenti all'utente). |
@@ -307,6 +314,11 @@ tipo, attività, barrio, web, risposte e motivo. **Mai il NIF né l'email di chi
     NIF, commercial con attività dubbia, commercial con NIF e attività tranquilla no, invito mai); `commercial` senza indirizzo →
     `address_required`; `entity_type` e `flag_reason` non leggibili da anon né modificabili dal membro; `mark_reviewed` azzera il motivo;
     `create_professional` salva barrio e contatti.
+20. (sessione 5, file 17, rapporto di sicurezza) A1: `verified` non leggibile da `anon`/`authenticated`, nessuna organizzazione
+    verificata, nessuna policy o vista che dipende da `verified` o dall'elenco del Comune, NIF nell'elenco → `municipal_registry`
+    ma `verified = false`. M5: il tetto delle nuove organizzazioni conta solo le iscrizioni riuscite e oltre il tetto
+    `register_entity` e `create_professional` rispondono `rate_limited`. M1: un insert diretto in `events` conta nel limite;
+    il ventunesimo del giorno → `rate_limited`; un insert rifiutato dalla RLS non tocca il limite di un'altra organizzazione.
 
 I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
 (`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,

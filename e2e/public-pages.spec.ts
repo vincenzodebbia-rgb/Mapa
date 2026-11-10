@@ -66,6 +66,9 @@ test("la scheda di un'associazione mostra storia, contatti e prossimi eventi", a
   await expect(page.getByRole("list", { name: "Próximos eventos" }).getByRole("listitem").first()).toBeVisible();
   const organization = (await readJsonLd(page)).find((block) => block["@type"] === "Organization");
   expect(organization).toMatchObject({ name: "Colectivo Vecinal La Colmena (ficticio)" });
+  // A1: nessun segno "verificada", anche se il NIF della Colmena è nell'elenco del Comune; c'è "¿Es tu asociación?".
+  await expect(page.getByText(/verificada/i)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "¿Es tu asociación?" })).toHaveAttribute("href", /^mailto:[^?]+\?subject=/);
 });
 
 test("la pagina di un barrio con contenuto mostra mappa, eventi, associazioni e vicini", async ({ page }) => {

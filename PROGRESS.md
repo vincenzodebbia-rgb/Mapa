@@ -7,8 +7,23 @@ Updated by the agent at the end of every session. Newest first.
   notte del 5/11 sono **solo locali**). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link
   magico ricevuto per email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
 - Piano della sessione 6 scritto (senza codice) in `docs/piani/sessione-6.md`, con 13 punti da decidere (D1–D13).
+- Correzioni di sicurezza A1, M1, M5 **in commit locale** (10/11): la migrazione `20261110211136_security_a1_m1_m5` va
+  applicata a mapa-dev dal fondatore; poi `npm run db:types` e di nuovo pgTAP + e2e.
 
 ## Done
+### 2026-11-10 — Correzioni di sicurezza A1, M1, M5 (docs/rapporti/sicurezza-2026-11.md)
+- A1 (decisione del fondatore, `docs/decisioni/2026-11-10-verifica.md`): niente più "Verificada en el registro municipal".
+  `verified` tolto dal DTO e dalla scheda; nel database `revoke select (verified)` da anon/authenticated, tutte le righe a
+  `false`, `register_entity` non lo accende più. `entry_method = 'municipal_registry'` resta come dato interno.
+  Pulsante "¿Es tu asociación?" (mailto a `brand.contactEmail`, nome della scheda nell'oggetto, mai il NIF) nella scheda
+  delle associazioni e sotto l'errore "Este NIF ya está registrado". Helper condiviso `src/lib/claim-contact.ts`.
+- M1: trigger `events_rate_limit` (20 eventi al giorno per organizzazione, chiave `db:event:<org>`), vale anche per gli
+  insert diretti via API. M5: tetto di 60 nuove organizzazioni all'ora in tutto il sito in `register_entity` e
+  `create_professional` (chiave `db:new-organizations`). Errore `rate_limited` → "Demasiados intentos".
+- Test: pgTAP 17 nuovo; 07 e 16 aggiornati (`verified` ora `false`, contatore M5 azzerato nella transazione); Vitest
+  `claim-contact.test.ts` e `rate_limited` nel mapper; e2e: niente "verificada" nella scheda, link "¿Es tu asociación?".
+- check verde (145 test), deps verde, e2e 18/19: l'unico rosso aspetta la migrazione su mapa-dev (vedi Known issues).
+
 ### 2026-11-05 (notte, in autonomia) — Commenti in italiano e piano della sessione 6
 - Tutti i commenti del codice tradotti in italiano (regola di AGENTS.md): `src/`, `scripts/`, `e2e/`, file di configurazione
   e `globals.css`, 120 file. Codice, nomi e testi dell'interfaccia invariati: verificato file per file ristampando il codice
@@ -229,6 +244,13 @@ Updated by the agent at the end of every session. Newest first.
   definitivo, **mai** da un'email personale.
 
 ## Known issues
+- (10/11) Migrazione `20261110211136_security_a1_m1_m5` non ancora su mapa-dev: fino al push l'e2e "asociación del
+  registro… sin verificada" fallisce (`verified: true` dalla vecchia `register_entity`) e il pgTAP 17 non si può provare.
+  La CLI Supabase arriva da `npx` (non è nelle dipendenze): il 10/11 `npx` ha scaricato la 3.1.0, che non trova il token di
+  accesso, quindi niente prova a secco da parte dell'agente.
+- (10/11) Restano aperti dal rapporto di sicurezza: M1 per inviti e fili (solo eventi corretti), M2, M3, M4, M6, B1–B10.
+  Il tetto M5 conta solo le iscrizioni riuscite (un'eccezione annulla anche il conteggio): i tentativi falliti via RPC
+  (per esempio per scoprire quali NIF sono già usati) non hanno limite nel database.
 - Nominatim: il ritmo di 1 richiesta al secondo vale per processo; su Vercel più istanze possono superarlo di poco.
   Lo frenano la cache e il limite di 30 ricerche all'ora per utente. Se servirà, un limite globale con `check_rate_limit`.
 - In locale (senza `x-forwarded-for`) tutte le richieste hanno la stessa chiave di connessione: i limiti per connessione

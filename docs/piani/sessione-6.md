@@ -63,7 +63,9 @@ Niente campo immagine (decisione del 21 ottobre).
   `coorganizerIds` (uuid, massimo **[D7]**). Test Vitest.
 - `actions.ts` (`'use server'`), ordine di AGENTS.md:
   - `createEvent`: zod → utente + membership di un'organizzazione **attiva** → limite **20 eventi al giorno per
-    organizzazione** (`check_rate_limit` con chiave `event:<owner_org>`, l'id dell'organizzazione non è un dato personale)
+    organizzazione** (`check_rate_limit` con chiave `event:<owner_org>`, l'id dell'organizzazione non è un dato personale;
+    dal 10 novembre lo stesso tetto lo applica anche il database con il trigger `events_rate_limit`, errore `rate_limited`
+    da tradurre in "Demasiados intentos")
     → punto (pin o geocodifica) → insert in `events` (con il client dell'utente: la RLS fa da arbitro) → insert delle righe
     `co` → `updateTag(EVENTS_TAG)` e `updateTag(ORGANIZATIONS_TAG)` (le pagine dei barrios usano tutti e due) → redirect
     **[D8]**.

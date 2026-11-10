@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getButtonClasses } from "@/components/ui/button";
 import { JsonLd } from "@/components/ui/json-ld";
+import { brand } from "@/config/brand";
+import { getClaimContactHref } from "@/lib/claim-contact";
 import { t } from "@/lib/i18n/t";
 import { buildOrganizationJsonLd } from "../organization-json-ld";
 import type { OrganizationProfile as OrganizationProfileData } from "../types";
@@ -39,7 +42,6 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted">{t(`organization.kinds.${organization.kind}`)}</p>
           <h1 className="text-2xl font-semibold">{organization.name}</h1>
-          {organization.verified && <p className="text-sm text-muted">{t("organization.verified")}</p>}
         </div>
       </header>
 
@@ -104,6 +106,16 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
       )}
 
       {upcoming}
+
+      {/* Nessun segno "verificada" (A1): chi vede la propria associazione creata da altri scrive al progetto. */}
+      {organization.kind === "association" && (
+        <aside className="flex flex-col items-start gap-2 border-t border-line pt-4">
+          <a href={getClaimContactHref(organization.name)} className={getButtonClasses("secondary")}>
+            {t("claim.button")}
+          </a>
+          <p className="text-sm text-muted">{t("claim.profileHint", { email: brand.contactEmail })}</p>
+        </aside>
+      )}
     </article>
   );
 }

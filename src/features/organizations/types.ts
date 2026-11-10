@@ -20,7 +20,6 @@ export type OrganizationProfile = {
   story: string | null;
   /** URL pubblico assoluto del logo WebP nello Storage, oppure null. */
   logoUrl: string | null;
-  verified: boolean;
   /** false solo per i professionisti che hanno spento "Mostrar mi perfil en Google". */
   indexable: boolean;
 };

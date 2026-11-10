@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ContentPage } from "@/components/ui/content-page";
 import { brand } from "@/config/brand";
+import { getClaimContactHref } from "@/lib/claim-contact";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
 import { LocationPicker } from "@/features/map/components/location-picker";
 import { getNeighborhoods } from "@/features/map/data";
@@ -110,6 +111,7 @@ function getFormTexts(entityType: EntityType): RegistrationFormTexts {
       invalidInvite: t("registro.formErrors.invalidInvite"),
       generic: t("registro.formErrors.generic"),
     },
+    claim: { label: t("claim.button"), href: getClaimContactHref() },
   };
 }
 

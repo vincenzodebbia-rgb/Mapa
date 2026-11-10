@@ -7,6 +7,12 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 select no_plan();
 
+-- Tetto M5 delle nuove organizzazioni azzerato (solo in questa transazione): il test non dipende dalle iscrizioni
+-- dell'ultima ora su mapa-dev.
+insert into public.rate_limits (key, window_start, count)
+values ('db:new-organizations', to_timestamp(floor(extract(epoch from now()) / 3600) * 3600), 0)
+on conflict (key, window_start) do update set count = 0;
+
 insert into auth.users (id, email) values
   ('00000001-0000-4000-8000-000000000001', 'u1@test.invalid'),
   ('00000002-0000-4000-8000-000000000001', 'u2@test.invalid'),
@@ -38,8 +44,8 @@ select results_eq(
   $$ select o.entry_method::text, o.verified, o.kind::text from public.organizations o
      join public.memberships m on m.organization_id = o.id
      where m.user_id = '00000001-0000-4000-8000-000000000001' $$,
-  $$ values ('municipal_registry', true, 'association') $$,
-  'entry_method municipal_registry e verified = true'
+  $$ values ('municipal_registry', false, 'association') $$,
+  'entry_method municipal_registry, ma verified resta false (A1, decisione del 10 novembre)'
 );
 select is(
   (select count(*)::integer from public.memberships where user_id = '00000001-0000-4000-8000-000000000001'),

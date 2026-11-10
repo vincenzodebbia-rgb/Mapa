@@ -147,6 +147,7 @@ describe("isHttpUrl", () => {
 describe("mapRegistrationDbError", () => {
   it("turns SQL errors into field or form errors", () => {
     expect(mapRegistrationDbError("already_claimed")).toEqual({ type: "form", error: "alreadyClaimed" });
+    expect(mapRegistrationDbError("rate_limited")).toEqual({ type: "form", error: "tooMany" });
     expect(mapRegistrationDbError("personal_nif")).toEqual({ type: "field", field: "nif", error: "personalNif" });
     expect(mapRegistrationDbError("invalid_location")).toEqual({ type: "field", field: "address", error: "invalidLocation" });
     expect(mapRegistrationDbError("already_member")).toEqual({ type: "alreadyMember" });

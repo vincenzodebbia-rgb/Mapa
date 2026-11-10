@@ -17,7 +17,7 @@ import type {
 // updateTag(ORGANIZATIONS_TAG) di src/lib/cache-tags.ts.
 
 const PROFILE_COLUMNS =
-  "id, slug, kind, name, one_liner, when_to_visit, contact_email, contact_phone, contact_url, address, story, logo_path, verified, indexable, neighborhood:neighborhoods(slug, name)";
+  "id, slug, kind, name, one_liner, when_to_visit, contact_email, contact_phone, contact_url, address, story, logo_path, indexable, neighborhood:neighborhoods(slug, name)";
 
 /** Alla pagina arrivano solo link http/https (lo controlla anche il database). */
 function toSafeHttpUrl(value: string | null): string | null {
@@ -54,7 +54,6 @@ export async function getOrganizationProfile(slug: string): Promise<Organization
     neighborhood: row.neighborhood ? { slug: row.neighborhood.slug, name: row.neighborhood.name } : null,
     story: row.story,
     logoUrl: row.logo_path ? getPublicStorageUrl("org-logos", row.logo_path) : null,
-    verified: row.verified,
     indexable: row.indexable,
   };
 }
