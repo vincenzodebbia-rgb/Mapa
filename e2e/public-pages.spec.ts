@@ -71,6 +71,16 @@ test("la scheda di un'associazione mostra storia, contatti e prossimi eventi", a
   await expect(page.getByRole("link", { name: "¿Es tu asociación?" })).toHaveAttribute("href", /^mailto:[^?]+\?subject=/);
 });
 
+test("ogni tipo di scheda ha il proprio tasto di rivendicazione", async ({ page }) => {
+  for (const [path, label] of [
+    ["/a/libreria-imaginaria-pagina-cero-ficticia", "¿Es tu espacio?"],
+    ["/a/estudio-de-ilustracion-ficticio", "¿Es tu perfil?"],
+  ] as const) {
+    expect((await page.goto(path))?.status()).toBe(200);
+    await expect(page.getByRole("link", { name: label })).toHaveAttribute("href", /^mailto:[^?]+\?subject=/);
+  }
+});
+
 test("la pagina di un barrio con contenuto mostra mappa, eventi, associazioni e vicini", async ({ page }) => {
   const response = await page.goto("/barrio/opanel");
   expect(response?.status()).toBe(200);

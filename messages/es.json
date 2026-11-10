@@ -185,9 +185,21 @@
     "shareText": "{title} · {date}, {time} · {place}"
   },
   "claim": {
-    "button": "¿Es tu asociación?",
-    "profileHint": "Si alguien la ha registrado en vuestro nombre, escríbenos a {email} y lo revisamos.",
-    "subjectProfile": "¿Es mi asociación? · {name}",
+    "button": {
+      "association": "¿Es tu asociación?",
+      "venue": "¿Es tu espacio?",
+      "professional": "¿Es tu perfil?"
+    },
+    "profileHint": {
+      "association": "Si alguien la ha registrado en vuestro nombre, escríbenos a {email} y lo revisamos.",
+      "venue": "Si alguien lo ha registrado en vuestro nombre, escríbenos a {email} y lo revisamos.",
+      "professional": "Si alguien lo ha creado en tu nombre, escríbenos a {email} y lo revisamos."
+    },
+    "subjectProfile": {
+      "association": "¿Es mi asociación? · {name}",
+      "venue": "¿Es mi espacio? · {name}",
+      "professional": "¿Es mi perfil? · {name}"
+    },
     "subjectNifTaken": "Nuestro NIF ya está registrado"
   },
   "organization": {

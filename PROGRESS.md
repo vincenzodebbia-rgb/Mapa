@@ -11,6 +11,14 @@ Updated by the agent at the end of every session. Newest first.
   applicata a mapa-dev dal fondatore; poi `npm run db:types` e di nuovo pgTAP + e2e.
 
 ## Done
+### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
+- CLI Supabase fissata a `2.122.0` come devDependency esatta: `npx supabase` usa sempre quella.
+- Tasto di rivendicazione su tutte le schede: "¿Es tu asociación?", "¿Es tu espacio?", "¿Es tu perfil?" (`claim.*` per
+  `kind`); nell'errore del NIF già registrato il testo segue il tipo (entità o attività commerciale). Mai il NIF.
+- Nessun avviso al fondatore per le associazioni dell'elenco (resta com'è).
+- Rapporto di sicurezza: nuovi punti B11–B14 da rivedere prima del lancio.
+- check verde (146 test), deps verde, e2e 19/20 (stesso rosso: migrazione non ancora su mapa-dev).
+
 ### 2026-11-10 — Correzioni di sicurezza A1, M1, M5 (docs/rapporti/sicurezza-2026-11.md)
 - A1 (decisione del fondatore, `docs/decisioni/2026-11-10-verifica.md`): niente più "Verificada en el registro municipal".
   `verified` tolto dal DTO e dalla scheda; nel database `revoke select (verified)` da anon/authenticated, tutte le righe a

@@ -111,7 +111,11 @@ function getFormTexts(entityType: EntityType): RegistrationFormTexts {
       invalidInvite: t("registro.formErrors.invalidInvite"),
       generic: t("registro.formErrors.generic"),
     },
-    claim: { label: t("claim.button"), href: getClaimContactHref() },
+    // Il NIF già usato capita solo a chi ha un NIF: entità (association) o attività commerciale (venue).
+    claim: {
+      label: t(isCommercial ? "claim.button.venue" : "claim.button.association"),
+      href: getClaimContactHref(isCommercial ? "venue" : "association"),
+    },
   };
 }
 

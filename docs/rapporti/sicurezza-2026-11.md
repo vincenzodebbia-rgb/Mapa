@@ -32,6 +32,7 @@ rischio che dipende da un'impostazione non verificabile · **Bassa** = difetto l
 | B8 | Bassa | GitHub Actions fissate per tag, non per SHA, anche nel deploy con la password di produzione | Sì |
 | B9 | Bassa | `event_occurrences()` / `event_schedule()` espandono tutti gli eventi a ogni chiamata anonima | No |
 | B10 | Bassa | 9 vulnerabilità "moderate" solo nelle dipendenze di sviluppo | No |
+| B11–B14 | Bassa | Aperti dopo A1/M1/M5 (11/11): tentativi falliti non contati, tetto globale, inviti e fili, contatto segnaposto | Prima del lancio |
 | I1–I4 | Info | Cose controllate e a posto; impostazioni da verificare nei pannelli | — |
 
 ---
@@ -233,6 +234,29 @@ quando servirà, e un `statement_timeout` per il ruolo `anon` nel pannello.
 `npm audit --omit=dev`: **0 vulnerabilità**. `npm audit` completo: 9 "moderate", tutte nelle dipendenze di sviluppo
 (catena `minimatch` → `typescript-eslint` / `eslint-config-next`). Non arrivano al sito. **Proposta:** lasciare che
 Dependabot le aggiorni (su GitHub c'è già un suo ramo di aggiornamenti minori).
+
+### Da rivedere prima del lancio (aggiunti l'11 novembre, dopo le correzioni A1, M1, M5)
+
+Punti minori lasciati aperti dalla migrazione `20261110211136_security_a1_m1_m5`. Nessuno è un rischio alto oggi, ma
+vanno chiusi o accettati per iscritto prima del lancio.
+
+- **B11 — Tentativi falliti non contati dai limiti nel database.** I limiti dentro le funzioni e nel trigger degli eventi
+  (`db:new-organizations`, `db:event:<org>`) contano solo le scritture riuscite: un'eccezione annulla tutta la transazione,
+  conteggio compreso. Chi chiama `register_entity` via RPC per sapere quali NIF sono già usati (`already_claimed`) non
+  trova un limite nel database; lo frena solo il limite dell'action, che però la chiamata diretta salta. *Da valutare:*
+  contare i tentativi fuori dalla transazione (per esempio con il limite di Supabase Auth, M2) o rendere
+  `register_entity` eseguibile solo da `service_role` (M5, seconda proposta).
+- **B12 — Tetto globale di 60 iscrizioni all'ora.** Il tetto M5 vale per tutto il sito, non per utente: un robot che lo
+  esaurisce blocca per un'ora anche le iscrizioni vere ("Demasiados intentos"). *Da valutare* con i numeri del pilota:
+  un tetto più alto, un tetto per connessione nell'action, oppure il captcha di Supabase Auth (M2), che toglie il robot a
+  monte.
+- **B13 — Inviti e fili senza limite nel database.** La correzione M1 copre solo `events`. `invites` e `threads`
+  accettano ancora insert diretti senza tetto (si possono proporre fili a tutte le organizzazioni in un colpo). *Proposta:*
+  lo stesso trigger di `events_rate_limit`, con chiavi `db:invite:<org>` e `db:thread:<org>`, quando inviti e fili
+  arrivano nell'interfaccia (sessione 7 e dopo il lancio).
+- **B14 — `brand.contactEmail` ancora segnaposto.** `src/config/brand.ts` ha `hola@example.org`: il tasto
+  "¿Es tu asociación?" / "¿Es tu espacio?" / "¿Es tu perfil?" e l'errore "Este NIF ya está registrado" mandano lì. Va
+  sostituito con il canale di contatto vero del progetto (mai un indirizzo personale) prima che qualcuno lo usi.
 
 ---
 
