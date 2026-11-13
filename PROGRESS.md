@@ -7,8 +7,9 @@ Updated by the agent at the end of every session. Newest first.
   notte del 5/11 sono **solo locali**). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link
   magico ricevuto per email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
 - Piano della sessione 6 scritto (senza codice) in `docs/piani/sessione-6.md`, con 13 punti da decidere (D1–D13).
-- Correzioni di sicurezza A1, M1, M5 **in commit locale** (10/11): la migrazione `20261110211136_security_a1_m1_m5` va
-  applicata a mapa-dev dal fondatore; poi `npm run db:types` e di nuovo pgTAP + e2e.
+- Correzioni di sicurezza A1, M1, M5 nella PR in bozza #17: migrazione `20261110211136_security_a1_m1_m5` applicata a
+  mapa-dev dal fondatore il 13/11. Tipi rigenerati (nessuna differenza), check, deps ed e2e 20/20 verdi; in CI check,
+  secrets-scan e db-test (pgTAP 1–17) verdi.
 
 ## Done
 ### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
@@ -252,11 +253,7 @@ Updated by the agent at the end of every session. Newest first.
   definitivo, **mai** da un'email personale.
 
 ## Known issues
-- (10/11) Migrazione `20261110211136_security_a1_m1_m5` non ancora su mapa-dev: fino al push l'e2e "asociación del
-  registro… sin verificada" fallisce (`verified: true` dalla vecchia `register_entity`) e il pgTAP 17 non si può provare.
-  La CLI Supabase arriva da `npx` (non è nelle dipendenze): il 10/11 `npx` ha scaricato la 3.1.0, che non trova il token di
-  accesso, quindi niente prova a secco da parte dell'agente.
-- (10/11) Restano aperti dal rapporto di sicurezza: M1 per inviti e fili (solo eventi corretti), M2, M3, M4, M6, B1–B10.
+- (10/11) Restano aperti dal rapporto di sicurezza: M1 per inviti e fili (solo eventi corretti), M2, M3, M4, M6, B1–B14.
   Il tetto M5 conta solo le iscrizioni riuscite (un'eccezione annulla anche il conteggio): i tentativi falliti via RPC
   (per esempio per scoprire quali NIF sono già usati) non hanno limite nel database.
 - Nominatim: il ritmo di 1 richiesta al secondo vale per processo; su Vercel più istanze possono superarlo di poco.
