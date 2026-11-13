@@ -5,9 +5,10 @@ import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
-import { getMadridDateKey } from "@/lib/dates";
+import { formatMadridTime, getMadridDateKey } from "@/lib/dates";
 import { isEventIndexable, shouldRedirectEvent } from "./event-page-rules";
-import type { EventOrganizer, EventOwner, EventPageResult, MyEvent, UpcomingEvent } from "./types";
+import { isEventUpcoming } from "./schema";
+import type { EventForEdit, EventOrganizer, EventOwner, EventPageResult, MyEvent, UpcomingEvent } from "./types";
 
 // Letture pubbliche, come anon (RLS: niente eventi di organizzazioni sospese), in cache così la pagina evento è statica
 // e risponde con un 404 o un 308 veri. Le scritture (sessione 6) devono chiamare updateTag(EVENTS_TAG).
@@ -205,7 +206,6 @@ export async function getMyEvents(organizationId: string, now: Date): Promise<My
         .order("starts_at", { ascending: false })
         .limit(MY_EVENTS_LIMIT),
     ) ?? [];
-  const today = getMadridDateKey(now);
   return rows
     .map((row) => ({
       id: row.id,
@@ -214,9 +214,49 @@ export async function getMyEvents(organizationId: string, now: Date): Promise<My
       startsAt: toIso(row.starts_at),
       recurrence: row.recurrence,
       recurrenceUntil: row.recurrence_until,
-      // Senza espandere le ripetizioni (D10): una serie è "in arrivo" finché il suo ultimo giorno non è passato.
-      upcoming:
-        row.recurrence === "none" ? Date.parse(row.ends_at) > now.getTime() : (row.recurrence_until ?? "") >= today,
+      upcoming: isEventUpcoming({ endsAt: row.ends_at, recurrence: row.recurrence, recurrenceUntil: row.recurrence_until }, now),
     }))
     .sort((a, b) => Number(b.upcoming) - Number(a.upcoming) || (a.upcoming ? a.startsAt.localeCompare(b.startsAt) : 0));
+}
+
+/**
+ * Un evento della propria organizzazione, con i valori per il modulo di modifica. Null se non esiste o se è di un'altra
+ * organizzazione (la query filtra per owner_org, e la RLS lo ricontrolla): la pagina risponde 404.
+ */
+export async function getEventForEdit(eventId: string, organizationId: string, now: Date): Promise<EventForEdit | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase
+      .from("events")
+      .select(
+        "id, slug, title, description, category, price_type, price_amount, starts_at, ends_at, recurrence, recurrence_until, venue_name, address, location",
+      )
+      .eq("id", eventId)
+      .eq("owner_org", organizationId)
+      .maybeSingle(),
+  );
+  if (!row) return null;
+  const point = parseEwkbPoint(row.location);
+  return {
+    id: row.id,
+    slug: row.slug,
+    upcoming: isEventUpcoming({ endsAt: row.ends_at, recurrence: row.recurrence, recurrenceUntil: row.recurrence_until }, now),
+    defaults: {
+      values: {
+        title: row.title,
+        category: row.category,
+        priceType: row.price_type,
+        priceAmount: row.price_amount === null ? undefined : String(row.price_amount),
+        date: getMadridDateKey(row.starts_at),
+        startTime: formatMadridTime(row.starts_at),
+        endTime: formatMadridTime(row.ends_at),
+        recurrence: row.recurrence,
+        recurrenceUntil: row.recurrence_until ?? undefined,
+        address: row.address,
+        venueName: row.venue_name ?? undefined,
+        description: row.description ?? undefined,
+      },
+      point: point ? { lng: point[0], lat: point[1] } : null,
+    },
+  };
 }

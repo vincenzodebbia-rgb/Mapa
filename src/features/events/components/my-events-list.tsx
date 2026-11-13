@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getButtonClasses } from "@/components/ui/button";
 import { formatMadridDate, formatMadridTime } from "@/lib/dates";
 import type { MyEvent } from "../types";
 import { DeleteEventButton } from "./delete-event-button";
@@ -9,13 +10,14 @@ export type MyEventsTexts = {
   empty: string;
   /** "Se repite hasta …" per l'ultimo giorno di una serie ("2027-05-20"); lo costruisce la pagina con t(). */
   repeatsUntil: (until: string) => string;
+  edit: string;
   delete: string;
   confirmDelete: string;
 };
 
 const linkClass = "underline underline-offset-2 break-words focus-visible:outline-2 focus-visible:outline-light";
 
-/** "Mis eventos" in /panel: in arrivo (con Eliminar) e passati. Il titolo si mostra come testo. */
+/** "Mis eventos" in /panel: in arrivo (con Editar ed Eliminar) e passati. Il titolo si mostra come testo. */
 export function MyEventsList({ events, texts }: { events: MyEvent[]; texts: MyEventsTexts }) {
   const upcoming = events.filter((event) => event.upcoming);
   const past = events.filter((event) => !event.upcoming);
@@ -29,7 +31,14 @@ export function MyEventsList({ events, texts }: { events: MyEvent[]; texts: MyEv
         {`${formatMadridDate(event.startsAt)}, ${formatMadridTime(event.startsAt)}`}
         {event.recurrence !== "none" && event.recurrenceUntil ? ` · ${texts.repeatsUntil(event.recurrenceUntil)}` : ""}
       </p>
-      {withDelete && <DeleteEventButton eventId={event.id} label={texts.delete} confirmText={texts.confirmDelete} />}
+      {withDelete && (
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/panel/eventos/${event.id}`} className={getButtonClasses("secondary")}>
+            {texts.edit}
+          </Link>
+          <DeleteEventButton eventId={event.id} label={texts.delete} confirmText={texts.confirmDelete} />
+        </div>
+      )}
     </li>
   );
 

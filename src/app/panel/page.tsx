@@ -31,6 +31,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
       <h1 className="font-display text-2xl font-semibold">{t("panel.title", { name: organization.name })}</h1>
       <p className="text-muted">{t("panel.intro")}</p>
       {outcome === "eliminado" && <p role="status">{t("panel.myEvents.deleted")}</p>}
+      {outcome === "guardado" && <p role="status">{t("panel.myEvents.saved")}</p>}
       {outcome === "error" && (
         <p role="alert" className="text-danger">
           {t("panel.myEvents.deleteFailed")}
@@ -50,6 +51,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
           pastHeading: t("panel.myEvents.past"),
           empty: t("panel.myEvents.empty"),
           repeatsUntil: (until) => t("panel.myEvents.repeatsUntil", { date: formatMadridDate(`${until}T12:00:00Z`) }),
+          edit: t("panel.myEvents.edit"),
           delete: t("panel.myEvents.delete"),
           confirmDelete: t("panel.myEvents.confirmDelete"),
         }}

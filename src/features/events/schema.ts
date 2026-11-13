@@ -70,11 +70,17 @@ const enumOf = <T extends string>(values: readonly [T, ...T[]]) => z.enum(values
 /**
  * Modulo → dati per il database. `now` arriva da chi chiama (l'action), così i test sono stabili.
  * Regole degli orari (decisione del 13 novembre):
- * - fine prima dell'inizio (o uguale) = il giorno dopo (concerto 22:00–02:00); al massimo 24 ore;
- * - un evento già finito non si pubblica (D4); uno in corso sì;
+ * - fine prima dell'inizio = il giorno dopo (concerto 22:00–02:00); al massimo 24 ore; fine uguale all'inizio no (A);
+ * - un evento già finito non si pubblica (D4); uno in corso sì. In modifica (`mode: "update"`) una serie si giudica
+ *   dal suo ultimo giorno, come il trigger events_not_in_past: si può cambiare l'orario di una serie già cominciata;
  * - un orario che non esiste al cambio dell'ora si rifiuta; uno doppio prende il primo (src/lib/dates.ts).
  */
-export function parseEventForm(raw: Record<string, unknown>, now: Date): EventParseResult {
+export function parseEventForm(
+  raw: Record<string, unknown>,
+  now: Date,
+  options: { mode: "create" | "update" } = { mode: "create" },
+): EventParseResult {
+  const judgeSeriesByLastDay = options.mode === "update" && asString(raw.recurrence) !== "" && asString(raw.recurrence) !== "none";
   const errors: EventFieldErrors = {};
   const fail = (field: EventField, error: EventFieldError) => {
     errors[field] ??= error;
@@ -110,14 +116,15 @@ export function parseEventForm(raw: Record<string, unknown>, now: Date): EventPa
   if (!date) fail("date", "required");
   if (!startTime) fail("startTime", "required");
   if (!endTime) fail("endTime", "required");
-  if (date && startTime && endTime) {
+  if (startTime && endTime && startTime === endTime) fail("endTime", "sameTime");
+  if (date && startTime && endTime && startTime !== endTime) {
     const start = madridLocalToInstant(date, startTime);
     if (!start.ok) {
       if (start.error === "nonexistent") fail("startTime", "nonexistentTime");
       else if (madridLocalToInstant(date, "12:00").ok) fail("startTime", "invalidTime");
       else fail("date", "invalidDate");
     }
-    // Fine uguale o prima dell'inizio: il giorno dopo. "HH:MM" si confronta bene come testo.
+    // Fine prima dell'inizio: il giorno dopo. "HH:MM" si confronta bene come testo.
     const endDate = endTime <= startTime ? addDaysToDateKey(date, 1) : date;
     const end = start.ok && endDate ? madridLocalToInstant(endDate, endTime) : null;
     if (end && !end.ok) fail("endTime", end.error === "nonexistent" ? "nonexistentTime" : "invalidTime");
@@ -126,7 +133,7 @@ export function parseEventForm(raw: Record<string, unknown>, now: Date): EventPa
       const duration = Date.parse(end.iso) - Date.parse(start.iso);
       // Al cambio dell'ora una notte può durare 25 ore sull'orologio: più di 24 ore reali non si accetta.
       if (duration <= 0 || duration > MAX_DURATION_MS) fail("endTime", "tooLongDuration");
-      else if (Date.parse(end.iso) <= now.getTime()) fail("date", "inPast");
+      else if (!judgeSeriesByLastDay && Date.parse(end.iso) <= now.getTime()) fail("date", "inPast");
       else {
         startsAt = start.iso;
         endsAt = end.iso;
@@ -144,6 +151,7 @@ export function parseEventForm(raw: Record<string, unknown>, now: Date): EventPa
       const maxDay = addMonthsToDateKey(startDay, RECURRENCE_MAX_MONTHS);
       const valid = addDaysToDateKey(until, 0) !== null && maxDay !== null && until >= startDay && until <= maxDay;
       if (!valid) fail("recurrenceUntil", "invalidRecurrenceUntil");
+      else if (judgeSeriesByLastDay && until < getMadridDateKey(now)) fail("recurrenceUntil", "inPast");
       else recurrenceUntil = until;
     }
   }
@@ -202,6 +210,7 @@ export function mapEventDbError(error: { message: string; code?: string }): Even
   if (error.message.includes("events_recurrence_until")) {
     return { type: "field", field: "recurrenceUntil", error: "invalidRecurrenceUntil" };
   }
+  if (error.message.includes("events_end_differs_from_start")) return { type: "field", field: "endTime", error: "sameTime" };
   if (error.message.includes("events_price_amount")) return { type: "field", field: "priceAmount", error: "invalidPrice" };
   // RLS: organizzazione sospesa o non propria.
   if (error.code === "42501") return { type: "form", error: "notAllowed" };
@@ -253,4 +262,16 @@ export function getDefaultSchedule(now: Date): { date: string; startTime: string
     startTime: pad(DEFAULT_START_HOUR),
     endTime: pad(DEFAULT_START_HOUR + DEFAULT_DURATION_HOURS),
   };
+}
+
+/**
+ * Un evento non ancora finito: singolo → la fine è nel futuro; serie → il suo ultimo giorno non è passato (a Madrid).
+ * Senza espandere le ripetizioni (D10). Stessa regola del trigger events_not_in_past in modifica.
+ */
+export function isEventUpcoming(
+  event: { endsAt: string; recurrence: Recurrence; recurrenceUntil: string | null },
+  now: Date,
+): boolean {
+  if (event.recurrence === "none") return Date.parse(event.endsAt) > now.getTime();
+  return (event.recurrenceUntil ?? "") >= getMadridDateKey(now);
 }

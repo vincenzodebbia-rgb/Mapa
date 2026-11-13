@@ -410,9 +410,11 @@
       "past": "Pasados",
       "empty": "Todavía no hay eventos. Publicad el primero.",
       "repeatsUntil": "se repite hasta el {date}",
+      "edit": "Editar",
       "delete": "Eliminar",
       "confirmDelete": "¿Eliminar este evento? No se puede deshacer.",
       "deleted": "Evento eliminado.",
+      "saved": "Cambios guardados.",
       "deleteFailed": "No hemos podido eliminar el evento. Inténtalo de nuevo."
     }
   },
@@ -473,6 +475,12 @@
     },
     "submit": "Publicar",
     "sending": "Publicando…",
+    "editMetaTitle": "Editar evento",
+    "editTitle": "Editar evento",
+    "editSubmit": "Guardar cambios",
+    "editSending": "Guardando…",
+    "seriesNote": "Si el evento se repite, los cambios valen para todas sus fechas.",
+    "notEditable": "Este evento ya ha terminado: ya no se puede editar.",
     "checkFields": "Revisa los campos marcados.",
     "fieldErrors": {
       "required": "Este campo es obligatorio.",
@@ -483,6 +491,7 @@
       "invalidTime": "Revisa la hora.",
       "nonexistentTime": "Esa hora no existe ese día: es el cambio de hora. Elige otra.",
       "tooLongDuration": "Un evento dura como mucho 24 horas. Si dura varios días, publica uno por día.",
+      "sameTime": "La hora de fin debe ser distinta de la de inicio.",
       "inPast": "Este evento ya ha terminado. Solo se pueden publicar eventos de hoy en adelante.",
       "invalidRecurrenceUntil": "Elige un día entre el primer día del evento y 6 meses después.",
       "addressNotFound": "No encontramos esa dirección en la Comunidad de Madrid.",

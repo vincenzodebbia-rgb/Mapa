@@ -67,11 +67,12 @@ describe("parseEventForm", () => {
       ok: false,
       fieldErrors: { startTime: "nonexistentTime" },
     });
-    // Notte del 25 ottobre: 03:00 → 03:00 del giorno dopo sono 25 ore reali.
-    const autumn = new Date("2026-10-01T00:00:00Z");
-    expect(parseEventForm({ ...base, date: "2026-10-24", startTime: "03:00", endTime: "03:00" }, autumn)).toEqual({
+  });
+
+  it("refuses an end time equal to the start time (decision A)", () => {
+    expect(parseEventForm({ ...base, startTime: "19:00", endTime: "19:00" }, NOW)).toEqual({
       ok: false,
-      fieldErrors: { endTime: "tooLongDuration" },
+      fieldErrors: { endTime: "sameTime" },
     });
   });
 
@@ -118,6 +119,28 @@ describe("parseEventForm", () => {
   });
 });
 
+describe("parseEventForm in update mode", () => {
+  // Serie settimanale cominciata il 30 ottobre, ancora in corso fino a gennaio.
+  const series = { ...base, date: "2026-10-30", recurrence: "weekly", recurrenceUntil: "2027-01-29" };
+
+  it("judges a series by its last day: a running series can change time", () => {
+    expect(parseEventForm(series, NOW).ok).toBe(false);
+    const updated = parseEventForm({ ...series, startTime: "18:00" }, NOW, { mode: "update" });
+    expect(updated.ok && updated.value.startsAt).toBe("2026-10-30T17:00:00.000Z");
+  });
+
+  it("refuses to end a series in the past, and a single event stays judged by its end", () => {
+    expect(parseEventForm({ ...series, recurrenceUntil: "2026-11-06" }, NOW, { mode: "update" })).toEqual({
+      ok: false,
+      fieldErrors: { recurrenceUntil: "inPast" },
+    });
+    expect(parseEventForm({ ...base, date: "2026-11-12" }, NOW, { mode: "update" })).toEqual({
+      ok: false,
+      fieldErrors: { date: "inPast" },
+    });
+  });
+});
+
 describe("parsePriceAmount", () => {
   it("reads euros with comma or dot and at most two decimals", () => {
     expect(parsePriceAmount("12")).toBe(12);
@@ -140,6 +163,11 @@ describe("mapEventDbError", () => {
     expect(mapEventDbError({ message: "new row violates row-level security policy", code: "42501" })).toEqual({
       type: "form",
       error: "notAllowed",
+    });
+    expect(mapEventDbError({ message: 'new row violates check constraint "events_end_differs_from_start"' })).toEqual({
+      type: "field",
+      field: "endTime",
+      error: "sameTime",
     });
     expect(mapEventDbError({ message: "something else" })).toEqual({ type: "form", error: "generic" });
   });

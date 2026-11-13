@@ -20,6 +20,9 @@ Updated by the agent at the end of every session. Newest first.
   evento e Mis eventos; `/?evento=<slug>` apre il punto sulla mappa Hoy. `dates.ts`: ore di Madrid → istante.
   FormField e AddressField in `components/ui`.
 - check verde (Vitest 172/172), deps verde, build verde, e2e 22/26 (i 4 rossi aspettano la migrazione), e2e demo 6/6.
+- 14/11, correzioni del fondatore: slug con default e senza permessi (segnaposto in createEvent da togliere dopo i tipi),
+  bucket event-images chiuso (le policy permettevano caricamenti via API), fine ≠ inizio (A), modifica
+  `/panel/eventos/[id]` + Editar (B), test "un'altra organizzazione" (pgTAP 18, e2e). Vitest 175/175, e2e 24/28.
 
 ### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
 - CLI Supabase fissata a `2.122.0` come devDependency esatta: `npx supabase` usa sempre quella.

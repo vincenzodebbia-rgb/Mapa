@@ -79,33 +79,57 @@ La migrazione nuova **non è applicata**: la applica il fondatore domattina (com
    si mostra la data della prima occorrenza + "se repite hasta…", non la prossima occorrenza.
 10. **D11, D12:** mensile = stesso giorno del mese; una serie si cambia solo tutta (nessuna eccezione per una data).
 11. **D13 Open Graph:** rimandato alla fase di design.
-12. **Slug all'inserimento:** il tipo generato chiede `slug`, che gli utenti non potevano scrivere. Soluzione:
-    `grant insert (slug)` + segnaposto nell'action; il trigger lo sostituisce **sempre** (provato nel pgTAP 18). Alternativa
-    più pulita, se si preferisce: una funzione SQL `create_event`.
+12. **Slug all'inserimento:** superato dalla correzione 1 del fondatore (vedi §8).
 13. **"Accesso disponibile"** richiede anche `NOMINATIM_USER_AGENT`: senza, il server rifiuta tutte le variabili segrete
     insieme (`getServerEnv`), quindi anche il link magico si romperebbe.
 14. **Testo del prezzo "a offerta":** "Aportación voluntaria", come nei filtri della mappa.
 15. **Orario proposto:** 19:00–21:00; dalle 19 in poi la prossima ora piena (+2 ore, anche dopo mezzanotte); dopo le 23 domani.
 
 ## 6. Punti saltati (non bloccanti, da fare dopo)
-- **Modifica di un evento** (`/panel/eventos/[id]`, `updateEvent`): non fatta. Il database è già pronto (il trigger D4
-  vale anche in modifica, provato nel pgTAP 18).
 - **Archivo** (numero di eventi dell'anno) in /panel.
-- e2e del piano non scritti: "Gente que hace cosas" in un bar non registrato, evento settimanale con 2 occorrenze, un
-  utente di un'altra organizzazione che prova a modificare (manca la pagina di modifica).
-- Prova a secco dei pgTAP su mapa-dev: non fatta (vedi §4).
+- e2e del piano non scritti: "Gente que hace cosas" in un bar non registrato, evento settimanale con 2 occorrenze.
+- Prova a secco dei pgTAP su mapa-dev: non fatta (la fa la CI, db-test).
 - Revisione con `architecture-reviewer`: non lanciata.
 
-## 7. Domattina, nell'ordine
-Comandi del fondatore, dal suo terminale nella cartella del progetto:
-1. `npx supabase db push --linked --dry-run`: mostra solo la migrazione `20261113194715_events_session6`, non applica
-   niente. **~10 secondi.**
-2. `npx supabase db push --linked`: applica la migrazione a mapa-dev. **~15 secondi.**
+## 7. Dopo il push, nell'ordine
+1. PR in bozza verso `main` (la apre il fondatore). CI: check, secrets-scan, db-test con pgTAP 1–18. **~4-5 minuti.**
+2. Solo con db-test verde, il fondatore: `npx supabase db push --linked --dry-run` (**~10 s**), poi
+   `npx supabase db push --linked` (**~15 s**).
+3. L'agente: `npm run db:types` (**~15 s**): `slug` diventa facoltativo nell'insert. Poi toglie il segnaposto `slug: "nuevo"`
+   da `createEvent` (riga con il TODO), `npm run check` (**~1-2 min**), `npx playwright test` (**~2-3 min**: i 4 rossi
+   devono diventare verdi), commit di tipi + correzione, push sulla stessa PR.
 
-Poi l'agente, quando il fondatore lo dice:
-3. `npm run db:types`, rigenera i tipi. Probabilmente nessuna differenza (la migrazione cambia permessi e trigger). **~15 s.**
-4. `npm run check`, poi `npm run deps`. **~1-2 minuti.**
-5. `npx playwright test`: i 4 e2e degli eventi devono diventare verdi. **~2-3 minuti.**
-6. `npm run e2e:demo`. **~30 secondi.**
-7. Con il permesso del fondatore: push di `feat/eventi` e PR in bozza verso `main`. CI (check, secrets-scan, db-test con
-   pgTAP 1–18) **~4-5 minuti.**
+## 8. Correzioni e decisioni dopo il rapporto (14 novembre)
+**Correzioni**
+1. **Slug:** tolto `grant insert (slug)`. La colonna ha ora un valore predefinito (stringa vuota: se il trigger mancasse,
+   il vincolo sul formato la rifiuterebbe) e gli utenti non hanno nessun permesso su `slug`. Il trigger continua a
+   scriverlo dal titolo. pgTAP 18: l'utente che manda uno slug riceve 42501; senza slug l'insert funziona; il titolo
+   cambia e lo slug no.
+   **Attenzione:** il tipo generato smette di chiedere `slug` solo dopo l'applicazione della migrazione e `npm run db:types`.
+   Fino ad allora `createEvent` manda ancora il segnaposto (altrimenti il typecheck della CI fallisce): con la migrazione
+   applicata e i tipi vecchi la pubblicazione è rifiutata. Va tolto subito dopo la rigenerazione dei tipi (§7, passo 3).
+2. **Bucket `event-images`: trovato un buco.** Le policy `event_images_insert_members` e `event_images_update_members`
+   (sessione 2) permettevano a ogni membro di un'organizzazione attiva di caricare e riscrivere file nella cartella della
+   propria organizzazione, direttamente con l'API Storage (l'interfaccia non ha mai avuto un campo immagine). Tolte nella
+   migrazione. Restano la lettura (il bucket è vuoto) e la cancellazione (serve a eliminare l'account). In più gli utenti non
+   possono più scrivere la colonna `image_path` (nessun codice la usa). Il bucket in sé resta (D1: si toglie più avanti).
+   `service_role` può ancora scriverci, come in ogni bucket: lo usa solo il nostro server. pgTAP 18: il membro che carica
+   in `event-images` riceve 42501.
+3. **Test "un'altra organizzazione":** pgTAP 18 (B prova update, delete e cambio di `owner_org` su un evento di A: nessuna
+   riga toccata o 42501) ed e2e (`/panel/eventos/<id di A>` → 404; modulo ed Eliminar con l'id di A nel campo nascosto →
+   rifiutati, l'evento di A non cambia).
+
+**Decisioni**
+- **A:** fine uguale all'inizio rifiutata ("La hora de fin debe ser distinta de la de inicio") nel modulo e nel database
+  (vincolo `events_end_differs_from_start` sulle ore di Madrid, `not valid` per non bloccare la migrazione su righe vecchie:
+  vale per ogni insert e update da adesso).
+- **B:** `/panel/eventos/[id]` con lo stesso modulo, `updateEvent` (zod → utente e organizzazione proprietaria attiva →
+  limite 60 all'ora → punto → update con la RLS → cache → `/panel?evento=guardado`). Pulsante "Editar" in Mis eventos.
+  Per una serie già cominciata conta l'ultimo giorno, come nel trigger; un evento singolo già finito mostra "ya ha
+  terminado" invece del modulo.
+
+**Esito dei test dopo le correzioni**
+- `npm run check`: typecheck e lint verdi, Vitest **175/175**. `npm run deps`: verde. `npm run build`: verde.
+- e2e: **24 verdi, 4 rossi attesi** (pubblicazione dal modulo: aspettano migrazione + tipi + tolto il segnaposto).
+  Verdi: modifica (titolo nuovo, stesso slug) e "un'altra organizzazione" (404 e rifiuti).
+- pgTAP: in CI (db-test) con la PR.

@@ -3,6 +3,8 @@
 --     passato resta modificabile; una serie si giudica dalla data di fine.
 -- D5: un evento può passare la mezzanotte (massimo 24 ore, fine dopo l'inizio).
 -- D7: nessun co-organizzatore via API.
+-- A: fine diversa dall'inizio. B: il titolo cambia, lo slug no; un'altra organizzazione non modifica né elimina.
+-- Slug: nessun permesso per gli utenti (valore predefinito + trigger). Nessun caricamento nel bucket event-images.
 -- In più: un membro non cambia owner_org né slug del proprio evento.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -101,16 +103,50 @@ select throws_ok(
   '42501', null, 'il membro non cambia slug'
 );
 
--- Lo slug mandato dall'utente (segnaposto dell'action) non arriva mai nel database: lo scrive il trigger.
-select lives_ok(
+-- Slug: nessun permesso per l'utente; senza slug l'insert funziona (valore predefinito) e il trigger lo scrive dal titolo.
+select throws_ok(
   $$ insert into public.events (slug, title, category, starts_at, ends_at, address, location, owner_org)
      values ('slug-elegido-a-mano', 'Título con slug propio', 'musica', now() + interval '3 days',
              now() + interval '3 days 1 hour', 'Calle', 'SRID=4326;POINT(-3.70 40.41)', 'a0000000-0000-4000-8000-000000000018') $$,
-  'insert con uno slug segnaposto'
+  '42501', null, 'l''utente non scrive lo slug'
+);
+select lives_ok(
+  $$ insert into public.events (title, category, starts_at, ends_at, address, location, owner_org)
+     values ('Título sin slug', 'musica', now() + interval '3 days', now() + interval '3 days 1 hour', 'Calle',
+             'SRID=4326;POINT(-3.70 40.41)', 'a0000000-0000-4000-8000-000000000018') $$,
+  'insert senza slug'
 );
 select is(
-  (select slug from public.events where title = 'Título con slug propio'),
-  'titulo-con-slug-propio', 'lo slug viene dal titolo, non dall''utente'
+  (select slug from public.events where title = 'Título sin slug'),
+  'titulo-sin-slug', 'lo slug viene dal titolo'
+);
+-- Il titolo cambia, lo slug no: i link già condivisi continuano a funzionare (decisione B).
+select lives_ok(
+  $$ update public.events set title = 'Título cambiado' where title = 'Título sin slug' $$,
+  'il membro cambia il titolo'
+);
+select is(
+  (select slug from public.events where title = 'Título cambiado'),
+  'titulo-sin-slug', 'lo slug resta quello di prima'
+);
+
+-- A: la fine deve essere diversa dall'inizio (anche con fine il giorno dopo = 24 ore esatte).
+select throws_ok(
+  $$ insert into public.events (title, category, starts_at, ends_at, address, location, owner_org)
+     values ('Misma hora', 'musica', now() + interval '2 days', now() + interval '3 days', 'Calle',
+             'SRID=4326;POINT(-3.70 40.41)', 'a0000000-0000-4000-8000-000000000018') $$,
+  '23514', null, 'fine alla stessa ora dell''inizio: rifiutata'
+);
+
+-- Immagini: nessun caricamento nel bucket event-images, nemmeno nella propria cartella.
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name) values ('event-images', 'a0000000-0000-4000-8000-000000000018/foto.webp') $$,
+  '42501', null, 'il membro non carica immagini degli eventi'
+);
+select throws_ok(
+  $$ update public.events set image_path = 'a0000000-0000-4000-8000-000000000018/foto.webp'
+     where id = 'e000000c-0000-4000-8000-000000000018' $$,
+  '42501', null, 'il membro non scrive image_path'
 );
 
 -- D7 ------------------------------------------------------------------------------
@@ -135,11 +171,23 @@ select lives_ok(
      where event_id = 'e000000a-0000-4000-8000-000000000018' and organization_id = 'b0000000-0000-4000-8000-000000000018' $$,
   'un co-organizzatore esistente si toglie da solo'
 );
+-- Un'altra organizzazione (B) non modifica né elimina un evento di A: la RLS non le mostra la riga (0 righe toccate).
+update public.events set title = 'Hackeado' where id = 'e000000c-0000-4000-8000-000000000018';
+delete from public.events where id = 'e000000c-0000-4000-8000-000000000018';
+select throws_ok(
+  $$ update public.events set owner_org = 'b0000000-0000-4000-8000-000000000018'
+     where id = 'e000000c-0000-4000-8000-000000000018' $$,
+  '42501', null, 'B non si prende l''evento di A'
+);
 reset role;
 select is(
   (select count(*)::integer from public.event_organizers
    where event_id = 'e000000a-0000-4000-8000-000000000018' and role = 'co'),
   0, 'la riga co è sparita'
+);
+select is(
+  (select title from public.events where id = 'e000000c-0000-4000-8000-000000000018'),
+  'Serie', 'B non ha cambiato il titolo dell''evento di A'
 );
 
 select * from finish();

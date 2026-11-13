@@ -19,6 +19,7 @@ import type { EventFieldErrors, EventFormState } from "./types";
 const EVENTS_PER_ORGANIZATION_PER_DAY = 20;
 const GEOCODES_PER_USER_PER_HOUR = 30;
 const DELETES_PER_ORGANIZATION_PER_HOUR = 60;
+const UPDATES_PER_ORGANIZATION_PER_HOUR = 60;
 
 function readValues(formData: FormData): EventFormState["values"] {
   const values: EventFormState["values"] = {};
@@ -73,7 +74,8 @@ export async function createEvent(previous: EventFormState, formData: FormData):
   const { data, error } = await supabase
     .from("events")
     .insert({
-      // Segnaposto: il trigger events_before_write sostituisce sempre lo slug (unico, dal titolo, mai cambiato).
+      // TODO(dopo db push): togliere. Segnaposto finché database.types.ts non è rigenerato con il default di slug
+      // (migrazione 20261113194715): con la migrazione applicata e i tipi vecchi l'insert è rifiutato (42501).
       slug: "nuevo",
       title: parsed.value.title,
       category: parsed.value.category,
@@ -108,6 +110,84 @@ export async function createEvent(previous: EventFormState, formData: FormData):
 }
 
 const eventIdSchema = z.uuid();
+
+/**
+ * "Guardar cambios" del modulo di modifica (/panel/eventos/[id]). Ordine di AGENTS.md: zod → utente + membership
+ * dell'organizzazione proprietaria (attiva) → limite → punto → update con il client dell'utente → updateTag → redirect.
+ * Si cambia sempre tutta la serie (D12). Lo slug non cambia mai, anche se cambia il titolo (nessun permesso su slug).
+ * D4 vale anche qui: il trigger events_not_in_past rifiuta di spostare un evento nel passato.
+ */
+export async function updateEvent(previous: EventFormState, formData: FormData): Promise<EventFormState> {
+  const attempt = previous.attempt + 1;
+  const values = readValues(formData);
+  const fail = (patch: { formError?: EventFormState["formError"]; fieldErrors?: EventFieldErrors }): EventFormState => ({
+    attempt,
+    values,
+    formError: patch.formError ?? null,
+    fieldErrors: patch.fieldErrors ?? {},
+  });
+
+  const eventId = eventIdSchema.safeParse(formData.get("eventId"));
+  if (!eventId.success) return fail({ formError: "generic" });
+  const now = new Date();
+  const parsed = parseEventForm(Object.fromEntries(formData), now, { mode: "update" });
+  if (!parsed.ok) return fail({ fieldErrors: parsed.fieldErrors });
+
+  const userId = await getCurrentUserId();
+  if (!userId) redirect("/entrar");
+  const owner = await getEventOwner(userId);
+  if (!owner) redirect("/registro");
+  if (!owner.active) return fail({ formError: "notAllowed" });
+
+  let point = parsed.value.point;
+  try {
+    if (!(await isWithinRateLimit(getIdKey("event-update", owner.organizationId), UPDATES_PER_ORGANIZATION_PER_HOUR, "1 hour"))) {
+      return fail({ formError: "tooMany" });
+    }
+    if (!point) {
+      const result = await geocodeAddress(parsed.value.address);
+      point = result ? { lng: result.lng, lat: result.lat } : null;
+    }
+  } catch {
+    return fail({ formError: "generic" });
+  }
+  if (!point) return fail({ fieldErrors: { address: "addressNotFound" } });
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("events")
+    .update({
+      title: parsed.value.title,
+      category: parsed.value.category,
+      price_type: parsed.value.priceType,
+      price_amount: parsed.value.priceAmount,
+      starts_at: parsed.value.startsAt,
+      ends_at: parsed.value.endsAt,
+      recurrence: parsed.value.recurrence,
+      recurrence_until: parsed.value.recurrenceUntil,
+      address: parsed.value.address,
+      venue_name: parsed.value.venueName,
+      description: parsed.value.description,
+      location: `SRID=4326;POINT(${point.lng} ${point.lat})`,
+    })
+    .eq("id", eventId.data)
+    .eq("owner_org", owner.organizationId)
+    .select("id");
+
+  if (error) {
+    const outcome = mapEventDbError(error);
+    if (outcome.type === "form" && outcome.error === "generic") console.warn("Event update failed:", error.code);
+    return outcome.type === "field"
+      ? fail({ fieldErrors: { [outcome.field]: outcome.error } })
+      : fail({ formError: outcome.error });
+  }
+  // Nessuna riga: l'evento non esiste o è di un'altra organizzazione (la RLS non lo mostra).
+  if ((data?.length ?? 0) !== 1) return fail({ formError: "notAllowed" });
+
+  updateTag(EVENTS_TAG);
+  updateTag(ORGANIZATIONS_TAG);
+  redirect("/panel?evento=guardado");
+}
 
 /** "Eliminar" in Mis eventos. Solo un membro dell'organizzazione proprietaria (lo ricontrolla la RLS). */
 export async function deleteEvent(formData: FormData): Promise<void> {

@@ -4,8 +4,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 // Sessione 6: "Nuevo evento" dal telefono su mapa-dev. Un'associazione di prova (dati inventati) creata con l'API admin,
 // con sede e categoria abituale, così il modulo arriva precompilato. Alla fine si cancellano organizzazione e utente.
-// ATTENZIONE: servono le migrazioni della sessione 6 su mapa-dev (grant insert (slug), trigger events_not_in_past):
-// prima del db push del fondatore la pubblicazione fallisce.
+// ATTENZIONE: i test che pubblicano dal modulo aspettano la migrazione della sessione 6 su mapa-dev (default di slug)
+// e i tipi rigenerati (senza il segnaposto dello slug in createEvent). Modifica e sicurezza usano eventi scritti con l'admin.
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
@@ -170,6 +170,84 @@ test("Mis eventos muestra el evento publicado y se puede eliminar", async ({ pag
   const remaining = await admin.from("events").select("id").eq("owner_org", organizationId);
   expect(remaining.error).toBeNull();
   expect(remaining.data).toHaveLength(0);
+});
+
+/** Evento futuro scritto direttamente con l'API admin (non dipende dal modulo né dalla migrazione della sessione 6). */
+async function insertEvent(organizationId: string, title: string): Promise<{ id: string; slug: string }> {
+  const start = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000);
+  start.setUTCHours(17, 0, 0, 0);
+  const inserted = await admin
+    .from("events")
+    .insert({
+      title,
+      category: "talleres",
+      starts_at: start.toISOString(),
+      ends_at: new Date(start.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+      address: "Calle Inventada 1",
+      location: "SRID=4326;POINT(-3.7350 40.3890)",
+      owner_org: organizationId,
+    })
+    .select("id, slug")
+    .single();
+  expect(inserted.error).toBeNull();
+  return { id: inserted.data?.id ?? "", slug: inserted.data?.slug ?? "" };
+}
+
+test("Editar cambia el título y deja el mismo enlace (decisión B)", async ({ page }) => {
+  const organizationId = await signInAsAssociation(page);
+  const event = await insertEvent(organizationId, "Taller e2e para editar");
+  await page.goto("/panel");
+  await page.getByRole("list", { name: "Mis eventos" }).getByRole("link", { name: "Editar", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/panel/eventos/${event.id}$`));
+  await expect(page.getByLabel(/^Título/)).toHaveValue("Taller e2e para editar");
+  await page.getByLabel(/^Título/).fill("Taller e2e editado");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page).toHaveURL(/\/panel\?evento=guardado$/);
+  await expect(page.getByText("Cambios guardados.")).toBeVisible();
+
+  const saved = await admin.from("events").select("title, slug").eq("id", event.id).single();
+  expect(saved.error).toBeNull();
+  expect(saved.data).toEqual({ title: "Taller e2e editado", slug: event.slug });
+  await page.goto(`/e/${event.slug}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Taller e2e editado");
+});
+
+test("otra organización no edita ni elimina un evento que no es suyo", async ({ page, browser }) => {
+  // A: titolare dell'evento (in un altro contesto del browser, solo per creare l'organizzazione).
+  const otherContext = await browser.newContext();
+  const ownerOrganizationId = await signInAsAssociation(await otherContext.newPage());
+  await otherContext.close();
+  const foreign = await insertEvent(ownerOrganizationId, "Evento e2e ajeno");
+
+  // B: un'altra associazione, con un evento suo per avere i pulsanti.
+  const organizationId = await signInAsAssociation(page);
+  const own = await insertEvent(organizationId, "Evento e2e propio");
+
+  const response = await page.goto(`/panel/eventos/${foreign.id}`);
+  expect(response?.status()).toBe(404);
+
+  // Modifica: il modulo del proprio evento con l'id dell'evento altrui nel campo nascosto.
+  await page.goto(`/panel/eventos/${own.id}`);
+  await page.locator('input[name="eventId"]').evaluate((input, id) => {
+    (input as HTMLInputElement).value = id;
+  }, foreign.id);
+  await page.getByLabel(/^Título/).fill("Hackeado");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page.getByText("No podéis publicar eventos con esta organización.")).toBeVisible();
+
+  // Eliminazione: stesso trucco sul pulsante Eliminar.
+  await page.goto("/panel");
+  const list = page.getByRole("list", { name: "Mis eventos" });
+  await list.locator('input[name="eventId"]').first().evaluate((input, id) => {
+    (input as HTMLInputElement).value = id;
+  }, foreign.id);
+  page.once("dialog", (dialog) => void dialog.accept());
+  await list.getByRole("button", { name: "Eliminar" }).first().click();
+  await expect(page).toHaveURL(/\/panel\?evento=error$/);
+
+  const untouched = await admin.from("events").select("title").eq("id", foreign.id).single();
+  expect(untouched.error).toBeNull();
+  expect(untouched.data?.title).toBe("Evento e2e ajeno");
 });
 
 test("sin sesión /panel/eventos/nuevo lleva a /entrar", async ({ page }) => {

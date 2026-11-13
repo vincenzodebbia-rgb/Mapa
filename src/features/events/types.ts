@@ -94,6 +94,7 @@ export type EventFieldError =
   | "invalidTime"
   | "nonexistentTime"
   | "tooLongDuration"
+  | "sameTime"
   | "inPast"
   | "invalidRecurrenceUntil"
   | "addressNotFound"
@@ -123,14 +124,20 @@ export type EventOwner = {
   usualCategory: EventCategory | null;
 };
 
-/** Valori iniziali del modulo, calcolati sul server (giorno di oggi a Madrid, sede, categoria abituale). */
+/** Valori iniziali del modulo, calcolati sul server: per un evento nuovo oggi, sede e categoria abituale; per una
+ * modifica i valori salvati (ore già convertite in ora di Madrid). */
 export type EventFormDefaults = {
-  date: string;
-  startTime: string;
-  endTime: string;
-  category: EventCategory | null;
-  address: string | null;
+  values: Partial<Record<EventField, string>>;
   point: { lng: number; lat: number } | null;
+};
+
+/** Un evento della propria organizzazione da modificare in /panel/eventos/[id]. */
+export type EventForEdit = {
+  id: string;
+  slug: string;
+  /** false = già finito (per una serie: l'ultimo giorno è passato): non si modifica più. */
+  upcoming: boolean;
+  defaults: EventFormDefaults;
 };
 
 export type Option = { value: string; label: string };

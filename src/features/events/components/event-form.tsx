@@ -7,7 +7,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { PointFieldInputs, PointFieldProvider } from "@/components/ui/point-field";
 import { Select } from "@/components/ui/select";
-import { createEvent, locateEventAddress } from "../actions";
+import { createEvent, locateEventAddress, updateEvent } from "../actions";
 import {
   INITIAL_EVENT_FORM_STATE,
   PRICE_TYPE_VALUES,
@@ -22,6 +22,8 @@ type EventFormProps = {
   texts: EventFormTexts;
   defaults: EventFormDefaults;
   categoryOptions: Option[];
+  /** Presente = modifica di questo evento (updateEvent); assente = evento nuovo (createEvent). Stesso modulo. */
+  eventId?: string;
   /** Pin trascinabile del blocco map, composto dalla pagina (i blocchi non si importano mai a vicenda). */
   locationPicker: ReactNode;
 };
@@ -31,7 +33,8 @@ const textareaClass =
 
 /**
  * "Nuevo evento" in 4 blocchi (docs/SPEC.md §5): Qué, Cuándo, Dónde, Más (chiuso). Precompilato dal server (oggi, sede,
- * categoria abituale), così bastano titolo e ora. Niente immagini, niente co-organizzatori (D7). Si salva con createEvent.
+ * categoria abituale), così bastano titolo e ora. Niente immagini, niente co-organizzatori (D7). Si salva con createEvent;
+ * con `eventId` lo stesso modulo modifica un evento esistente (updateEvent, sempre tutta la serie).
  */
 export function EventForm(props: EventFormProps) {
   return (
@@ -41,20 +44,11 @@ export function EventForm(props: EventFormProps) {
   );
 }
 
-function EventFormBody({ texts, defaults, categoryOptions, locationPicker }: EventFormProps) {
-  const [state, formAction, pending] = useActionState(createEvent, INITIAL_EVENT_FORM_STATE);
+function EventFormBody({ texts, defaults, categoryOptions, eventId, locationPicker }: EventFormProps) {
+  const [state, formAction, pending] = useActionState(eventId ? updateEvent : createEvent, INITIAL_EVENT_FORM_STATE);
 
   // Dopo un errore valgono i valori rimandati dal server; al primo giro quelli precompilati.
-  const fallback: Partial<Record<EventField, string>> = {
-    date: defaults.date,
-    startTime: defaults.startTime,
-    endTime: defaults.endTime,
-    category: defaults.category ?? undefined,
-    address: defaults.address ?? undefined,
-    priceType: "free",
-    recurrence: "none",
-  };
-  const valueOf = (field: EventField) => (state.attempt > 0 ? state.values[field] : fallback[field]);
+  const valueOf = (field: EventField) => (state.attempt > 0 ? state.values[field] : defaults.values[field]);
   const marker = (required: boolean) => (required ? texts.required : texts.optional);
   const errorOf = (field: EventField) => {
     const code = state.fieldErrors[field];
@@ -120,6 +114,7 @@ function EventFormBody({ texts, defaults, categoryOptions, locationPicker }: Eve
   return (
     // key: dopo ogni tentativo il modulo si ricrea con i valori rimandati indietro (React lo azzera dopo un'action).
     <form key={state.attempt} action={formAction} className="flex flex-col gap-6" noValidate>
+      {eventId && <input type="hidden" name="eventId" value={eventId} />}
       {section(
         texts.sections.what,
         <>
