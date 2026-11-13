@@ -3,15 +3,24 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 5 finita nel codice** sul ramo `feat/onboarding` (pushato il 5/11 fino a `3203a77`; i due commit della
-  notte del 5/11 sono **solo locali**). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link
-  magico ricevuto per email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
-- Piano della sessione 6 scritto (senza codice) in `docs/piani/sessione-6.md`, con 13 punti da decidere (D1–D13).
-- Correzioni di sicurezza A1, M1, M5 nella PR in bozza #17: migrazione `20261110211136_security_a1_m1_m5` applicata a
-  mapa-dev dal fondatore il 13/11. Tipi rigenerati (nessuna differenza), check, deps ed e2e 20/20 verdi; in CI check,
-  secrets-scan e db-test (pgTAP 1–17) verdi.
+- Fase: **sessione 6 (eventi) in corso** sul ramo `feat/eventi` (da `main` dopo il merge della PR #17), solo commit
+  locali, niente push. Modulo "Nuevo evento", Mis eventos, evento aperto sulla mappa dopo Publicar. Migrazione
+  `20261113194715_events_session6` **da applicare** su mapa-dev dal fondatore; poi tipi, pgTAP in CI ed e2e.
+  Rapporto: `docs/rapporti/sessione-6.md`.
+- Sessione 5 chiusa: PR #17 unita in `main` il 13/11 (prova dal vivo sull'anteprima ok).
 
 ## Done
+### 2026-11-13/14 (notte, in autonomia) — Sessione 6: eventi
+- Punto 0: con `NEXT_PUBLIC_DEMO=1` /entrar e /registro rimandano alla mappa; senza chiavi Turnstile o variabili segrete
+  mostrano "El acceso estará disponible pronto" (`src/lib/access.ts`), le action rispondono con un errore pulito.
+- Decisioni del 13/11 in `docs/decisioni/2026-11-13-eventi.md` (D4, D5, D7, D8). Migrazione: trigger
+  `events_not_in_past`, niente insert su `event_organizers` per gli utenti, `grant insert (slug)` (lo sovrascrive il
+  trigger). pgTAP 18.
+- `/panel/eventos/nuevo` (Qué, Cuándo, Dónde, Más), `createEvent`, `deleteEvent`, `locateEventAddress`; /panel con Nuevo
+  evento e Mis eventos; `/?evento=<slug>` apre il punto sulla mappa Hoy. `dates.ts`: ore di Madrid → istante.
+  FormField e AddressField in `components/ui`.
+- check verde (Vitest 172/172), deps verde, build verde, e2e 22/26 (i 4 rossi aspettano la migrazione), e2e demo 6/6.
+
 ### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
 - CLI Supabase fissata a `2.122.0` come devDependency esatta: `npx supabase` usa sempre quella.
 - Tasto di rivendicazione su tutte le schede: "¿Es tu asociación?", "¿Es tu espacio?", "¿Es tu perfil?" (`claim.*` per
