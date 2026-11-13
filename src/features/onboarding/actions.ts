@@ -2,6 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { getAccessState } from "@/lib/access";
 import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import { isInsideMadridRegion } from "@/lib/domain/geocode";
 import { geocodeAddress } from "@/lib/geocode";
@@ -74,6 +75,8 @@ export async function registerOrganization(previous: RegistrationState, formData
 
   const entityType = parseRegistrationType(formData.get("tipo"));
   if (!entityType) return fail({ formError: "generic" });
+  // Demo o variabili mancanti: la pagina non mostra il modulo; una chiamata diretta riceve un errore pulito.
+  if (getAccessState() !== "available") return fail({ formError: "generic" });
   const parsed = parseRegistration(entityType, Object.fromEntries(formData));
   if (!parsed.ok) return fail({ fieldErrors: parsed.fieldErrors });
 

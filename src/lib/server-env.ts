@@ -28,6 +28,15 @@ export function getDeploymentEnv(): DeploymentEnv {
   });
 }
 
+/** true se ci sono tutte le variabili segrete: senza, le action che le usano non devono nemmeno partire (src/lib/access.ts). */
+export function hasServerEnv(): boolean {
+  return serverEnvSchema.safeParse({
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
+    TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
+    NOMINATIM_USER_AGENT: process.env.NOMINATIM_USER_AGENT,
+  }).success;
+}
+
 /** Validate solo al primo uso, così `next build` in CI funziona con le sole variabili pubbliche. */
 export function getServerEnv(): ServerEnv {
   cachedServerEnv ??= serverEnvSchema.parse({

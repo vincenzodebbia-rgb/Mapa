@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ContentPage } from "@/components/ui/content-page";
 import { brand } from "@/config/brand";
+import { getAccessState } from "@/lib/access";
 import { getClaimContactHref } from "@/lib/claim-contact";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
 import { LocationPicker } from "@/features/map/components/location-picker";
@@ -120,8 +121,19 @@ function getFormTexts(entityType: EntityType): RegistrationFormTexts {
 }
 
 export default async function RegistrationPage({ searchParams }: PageProps<"/registro">) {
+  const access = getAccessState();
+  if (access === "demo") redirect("/");
   const userId = await getCurrentUserId();
   const contentPage = getContentPageTexts();
+
+  if (access === "unavailable") {
+    return (
+      <ContentPage {...contentPage}>
+        <h1 className="font-display text-2xl font-semibold">{t("registro.title")}</h1>
+        <p role="status">{t("auth.unavailable")}</p>
+      </ContentPage>
+    );
+  }
 
   if (!userId) {
     return (

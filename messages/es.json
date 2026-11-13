@@ -256,6 +256,7 @@
     "sent": "Si el correo es correcto, te llegará un enlace en unos minutos. Ábrelo en este mismo teléfono u ordenador.",
     "noScript": "Para comprobar que no eres un robot hace falta JavaScript.",
     "linkError": "El enlace no es válido o ha caducado. Pide uno nuevo.",
+    "unavailable": "El acceso estará disponible pronto.",
     "signOut": "Salir",
     "errors": {
       "invalidEmail": "Revisa el correo: no parece válido.",
