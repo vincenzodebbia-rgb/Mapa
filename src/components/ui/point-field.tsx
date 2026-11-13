@@ -13,8 +13,9 @@ type PointFieldValue = { point: Point | null; setPoint: (point: Point | null) =>
 
 const PointFieldContext = createContext<PointFieldValue | null>(null);
 
-export function PointFieldProvider({ children }: { children: ReactNode }) {
-  const [point, setPoint] = useState<Point | null>(null);
+/** `initialPoint`: punto già noto (la sede dell'organizzazione nel modulo di un evento). */
+export function PointFieldProvider({ children, initialPoint = null }: { children: ReactNode; initialPoint?: Point | null }) {
+  const [point, setPoint] = useState<Point | null>(initialPoint);
   return <PointFieldContext value={{ point, setPoint }}>{children}</PointFieldContext>;
 }
 

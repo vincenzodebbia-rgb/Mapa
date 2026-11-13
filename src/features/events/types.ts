@@ -56,3 +56,112 @@ export type UpcomingEvent = {
   address: string | null;
   organizerNames: string;
 };
+
+// Modulo "Nuevo evento" (sessione 6) ------------------------------------------------
+
+export const EVENT_CATEGORY_VALUES = [
+  "musica",
+  "teatro_danza",
+  "arte",
+  "talleres",
+  "encuentros",
+  "comunidad",
+  "otros",
+] as const satisfies readonly EventCategory[];
+export const PRICE_TYPE_VALUES = ["free", "donation", "paid"] as const satisfies readonly PriceType[];
+export const RECURRENCE_VALUES = ["none", "weekly", "monthly"] as const satisfies readonly Recurrence[];
+
+export type EventField =
+  | "title"
+  | "category"
+  | "priceType"
+  | "priceAmount"
+  | "date"
+  | "startTime"
+  | "endTime"
+  | "recurrence"
+  | "recurrenceUntil"
+  | "address"
+  | "venueName"
+  | "description";
+
+export type EventFieldError =
+  | "required"
+  | "tooLong"
+  | "invalidOption"
+  | "invalidPrice"
+  | "invalidDate"
+  | "invalidTime"
+  | "nonexistentTime"
+  | "tooLongDuration"
+  | "inPast"
+  | "invalidRecurrenceUntil"
+  | "addressNotFound"
+  | "invalidLocation";
+
+export type EventFormError = "tooMany" | "notAllowed" | "generic";
+
+export type EventFieldErrors = Partial<Record<EventField, EventFieldError>>;
+
+/** Stato del modulo. `values` riempie di nuovo i campi dopo un errore (React azzera il modulo dopo un'action). */
+export type EventFormState = {
+  attempt: number;
+  formError: EventFormError | null;
+  fieldErrors: EventFieldErrors;
+  values: Partial<Record<EventField, string>>;
+};
+
+export const INITIAL_EVENT_FORM_STATE: EventFormState = { attempt: 0, formError: null, fieldErrors: {}, values: {} };
+
+/** L'organizzazione che pubblica, con ciò che serve a precompilare il modulo. */
+export type EventOwner = {
+  organizationId: string;
+  kind: OrganizationKind;
+  active: boolean;
+  address: string | null;
+  point: { lng: number; lat: number } | null;
+  usualCategory: EventCategory | null;
+};
+
+/** Valori iniziali del modulo, calcolati sul server (giorno di oggi a Madrid, sede, categoria abituale). */
+export type EventFormDefaults = {
+  date: string;
+  startTime: string;
+  endTime: string;
+  category: EventCategory | null;
+  address: string | null;
+  point: { lng: number; lat: number } | null;
+};
+
+export type Option = { value: string; label: string };
+
+/** Tutti i testi del modulo, letti sul server e passati come props. */
+export type EventFormTexts = {
+  sections: { what: string; when: string; where: string; more: string };
+  labels: Record<EventField, string>;
+  hints: Partial<Record<EventField, string>>;
+  required: string;
+  optional: string;
+  choose: string;
+  priceTypes: Record<PriceType, string>;
+  recurrences: Record<Recurrence, string>;
+  geocode: { button: string; searching: string; found: string; notFound: string; failed: string };
+  submit: string;
+  sending: string;
+  checkFields: string;
+  fieldErrors: Record<EventFieldError, string>;
+  formErrors: Record<EventFormError, string>;
+};
+
+/** Un evento della propria organizzazione in /panel ("Mis eventos"). */
+export type MyEvent = {
+  id: string;
+  slug: string;
+  title: string;
+  startsAt: string;
+  recurrence: Recurrence;
+  /** Ultimo giorno della serie (solo per gli eventi che si ripetono). */
+  recurrenceUntil: string | null;
+  /** Non ancora finito (per una serie: l'ultimo giorno non è passato). */
+  upcoming: boolean;
+};
