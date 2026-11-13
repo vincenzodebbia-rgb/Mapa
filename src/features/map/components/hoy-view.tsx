@@ -33,6 +33,8 @@ export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
   const listEvents = filterEvents(events, filters, now, { byNeighborhood: true });
   const shown = filters.lista ? listEvents : mapEvents;
   const notice = shown.length === 0 ? <MapNotice message={getEmptyMessage(filters)} /> : null;
+  // D8: dopo "Publicar" un evento di oggi si apre sulla mappa (la prima occorrenza visibile con quello slug).
+  const selectedKey = filters.evento ? (mapEvents.find((event) => event.slug === filters.evento)?.key ?? null) : null;
   const bounds = neighborhoods.find((neighborhood) => neighborhood.slug === filters.barrio)?.bounds ?? null;
 
   return (
@@ -59,6 +61,7 @@ export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
             data={eventsToGeoJson(mapEvents, now)}
             popups={Object.fromEntries(mapEvents.map((event) => [event.key, toEventPopup(event, now)]))}
             bounds={bounds}
+            selectedKey={selectedKey}
             label={t("hoy.mapLabel")}
             loadingLabel={t("map.loading")}
           />

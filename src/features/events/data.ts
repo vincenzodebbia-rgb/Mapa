@@ -3,9 +3,11 @@ import { cacheLife, cacheTag } from "next/cache";
 import type { Database } from "@/lib/database.types";
 import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
+import { getMadridDateKey } from "@/lib/dates";
 import { isEventIndexable, shouldRedirectEvent } from "./event-page-rules";
-import type { EventOrganizer, EventPageResult, UpcomingEvent } from "./types";
+import type { EventOrganizer, EventOwner, EventPageResult, MyEvent, UpcomingEvent } from "./types";
 
 // Letture pubbliche, come anon (RLS: niente eventi di organizzazioni sospese), in cache così la pagina evento è statica
 // e risponde con un 404 o un 308 veri. Le scritture (sessione 6) devono chiamare updateTag(EVENTS_TAG).
@@ -158,4 +160,63 @@ export async function getIndexableEventSlugs(): Promise<string[]> {
   ]);
   const slugs = [...(unwrap(upcoming) ?? []), ...(unwrap(later) ?? [])].flatMap((row) => (row.slug ? [row.slug] : []));
   return [...new Set(slugs)].sort();
+}
+
+// Letture private per /panel (sessione 6): con il client dell'utente (RLS), mai in cache.
+
+/**
+ * L'organizzazione dell'utente che pubblica gli eventi, con sede e categoria abituale per precompilare il modulo.
+ * Null se l'utente non ha un'organizzazione. Legge come l'utente: la RLS mostra solo le sue membership.
+ */
+export async function getEventOwner(userId: string): Promise<EventOwner | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase
+      .from("memberships")
+      .select("organization:organizations(id, kind, status, address, location, usual_category)")
+      .eq("user_id", userId)
+      .maybeSingle(),
+  );
+  const organization = row?.organization;
+  if (!organization) return null;
+  const point = parseEwkbPoint(organization.location);
+  return {
+    organizationId: organization.id,
+    kind: organization.kind,
+    active: organization.status === "active",
+    // "Gente que hace cosas" non ha una sede: il luogo si scrive ogni volta (docs/SPEC.md §5).
+    address: organization.kind === "professional" ? null : organization.address,
+    point: organization.kind === "professional" || !point ? null : { lng: point[0], lat: point[1] },
+    usualCategory: organization.usual_category,
+  };
+}
+
+const MY_EVENTS_LIMIT = 100;
+
+/** "Mis eventos": gli eventi della propria organizzazione, prima i prossimi. `now` per decidere cosa è passato. */
+export async function getMyEvents(organizationId: string, now: Date): Promise<MyEvent[]> {
+  const supabase = await createSupabaseServerClient();
+  const rows =
+    unwrap(
+      await supabase
+        .from("events")
+        .select("id, slug, title, starts_at, ends_at, recurrence, recurrence_until")
+        .eq("owner_org", organizationId)
+        .order("starts_at", { ascending: false })
+        .limit(MY_EVENTS_LIMIT),
+    ) ?? [];
+  const today = getMadridDateKey(now);
+  return rows
+    .map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      startsAt: toIso(row.starts_at),
+      recurrence: row.recurrence,
+      recurrenceUntil: row.recurrence_until,
+      // Senza espandere le ripetizioni (D10): una serie è "in arrivo" finché il suo ultimo giorno non è passato.
+      upcoming:
+        row.recurrence === "none" ? Date.parse(row.ends_at) > now.getTime() : (row.recurrence_until ?? "") >= today,
+    }))
+    .sort((a, b) => Number(b.upcoming) - Number(a.upcoming) || (a.upcoming ? a.startsAt.localeCompare(b.startsAt) : 0));
 }

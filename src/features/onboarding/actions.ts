@@ -13,7 +13,8 @@ import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { hasOrganization } from "./data";
-import { addressSchema, lookupSchema, mapRegistrationDbError, parseRegistration, parseRegistrationType } from "./schema";
+import { addressSchema } from "@/lib/domain/address";
+import { lookupSchema, mapRegistrationDbError, parseRegistration, parseRegistrationType } from "./schema";
 import type { FieldErrors, GeocodeOutcome, LookupResult, RegistrationField, RegistrationState } from "./types";
 
 const REGISTRATIONS_PER_USER_PER_HOUR = 5;

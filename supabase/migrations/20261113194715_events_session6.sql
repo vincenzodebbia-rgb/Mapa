@@ -55,3 +55,11 @@ revoke insert on table public.event_organizers from authenticated;
 comment on table public.event_organizers is
   'Organizzatori di un evento. Dal 13 novembre 2026 nessun utente aggiunge co-organizzatori (decisione D7): '
   'la riga owner la scrive il trigger events_after_write.';
+
+-- Slug all'inserimento --------------------------------------------------------------
+
+-- Il tipo generato (database.types.ts) chiede slug nell'insert perché la colonna non ha un default; lo riempie il trigger
+-- events_before_write, che all'INSERT lo sostituisce SEMPRE con private.make_unique_slug(title). Il grant serve solo a non
+-- rifiutare il segnaposto che l'action manda: il valore scritto dall'utente non arriva mai nel database.
+-- In update lo slug resta vietato (grant di update senza slug + trigger event_identity_immutable).
+grant insert (slug) on table public.events to authenticated;

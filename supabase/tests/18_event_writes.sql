@@ -101,6 +101,18 @@ select throws_ok(
   '42501', null, 'il membro non cambia slug'
 );
 
+-- Lo slug mandato dall'utente (segnaposto dell'action) non arriva mai nel database: lo scrive il trigger.
+select lives_ok(
+  $$ insert into public.events (slug, title, category, starts_at, ends_at, address, location, owner_org)
+     values ('slug-elegido-a-mano', 'Título con slug propio', 'musica', now() + interval '3 days',
+             now() + interval '3 days 1 hour', 'Calle', 'SRID=4326;POINT(-3.70 40.41)', 'a0000000-0000-4000-8000-000000000018') $$,
+  'insert con uno slug segnaposto'
+);
+select is(
+  (select slug from public.events where title = 'Título con slug propio'),
+  'titulo-con-slug-propio', 'lo slug viene dal titolo, non dall''utente'
+);
+
 -- D7 ------------------------------------------------------------------------------
 select throws_ok(
   $$ insert into public.event_organizers (event_id, organization_id, role)

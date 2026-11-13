@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { addDaysToDateKey, addMonthsToDateKey, getMadridDateKey, madridLocalToInstant } from "@/lib/dates";
+import { addDaysToDateKey, addMonthsToDateKey, formatMadridTime, getMadridDateKey, madridLocalToInstant } from "@/lib/dates";
 import { isInsideMadridRegion } from "@/lib/domain/geocode";
 import {
   EVENT_CATEGORY_VALUES,
@@ -232,3 +232,25 @@ export const EVENT_REFILL_FIELDS: EventField[] = [
   "venueName",
   "description",
 ];
+
+const DEFAULT_START_HOUR = 19;
+const DEFAULT_DURATION_HOURS = 2;
+const pad = (hour: number) => `${String(hour % 24).padStart(2, "0")}:00`;
+
+/**
+ * Giorno e ore proposti nel modulo: oggi alle 19:00–21:00; se sono già le 19 o più tardi, dalla prossima ora piena
+ * (la fine può passare la mezzanotte, D5); dopo le 23 domani alle 19:00. Così la proposta non è mai nel passato.
+ */
+export function getDefaultSchedule(now: Date): { date: string; startTime: string; endTime: string } {
+  const today = getMadridDateKey(now);
+  const hour = Number(formatMadridTime(now).slice(0, 2));
+  if (hour < DEFAULT_START_HOUR) {
+    return { date: today, startTime: pad(DEFAULT_START_HOUR), endTime: pad(DEFAULT_START_HOUR + DEFAULT_DURATION_HOURS) };
+  }
+  if (hour + 1 <= 23) return { date: today, startTime: pad(hour + 1), endTime: pad(hour + 1 + DEFAULT_DURATION_HOURS) };
+  return {
+    date: addDaysToDateKey(today, 1) ?? today,
+    startTime: pad(DEFAULT_START_HOUR),
+    endTime: pad(DEFAULT_START_HOUR + DEFAULT_DURATION_HOURS),
+  };
+}

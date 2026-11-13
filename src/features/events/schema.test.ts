@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPublishedEventHref, mapEventDbError, parseEventForm, parsePriceAmount } from "./schema";
+import { getDefaultSchedule, getPublishedEventHref, mapEventDbError, parseEventForm, parsePriceAmount } from "./schema";
 
 // 13 novembre 2026, 18:00 a Madrid (UTC+1).
 const NOW = new Date("2026-11-13T17:00:00Z");
@@ -152,5 +152,27 @@ describe("getPublishedEventHref (D8)", () => {
     // Iniziato ieri alle 22:00 e ancora in corso: è di oggi sulla mappa.
     const lateNight = new Date("2026-11-14T01:00:00Z");
     expect(getPublishedEventHref("noche", "2026-11-13T21:00:00Z", "2026-11-14T03:00:00Z", lateNight)).toBe("/?evento=noche");
+  });
+});
+
+describe("getDefaultSchedule", () => {
+  it("proposes today 19:00–21:00 in the afternoon", () => {
+    expect(getDefaultSchedule(new Date("2026-11-13T10:00:00Z"))).toEqual({ date: "2026-11-13", startTime: "19:00", endTime: "21:00" });
+  });
+
+  it("starts at the next full hour in the evening, even across midnight", () => {
+    expect(getDefaultSchedule(new Date("2026-11-13T20:15:00Z"))).toEqual({ date: "2026-11-13", startTime: "22:00", endTime: "00:00" });
+  });
+
+  it("moves to tomorrow late at night", () => {
+    expect(getDefaultSchedule(new Date("2026-11-13T22:30:00Z"))).toEqual({ date: "2026-11-14", startTime: "19:00", endTime: "21:00" });
+  });
+
+  it("never proposes something already over", () => {
+    for (const iso of ["2026-11-13T10:00:00Z", "2026-11-13T18:59:00Z", "2026-11-13T22:59:00Z"]) {
+      const now = new Date(iso);
+      const schedule = getDefaultSchedule(now);
+      expect(parseEventForm({ ...base, ...schedule }, now).ok, iso).toBe(true);
+    }
   });
 });
