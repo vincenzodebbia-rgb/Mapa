@@ -18,7 +18,7 @@ function ewkbPoint(lng: number, lat: number, { srid = true, littleEndian = true 
 
 describe("parseEwkbPoint", () => {
   it("reads the EWKB that PostgREST returns for geography(Point, 4326)", () => {
-    // SRID=4326;POINT(-3.7038 40.4168), as printed by PostGIS.
+    // SRID=4326;POINT(-3.7038 40.4168), come lo stampa PostGIS.
     expect(parseEwkbPoint("0101000020E6100000FE65F7E461A10DC0857CD0B359354440")).toEqual([-3.7038, 40.4168]);
   });
 

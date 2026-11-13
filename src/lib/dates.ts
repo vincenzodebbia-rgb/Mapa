@@ -1,6 +1,6 @@
 /**
- * The only place that turns instants (timestamptz) into what people read.
- * Everything is shown in Madrid time, whatever the server or phone time zone is.
+ * L'unico posto che trasforma gli istanti (timestamptz) in ciò che le persone leggono.
+ * Tutto si mostra con l'ora di Madrid, qualunque sia il fuso del server o del telefono.
  */
 export const MADRID_TIME_ZONE = "Europe/Madrid";
 const LOCALE = "es-ES";
@@ -40,7 +40,7 @@ export function formatMadridDate(value: Date | string): string {
   return dateFormat.format(toDate(value));
 }
 
-/** "2026-07-16": the calendar day in Madrid. Use it to compare days ("is this event today?"). */
+/** "2026-07-16": il giorno di calendario a Madrid. Serve per confrontare i giorni ("questo evento è oggi?"). */
 export function getMadridDateKey(value: Date | string): string {
   const parts = dateKeyFormat.formatToParts(toDate(value));
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";

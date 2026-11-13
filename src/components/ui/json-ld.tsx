@@ -1,8 +1,8 @@
 import { serializeJsonLd, type JsonLdObject } from "@/lib/seo/json-ld";
 
 /**
- * schema.org data for search engines. React 19 writes a <script>'s text child as raw text
- * (no HTML entities), so no dangerouslySetInnerHTML is needed; serializeJsonLd escapes "<".
+ * Dati schema.org per i motori di ricerca. React 19 scrive il testo figlio di uno <script> così com'è
+ * (senza entità HTML), quindi non serve dangerouslySetInnerHTML; serializeJsonLd neutralizza "<".
  */
 export function JsonLd({ data }: { data: JsonLdObject }) {
   return <script type="application/ld+json">{serializeJsonLd(data)}</script>;

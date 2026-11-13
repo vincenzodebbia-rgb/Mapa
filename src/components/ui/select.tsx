@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-/** Neutral placeholder select: tokens only. Always pair it with a visible <label>. */
+/** Menu a tendina neutro provvisorio: solo token. Va sempre con una <label> visibile. */
 export function Select({ className = "", ...props }: ComponentProps<"select">) {
   return (
     <select

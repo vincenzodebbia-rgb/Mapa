@@ -41,6 +41,7 @@
     "eslint-plugin-import-x": "^4.17.1",
     "happy-dom": "^21.0.4",
     "prettier": "^3.9.10",
+    "supabase": "2.122.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.5"

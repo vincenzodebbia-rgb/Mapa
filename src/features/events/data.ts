@@ -7,9 +7,9 @@ import { unwrap } from "@/lib/supabase/unwrap";
 import { isEventIndexable, shouldRedirectEvent } from "./event-page-rules";
 import type { EventOrganizer, EventPageResult, UpcomingEvent } from "./types";
 
-// Public reads, as anon (RLS: no events of suspended organizations), cached so the event page is static
-// and answers a real 404 or 308. Writes (session 6) must call updateTag(EVENTS_TAG).
-// Occurrences come only from SQL (event_schedule, upcoming_events): recurrence is never computed here.
+// Letture pubbliche, come anon (RLS: niente eventi di organizzazioni sospese), in cache così la pagina evento è statica
+// e risponde con un 404 o un 308 veri. Le scritture (sessione 6) devono chiamare updateTag(EVENTS_TAG).
+// Le occorrenze arrivano solo da SQL (event_schedule, upcoming_events): la ripetizione non si calcola mai qui.
 export const EVENTS_TAG = "events";
 
 type UpcomingRow = Database["public"]["Views"]["upcoming_events"]["Row"];
@@ -31,7 +31,7 @@ export async function getEventPage(slug: string): Promise<EventPageResult> {
   const point = row ? parseEwkbPoint(row.location) : null;
   if (!row || !point) return { status: "missing" };
 
-  // Organizers hidden by RLS (suspended) come back as null: they are simply not shown.
+  // Gli organizzatori nascosti dalla RLS (sospesi) tornano come null: semplicemente non si mostrano.
   const organizers: EventOrganizer[] = row.event_organizers
     .flatMap((link) =>
       link.organization
@@ -45,13 +45,13 @@ export async function getEventPage(slug: string): Promise<EventPageResult> {
   const [schedule] = unwrap(await supabase.rpc("event_schedule", { p_event_id: row.id })) ?? [];
   if (!schedule?.last_end) return { status: "missing" };
 
-  // Inside the cache scope: "now" is the time of this render, refreshed with the cache (minutes).
+  // Dentro l'ambito della cache: "now" è l'ora di questo render, che si rinnova con la cache (minuti).
   const now = new Date();
   const lastEndsAt = toIso(schedule.last_end);
   if (shouldRedirectEvent(lastEndsAt, now)) return { status: "redirect", organizerSlug: owner.slug };
 
   const durationMs = new Date(row.ends_at).getTime() - new Date(row.starts_at).getTime();
-  // No occurrence left: show the last one (the page lives 7 more days before the redirect).
+  // Nessuna occorrenza rimasta: si mostra l'ultima (la pagina vive altri 7 giorni prima del redirect).
   const startsAt = schedule.next_start ? toIso(schedule.next_start) : new Date(Date.parse(lastEndsAt) - durationMs).toISOString();
   const endsAt = schedule.next_end ? toIso(schedule.next_end) : lastEndsAt;
 
@@ -101,7 +101,7 @@ function toUpcomingEvent(row: Pick<UpcomingRow, "id" | "slug" | "title" | "categ
 
 const UPCOMING_LIMIT = 30;
 
-/** Next occurrences (60 days) of the events an organization runs or co-organizes. */
+/** Prossime occorrenze (60 giorni) degli eventi che un'organizzazione organizza o co-organizza. */
 export async function getUpcomingEventsForOrganization(organizationId: string): Promise<UpcomingEvent[]> {
   "use cache";
   cacheLife("minutes");
@@ -120,7 +120,7 @@ export async function getUpcomingEventsForOrganization(organizationId: string): 
   return rows.flatMap((row) => toUpcomingEvent(row) ?? []);
 }
 
-/** Next occurrences (60 days) of the events in a barrio. */
+/** Prossime occorrenze (60 giorni) degli eventi di un barrio. */
 export async function getUpcomingEventsInNeighborhood(neighborhoodSlug: string): Promise<UpcomingEvent[]> {
   "use cache";
   cacheLife("minutes");
@@ -142,8 +142,8 @@ export async function getUpcomingEventsInNeighborhood(neighborhoodSlug: string):
 const UPCOMING_WINDOW_DAYS = 60;
 
 /**
- * Events with an occurrence that has not ended, for the sitemap: those in upcoming_events (next 60 days)
- * plus those that start even later. Together they are exactly the events not over yet.
+ * Eventi con un'occorrenza non finita, per la sitemap: quelli di upcoming_events (prossimi 60 giorni)
+ * più quelli che cominciano ancora dopo. Insieme sono esattamente gli eventi non ancora finiti.
  */
 export async function getIndexableEventSlugs(): Promise<string[]> {
   "use cache";

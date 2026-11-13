@@ -1,12 +1,14 @@
-This block is a read model. It owns `neighborhoods` and reads the views `map_items`, `map_neighborhoods`, `neighborhood_pages`, `neighborhood_neighbors` (and later `connection_lines`), all security_invoker. It never writes.
-Official boundaries come from scripts/import-neighborhoods.ts, which GENERATES a migration (never writes to a database).
-Barrio pages (/barrio/[slug]) read with createSupabasePublicClient() inside `'use cache'` (fully static page, real 404); NeighborhoodMap gets `now` from the cached read, never from the render.
-Pages import only data.ts, schema.ts (URL filters), types.ts and components/ (HoyView, ConexionesView compose everything else).
-Pure functions with unit tests: light-state.ts (`getLightState(item, now)` → 'pulse' | 'lit'; there is no 'faint' on the Hoy map), filter-events.ts, to-geojson.ts, build-popup.ts. describe-items.ts (server-only) turns DTOs into the texts of popups and lists.
-The Hoy map (`/`) shows only events. Organizations appear as points only on the static `/conexiones` map (active associations and venues with an address); thread lines are added there only when the `threads` flag is on.
-Filters live in the URL (precio, cat, quien, barrio, solo=hoy, vista=lista). The barrio centers the map and filters the list; the map points are not filtered by barrio.
-build-popup.ts builds DOM nodes with textContent only; links accept only http/https or same-site paths. Never setHTML.
-There is exactly ONE MapLibre component: components/map-view.tsx ('use client'), loaded with dynamic(..., { ssr: false }) from components/map-view-loader.tsx. Data comes from the server page as GeoJSON + popup texts by key; never fetch inside the component.
-MapLibre 6 finds its worker through setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url)): keep it, without it the worker 404s once bundled.
-Colors come from the tokens at runtime (an element with `text-light`, read by components/read-css-color.ts as rgba, because MapLibre may not parse oklch). No color literals.
-The map style URL comes from brand.mapStyleUrl. Always show OpenStreetMap attribution. Every map view has a list view with the same items and the same filters.
+Questo blocco è un read model. Possiede `neighborhoods` e legge le viste `map_items`, `map_neighborhoods`, `neighborhood_pages`, `neighborhood_neighbors` (e più avanti `connection_lines`), tutte security_invoker. Non scrive mai.
+I confini ufficiali arrivano da scripts/import-neighborhoods.ts, che GENERA una migrazione (non scrive mai in un database).
+Le pagine dei barrios (/barrio/[slug]) leggono con createSupabasePublicClient() dentro `'use cache'` (pagina completamente statica, 404 vero); NeighborhoodMap riceve `now` dalla lettura in cache, mai dal rendering.
+Le pagine importano solo data.ts, schema.ts (filtri dell'URL), types.ts e components/ (HoyView e ConexionesView compongono tutto il resto).
+Funzioni pure con test unitari: light-state.ts (`getLightState(item, now)` → 'pulse' | 'lit'; sulla mappa Hoy non esiste 'faint'), filter-events.ts, to-geojson.ts, build-popup.ts. describe-items.ts (server-only) trasforma i DTO nei testi dei popup e degli elenchi.
+La mappa Hoy (`/`) mostra solo eventi. Le organizzazioni compaiono come punti solo sulla mappa statica `/conexiones` (associazioni ed espacios attivi con un indirizzo); le linee dei fili si aggiungono lì solo quando il flag `threads` è acceso.
+I filtri stanno nell'URL (precio, cat, quien, barrio, solo=hoy, vista=lista). Il barrio centra la mappa e filtra l'elenco; i punti della mappa non si filtrano per barrio.
+build-popup.ts costruisce nodi DOM solo con textContent; i link accettano solo http/https o percorsi dello stesso sito. Mai setHTML.
+Ci sono esattamente DUE componenti MapLibre, tutti e due 'use client' e caricati con dynamic(..., { ssr: false }):
+- components/map-view.tsx (da map-view-loader.tsx): le mappe di lettura. I dati arrivano dalla pagina server come GeoJSON + testi dei popup per chiave; mai fetch dentro il componente.
+- components/location-picker-map.tsx (da location-picker.tsx): un solo pin trascinabile per l'indirizzo di un luogo (iscrizione, più avanti "Mi ficha"). Legge e scrive il punto tramite `usePointField()` di src/components/ui/point-field.tsx; la pagina passa `<LocationPicker />` come slot nel modulo di un altro blocco. Non fa mai fetch e non scrive mai nel database. La mappa è limitata alla Comunidad de Madrid (stesso riquadro di private.make_org_point).
+MapLibre 6 trova il suo worker tramite setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url)) in components/maplibre-worker.ts: ogni componente MapLibre lo importa; senza, una volta fatto il bundle il worker risponde 404.
+I colori arrivano dai token durante l'esecuzione (un elemento con `text-light`, letto da components/read-css-color.ts come rgba, perché MapLibre potrebbe non capire oklch). Nessun colore scritto a mano.
+L'URL dello stile della mappa arriva da brand.mapStyleUrl. Mostrare sempre l'attribuzione di OpenStreetMap. Ogni vista a mappa ha una vista a elenco con gli stessi elementi e gli stessi filtri.

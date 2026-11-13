@@ -1,8 +1,8 @@
 import type { JsonLdObject } from "@/lib/seo/json-ld";
 import type { OrganizationProfile } from "./types";
 
-// schema.org Organization for /a/[slug] (docs/SPEC.md §14). Pure: the page passes the absolute URL.
-// Only contacts the organization made public. No address for professionals (they have none on the map).
+// Organization di schema.org per /a/[slug] (docs/SPEC.md §14). Puro: la pagina passa l'URL assoluto.
+// Solo i contatti che l'organizzazione ha reso pubblici. Nessun indirizzo per i professionisti (sulla mappa non ne hanno).
 
 export function buildOrganizationJsonLd(organization: OrganizationProfile, url: string): JsonLdObject {
   const address =

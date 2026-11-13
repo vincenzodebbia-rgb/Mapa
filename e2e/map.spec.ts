@@ -1,18 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Needs the seed of mapa-dev (docs/SPEC.md §15): weekly events keep the map alive every day.
+// Ha bisogno della seed di mapa-dev (docs/SPEC.md §15): gli eventi settimanali tengono viva la mappa ogni giorno.
 
 async function readDrawnPoints(page: Page, path: string): Promise<number> {
   await page.goto(path);
   const map = page.getByTestId("map-view");
-  // data-rendered-points counts the points MapLibre actually drew, not just the data it received.
+  // data-rendered-points conta i punti che MapLibre ha davvero disegnato, non solo i dati che ha ricevuto.
   await expect(map).toHaveAttribute("data-rendered-points", /^[1-9]\d*$/, { timeout: 30_000 });
   return Number(await map.getAttribute("data-points"));
 }
 
 async function countListItems(page: Page, path: string, listName: string): Promise<number> {
   await page.goto(path);
-  // The list streams in after the static shell (Suspense): wait for it before counting.
+  // L'elenco arriva in streaming dopo il guscio statico (Suspense): si aspetta prima di contare.
   const list = page.getByRole("list", { name: listName });
   await expect(list).toBeAttached();
   return list.getByRole("listitem").count();

@@ -6,14 +6,14 @@ import { getNeighborhoodSlugsWithContent } from "@/features/map/data";
 import { getIndexableOrganizationSlugs } from "@/features/organizations/data";
 import { toAbsoluteUrl } from "@/lib/site-url";
 
-// Only indexable pages (docs/SPEC.md §14): profiles (except professionals who said no), events not over yet,
-// barrios with content, and the fixed pages. Private areas are never listed.
+// Solo pagine indicizzabili (docs/SPEC.md §14): schede (tranne i professionisti che hanno detto no), eventi non finiti,
+// barrios con contenuti e le pagine fisse. Le aree private non compaiono mai.
 const STATIC_PATHS = ["/", "/conexiones", "/que-es", "/legal"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Sito demo: niente da indicizzare.
   if (flags.demo) return [];
-  // At request time, not at build: the build must not need the database. The reads themselves are cached.
+  // Al momento della richiesta, non al build: il build non deve aver bisogno del database. Le letture sono comunque in cache.
   await connection();
   const [organizations, events, neighborhoods] = await Promise.all([
     getIndexableOrganizationSlugs(),

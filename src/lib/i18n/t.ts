@@ -2,8 +2,8 @@ import "server-only";
 import messages from "../../../messages/es.json";
 import { interpolateMessage, lookupMessage, type MessageKey, type MessageValues } from "./format";
 
-// Spanish only, no locale in URLs (docs/adr/0008-i18n-senza-next-intl.md).
-// Server only: client components receive their texts as props from the server page.
+// Solo spagnolo, nessuna lingua negli URL (docs/adr/0008-i18n-senza-next-intl.md).
+// Solo server: i componenti client ricevono i loro testi come props dalla pagina sul server.
 
 export type TranslationKey = MessageKey<typeof messages>;
 

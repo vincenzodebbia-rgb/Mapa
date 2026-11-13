@@ -10,9 +10,9 @@ type SiteUrlEnv = {
 };
 
 /**
- * Absolute origin of the site, for metadata, sitemap, JSON-LD and share links.
- * Never throws, so a missing variable cannot break build or CI:
- * NEXT_PUBLIC_SITE_URL → Vercel production domain → this deployment's Vercel URL → brand.siteUrl (localhost).
+ * Origine assoluta del sito, per metadati, sitemap, JSON-LD e link da condividere.
+ * Non lancia mai errori, così una variabile mancante non può rompere build o CI:
+ * NEXT_PUBLIC_SITE_URL → dominio di produzione Vercel → URL Vercel di questo deployment → brand.siteUrl (localhost).
  */
 export function resolveSiteUrl(env: SiteUrlEnv): URL {
   const candidates = [
@@ -26,7 +26,7 @@ export function resolveSiteUrl(env: SiteUrlEnv): URL {
       const url = new URL(candidate);
       if (url.protocol === "https:" || url.protocol === "http:") return new URL(url.origin);
     } catch {
-      // Not a URL: try the next one.
+      // Non è un URL: si prova il successivo.
     }
   }
   return new URL(brand.siteUrl);
@@ -41,7 +41,7 @@ export function getSiteUrl(): URL {
   });
 }
 
-/** Absolute URL of a site path, e.g. toAbsoluteUrl("/e/coro") → "https://…/e/coro". */
+/** URL assoluto di un percorso del sito, per esempio toAbsoluteUrl("/e/coro") → "https://…/e/coro". */
 export function toAbsoluteUrl(path: string): string {
   return new URL(path, getSiteUrl()).toString();
 }

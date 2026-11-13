@@ -1,7 +1,8 @@
-This block owns `organizations` (the public profile) and the Storage bucket `org-logos`.
-Pages import only data.ts, types.ts and components/ (OrganizationProfile renders its own JSON-LD; OrganizationList for barrio pages).
-Public reads use createSupabasePublicClient() (anon, no cookies) inside `'use cache'` + cacheLife("minutes") + cacheTag(ORGANIZATIONS_TAG): the profile page is fully static and answers a real 404. Any write to a profile (session 7, "Mi ficha") must call updateTag(ORGANIZATIONS_TAG).
-Upcoming events on the profile come from the events block as a slot (`upcoming`) composed by the page: never import src/features/events.
-"Gente que hace cosas" (professional): no address, no point, no "Nuestra historia" on the page; `indexable = false` means noindex and out of the sitemap.
-Logo: one WebP per organization at `{organization_id}/logo.webp` (the database checks the path). Always pass uploads through reencode-logo.ts (WebP, max 256×256, no metadata) before Storage. Delete the file before deleting the organization.
-Contact links: only http/https (toSafeHttpUrl), external links with rel="noopener noreferrer nofollow ugc". Text from the database is rendered as text, never as HTML.
+Questo blocco possiede `organizations` (la scheda pubblica) e il bucket di Storage `org-logos`.
+Le pagine importano solo data.ts, types.ts e components/ (OrganizationProfile scrive da sé il proprio JSON-LD; OrganizationList per le pagine dei barrios).
+Le letture pubbliche usano createSupabasePublicClient() (anon, niente cookie) dentro `'use cache'` + cacheLife("minutes") + cacheTag(ORGANIZATIONS_TAG): la pagina della scheda è completamente statica e risponde con un 404 vero. Ogni scrittura su una scheda (sessione 7, "Mi ficha") deve chiamare updateTag(ORGANIZATIONS_TAG).
+Lettura privata: getOrganizationForUser(userId) (per /panel) usa createSupabaseServerClient() come l'utente, mai in cache; la RLS la limita alla membership dell'utente stesso.
+I prossimi eventi nella scheda arrivano dal blocco events come slot (`upcoming`) composto dalla pagina: mai importare src/features/events.
+"Gente que hace cosas" (professional): niente indirizzo, niente punto, niente "Nuestra historia" nella pagina; `indexable = false` vuol dire noindex e fuori dalla sitemap.
+Logo: un solo WebP per organizzazione in `{organization_id}/logo.webp` (il database controlla il percorso). Far passare sempre i caricamenti da reencode-logo.ts (WebP, massimo 256×256, senza metadati) prima dello Storage. Cancellare il file prima di cancellare l'organizzazione.
+Link di contatto: solo http/https (toSafeHttpUrl), link esterni con rel="noopener noreferrer nofollow ugc". Il testo del database si mostra come testo, mai come HTML.

@@ -8,7 +8,7 @@ const MAPS: { name: MapName; href: string }[] = [
   { name: "conexiones", href: "/conexiones" },
 ];
 
-/** Switch between the Hoy map and the Conexiones map. */
+/** Passaggio tra la mappa Hoy e la mappa Conexiones. */
 export function MapSwitch({ current }: { current: MapName }) {
   return (
     <nav aria-label={t("map.nav.label")}>

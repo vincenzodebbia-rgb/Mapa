@@ -1,10 +1,10 @@
-// Pure helpers for the "Compartir" button of the event page (docs/SPEC.md §5).
+// Funzioni pure per il pulsante "Compartir" della pagina evento (docs/SPEC.md §5).
 
 type PageLocation = Pick<Location, "protocol" | "host" | "pathname">;
 
 /**
- * The link to share: the page the person is looking at (so a Vercel preview shares the preview, not production),
- * without query or hash. The site URL from the server is only the fallback (no browser, or a non-web scheme).
+ * Il link da condividere: la pagina che la persona sta guardando (così un'anteprima Vercel condivide l'anteprima, non
+ * la produzione), senza parametri né hash. L'URL del sito dal server è solo la riserva (niente browser, o schema non web).
  */
 export function resolveShareUrl(location: PageLocation | null, fallbackUrl: string): string {
   if (!location || (location.protocol !== "https:" && location.protocol !== "http:") || !location.host) {
@@ -13,7 +13,7 @@ export function resolveShareUrl(location: PageLocation | null, fallbackUrl: stri
   return `${location.protocol}//${location.host}${location.pathname}`;
 }
 
-/** WhatsApp share link: opens WhatsApp with the text and the link, no account or script of ours involved. */
+/** Link di condivisione WhatsApp: apre WhatsApp con il testo e il link, senza account né script nostri. */
 export function buildWhatsAppShareUrl(text: string, url: string): string {
   return `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`;
 }

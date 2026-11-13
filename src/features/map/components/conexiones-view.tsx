@@ -11,8 +11,8 @@ import { PlaceList } from "./place-list";
 import { ViewToggle } from "./view-toggle";
 
 /**
- * The Conexiones map, before launch: who is here. Active associations and venues with an address,
- * each a lit point with its name on tap. No threads until the `threads` flag is on (docs/SPEC.md §6).
+ * La mappa Conexiones, prima del lancio: chi c'è. Associazioni e espacios attivi con un indirizzo,
+ * ognuno un punto acceso con il nome al tocco. Niente fili finché il flag `threads` è spento (docs/SPEC.md §6).
  */
 export function ConexionesView({ places, filters }: { places: MapPlace[]; filters: MapFilters }) {
   const notice = places.length === 0 ? <MapNotice message={t("conexiones.empty")} /> : null;

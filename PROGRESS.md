@@ -3,10 +3,110 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: sessione 4 unita in `main` (PR #13). Punto demo privata fatto sul ramo `chore/demo`. Dopo: progetto
-  Vercel `mapa-demo`, demo alle associazioni, poi sessione 5.
+- Fase: **sessione 5 finita nel codice** sul ramo `feat/onboarding` (pushato il 5/11 fino a `3203a77`; i due commit della
+  notte del 5/11 sono **solo locali**). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link
+  magico ricevuto per email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
+- Piano della sessione 6 scritto (senza codice) in `docs/piani/sessione-6.md`, con 13 punti da decidere (D1–D13).
+- Correzioni di sicurezza A1, M1, M5 nella PR in bozza #17: migrazione `20261110211136_security_a1_m1_m5` applicata a
+  mapa-dev dal fondatore il 13/11. Tipi rigenerati (nessuna differenza), check, deps ed e2e 20/20 verdi; in CI check,
+  secrets-scan e db-test (pgTAP 1–17) verdi.
 
 ## Done
+### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
+- CLI Supabase fissata a `2.122.0` come devDependency esatta: `npx supabase` usa sempre quella.
+- Tasto di rivendicazione su tutte le schede: "¿Es tu asociación?", "¿Es tu espacio?", "¿Es tu perfil?" (`claim.*` per
+  `kind`); nell'errore del NIF già registrato il testo segue il tipo (entità o attività commerciale). Mai il NIF.
+- Nessun avviso al fondatore per le associazioni dell'elenco (resta com'è).
+- Rapporto di sicurezza: nuovi punti B11–B14 da rivedere prima del lancio.
+- check verde (146 test), deps verde, e2e 19/20 (stesso rosso: migrazione non ancora su mapa-dev).
+
+### 2026-11-10 — Correzioni di sicurezza A1, M1, M5 (docs/rapporti/sicurezza-2026-11.md)
+- A1 (decisione del fondatore, `docs/decisioni/2026-11-10-verifica.md`): niente più "Verificada en el registro municipal".
+  `verified` tolto dal DTO e dalla scheda; nel database `revoke select (verified)` da anon/authenticated, tutte le righe a
+  `false`, `register_entity` non lo accende più. `entry_method = 'municipal_registry'` resta come dato interno.
+  Pulsante "¿Es tu asociación?" (mailto a `brand.contactEmail`, nome della scheda nell'oggetto, mai il NIF) nella scheda
+  delle associazioni e sotto l'errore "Este NIF ya está registrado". Helper condiviso `src/lib/claim-contact.ts`.
+- M1: trigger `events_rate_limit` (20 eventi al giorno per organizzazione, chiave `db:event:<org>`), vale anche per gli
+  insert diretti via API. M5: tetto di 60 nuove organizzazioni all'ora in tutto il sito in `register_entity` e
+  `create_professional` (chiave `db:new-organizations`). Errore `rate_limited` → "Demasiados intentos".
+- Test: pgTAP 17 nuovo; 07 e 16 aggiornati (`verified` ora `false`, contatore M5 azzerato nella transazione); Vitest
+  `claim-contact.test.ts` e `rate_limited` nel mapper; e2e: niente "verificada" nella scheda, link "¿Es tu asociación?".
+- check verde (145 test), deps verde, e2e 18/19: l'unico rosso aspetta la migrazione su mapa-dev (vedi Known issues).
+
+### 2026-11-05 (notte, in autonomia) — Commenti in italiano e piano della sessione 6
+- Tutti i commenti del codice tradotti in italiano (regola di AGENTS.md): `src/`, `scripts/`, `e2e/`, file di configurazione
+  e `globals.css`, 120 file. Codice, nomi e testi dell'interfaccia invariati: verificato file per file ristampando il codice
+  con il compilatore TypeScript senza commenti (identico prima e dopo), per il CSS togliendo i commenti.
+  Non toccati: migrazioni già unite (immutabili; quelle nuove erano già in italiano), `database.types.ts` (generato),
+  hook in `.claude/hooks/` e CI (configurazione protetta), i `CLAUDE.md` dei blocchi (documenti in inglese, non commenti: da
+  decidere se tradurli).
+- check (142 test), deps, build ed e2e (19/19) verdi dopo la traduzione.
+- `docs/piani/sessione-6.md`: piano dettagliato della sessione 6 (pagine, modulo in 4 blocchi, file per blocco, database,
+  test, ordine di lavoro) e i punti da decidere con il fondatore.
+
+### 2026-11-04/05 — Sessione 5 (seconda parte): accesso, iscrizione, revisione
+- `src/lib`: `domain/nif.ts` (copia di `normalize_nif`, `is_personal_nif`, `nif_allowed_for`: un DNI/NIE non parte mai
+  verso il database), `turnstile.ts` (fallisce chiuso, non invia l'IP a Cloudflare), `rate-limit.ts` (chiavi HMAC-SHA256
+  con sale giornaliero ricavato dalla chiave secret: IP ed email mai in chiaro; nessuna variabile nuova),
+  `geocode.ts` + `domain/geocode.ts` (Nominatim, User-Agent del progetto, cache in `geocode_cache`, 1 richiesta al secondo
+  per processo, solo Comunidad de Madrid), `supabase/current-user.ts` (`getClaims()` + `connection()`),
+  `legal-versions.ts` (`2026-11-provisional`), `cache-tags.ts` (`ORGANIZATIONS_TAG` condiviso).
+- `components/ui`: `TurnstileWidget` (render esplicito, nuovo token a ogni tentativo) e `PointFieldProvider`
+  (il punto lng/lat condiviso tra l'indirizzo del blocco onboarding e il pin del blocco map, senza import tra blocchi).
+- **auth**: `/entrar` (Turnstile + 5 link all'ora per connessione + 3 all'ora per email; stessa risposta per ogni email),
+  `/auth/confirm` (`token_hash` del template nuovo e `code` del link standard; poi sempre `/panel`, nessun `next`, nessun
+  redirect aperto), "Salir". Il link torna sul sito che si sta usando (`origin` della richiesta + `/auth/confirm`).
+- **onboarding**: `/registro` → anonimo: modulo email; con organizzazione: `/panel`; "¿Qué sois?" (form GET `?tipo=`,
+  funziona senza JS); campi per tipo come SPEC §8; "¿Sois *nombre*?" (lookup 10 al giorno per connessione, client admin);
+  "Buscar en el mapa" (30 all'ora per utente) e, senza JS, geocodifica all'invio; 5 tentativi all'ora per utente;
+  una sola chiamata SQL; errori SQL tradotti in messaggi (`mapRegistrationDbError`). Inviti non ancora (sessione 7).
+- **map**: secondo componente MapLibre `location-picker-map.tsx` (pin trascinabile, mappa limitata alla Comunidad de
+  Madrid), passato come slot; worker in `maplibre-worker.ts`; CLAUDE.md del blocco aggiornato (due componenti).
+- **account**: `/revision` solo per admin (gli altri ricevono 404), sola lettura, righe segnalate di `admin_review_list`
+  con motivo, tipo, attività, barrio, web, risposte. Mai NIF né email. `noindex`.
+- **organizations**: `getOrganizationForUser` per `/panel` provvisorio (nome, link alla scheda, Salir).
+- `scripts/import-municipal-associations.ts`: CSV del Comune (dataset 206117), parser CSV a mano (virgolette doppie),
+  solo 6 colonne, CIF uniti (categorie unite con ` | `), categoria Comerciantes saltata, CIF personali o malformati saltati.
+  Prova a secco di default; `--write` (e `--prune`) solo con le chiavi di produzione: **rifiuta mapa-dev**.
+  Prova a secco sul file del 24/10/2026: 3283 righe → 2986 associazioni, 109 unite, 157 Comerciantes, 27 senza CIF, 4 CIF non validi.
+- Test: Vitest 142/142 (nuovi: NIF, Turnstile, rate limit, geocode, schema di auth e onboarding, script). Playwright
+  19/19 con `workers: 1` (nuovi 6: associazione in elenco verificata fino a `/panel`; NIF già usato, personale, di un
+  altro tipo; fuori elenco con avviso; commerciale senza NIF con pin e avviso `no_nif`; pagine private senza sessione;
+  link non valido). Utenti creati con l'admin e cancellati a fine test; nessuna email inviata.
+- `@architecture-reviewer`: prima STOP per 3 punti, tutti corretti: (1) l'e2e ora controlla `error` su ogni chiamata
+  admin; (2) anche l'id utente nelle chiavi dei limiti passa per l'HMAC (DATA_MODEL `rate_limits` aggiornato);
+  (3) l'e2e si rifiuta di girare se il progetto non è mapa-dev. Dopo le correzioni: check, deps, build, e2e verdi.
+
+## Done (prima parte)
+### 2026-10-30 — Sessione 5 (prima parte): iscrizione, schema
+- Decisioni del 29 ottobre applicate a SPEC, DATA_MODEL, PRIVACY, glossary, BUILD_PLAN; documento in
+  `docs/decisioni/2026-10-29-iscrizione.md` con le scelte del fondatore sul piano (A–F).
+- **Mappatura** "¿Qué sois?" → `entity_type` → `kind` (un solo posto: `private.kind_for_entity_type`): asociación,
+  fundación, cooperativa, entidad pública → `association`; actividad comercial → `venue`; gente que hace cosas → `professional`.
+- Migrazione `20261030121852_entity_type`: enum `entity_type` e `flag_reason`; `organizations.entity_type` (privata, non
+  modificabile) e `flag_reason` (privata); `organization_answers.what_they_offer` (`how_sustained` resta per le associazioni);
+  NIF unico tranne P/Q/S (indice parziale); helper `is_personal_nif` e `nif_allowed_for` (G / G / F / P-Q-S / A-B-E-J);
+  trigger: barrio scelto per i professionisti (`grant update (neighborhood_id)`, per gli altri si ricalcola sempre dal punto),
+  motivo `doubtful_activity` quando l'avviso si accende cambiando attività. Righe esistenti riempite da `kind`.
+- Migrazione `20261030121855_registration_v2`: `register_entity` nuova firma (tipo, NIF facoltativo solo per `commercial`,
+  scheda completa, indirizzo + lng/lat obbligatori per `commercial`, punto solo dentro la Comunidad de Madrid →
+  `invalid_location`), restituisce `(slug, flagged, flag_reason)`; avviso: fuori elenco `not_in_registry`, ente pubblico
+  sempre `public_entity`, commerciale senza NIF `no_nif`, attività dubbia `doubtful_activity`, invito mai.
+  `create_professional` con barrio (slug), contatti, Busco/Ofrezco, `indexable`. `admin_review_list` con tipo,
+  `what_they_offer`, motivo. `mark_reviewed` azzera anche il motivo.
+- pgTAP: 07 adattato (DNI/NIE → `personal_nif`; associazione fuori elenco ora segnalata), nuovo 16 (43 asserzioni).
+  Prova a secco prima del push, ogni file in transazione annullata: **226/226 verdi**, mapa-dev pulito dopo.
+- Dopo il push: tipi rigenerati; su mapa-dev 7 `association`, 3 `commercial` (1 segnalata), 2 `informal`.
+  Seed aggiornata (risposte degli espacios in `what_they_offer`, motivo del club).
+- Protezioni per la modalità automatica (commit separato): `protect-commands.sh` blocca ogni comando che nomina un file
+  `.env*` (tranne `.env.example`) o carica dotenv; `settings.json` con allow/ask/deny nuovi; riga in AGENTS.md.
+  Nota pratica: il blocco guarda il testo, quindi blocca anche messaggi di commit che nominano quei file.
+- Prova a secco senza Docker (da rifare così): per ogni file di `supabase/tests/`, un file con `begin;` + migrazioni nuove +
+  corpo del test con ogni `select <asserzione>` a inizio riga riscritto in `insert into pg_temp.__r (line) select …`
+  (tabella temporanea con `grant all … to public`, perché i test cambiano ruolo), poi un blocco `do` che fa
+  `raise exception` con totale e righe non `ok`. Lanciato con `npx supabase db query --linked -f <file>`.
+
+## Done (prima)
 ### 2026-10-29 — Punto demo privata
 - Flag `demo` in `src/config/flags.ts`: acceso solo con `NEXT_PUBLIC_DEMO=1` (letto al build). Senza variabile il sito
   vero non cambia (e2e: niente banner, niente `X-Robots-Tag`, robots e sitemap come prima).
@@ -111,6 +211,22 @@ Updated by the agent at the end of every session. Newest first.
 - ADR 0007 records the CSP `'unsafe-inline'` decision.
 
 ## Next
+- **Chiudere la sessione 5** (fondatore): ok al push di `feat/onboarding` → PR con CI verde → dall'anteprima Vercel sul
+  telefono: `/registro`, email, link, "¿Qué sois?" → Asociación con un NIF fittizio libero (`G99000045` o `G99000052`)
+  → `/panel`. Prima servono:
+  - Supabase mapa-dev → Auth → Redirect URLs: `http://localhost:3000/**`, `https://<progetto-mapa>.vercel.app/**`,
+    `https://<progetto-mapa-demo>.vercel.app/**`, `https://*-<slug-del-team>.vercel.app/**`.
+  - Template "Magic Link" **e** "Confirm signup" con il link `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+  - Vercel (Preview e Production di `mapa`, `mapa-demo`): `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`
+    (chiavi vere di Cloudflare con i domini Vercel; quelle di prova solo in locale), `NOMINATIM_USER_AGENT`
+    (`mapa-madrid/0.1 (+https://github.com/vincenzodebbia-rgb/Mapa)`), `SUPABASE_SECRET_KEY`.
+  - Dopo il primo accesso: riga in `app_admins` (SQL in fondo a questa sezione) per vedere `/revision`.
+  - Ricorda: l'email standard di Supabase arriva solo agli indirizzi del team del progetto (vedi "Bloccante per il pilota").
+- Produzione (quando ci sarà mapa-prod con le migrazioni): import dell'elenco del Comune con
+  `node --env-file=<file con le chiavi di produzione> scripts/import-municipal-associations.ts --write` (prima senza
+  `--write` per vedere i conteggi). Il nome del file del Comune cambia a ogni aggiornamento: passare l'URL nuovo.
+- SQL `app_admins` (una volta per progetto, dopo il primo accesso):
+  `insert into public.app_admins (user_id) select id from auth.users where email = 'TUA_EMAIL_QUI' on conflict (user_id) do nothing;`
 - Fondatore: PR di `feat/public-pages` con CI verde (anche `db-test` con i test 14-15), `@architecture-reviewer`,
   anteprima Vercel dal telefono (`/a/…`, `/e/…`, `/barrio/opanel`, `/sitemap.xml`).
 - `NEXT_PUBLIC_SITE_URL`: Vercel `mapa` Production = `https://<dominio>` quando ci sarà (fino ad allora vuota va bene,
@@ -119,12 +235,16 @@ Updated by the agent at the end of every session. Newest first.
   (`docs/operations.md`); prima di mostrarla rilanciare la seed se gli eventi singoli sono finiti; riga in `memberships`.
 - Sessione 7: caricamento del logo con `reencodeLogo` e `updateTag(ORGANIZATIONS_TAG)`; sessione 6: `updateTag(EVENTS_TAG)`.
 
-## Domande aperte (sessione 5)
-- **Espacio gestito da un autonomo con solo NIF personale** (DNI/NIE): oggi non può iscriversi, perché il NIF accetta solo il
-  formato degli enti. Come entra? (es. solo con invito, o come `professional`, o con un altro documento non personale).
-- Associazione fuori dall'elenco del Comune e senza invito: entra con o senza avviso al fondatore
-  (`register_entity`, commento `DA DECIDERE (sessione 5)`; nessuna migrazione serve oltre a quella riga).
-- Categoria del Comune "Comerciantes, empresarios, profesionales y autónomos": come trattarla all'import.
+## Bloccante per il pilota
+- **Servizio email** (da decidere con il dominio, prima del pilota): oggi non si invia nessuna email nostra. L'email standard di
+  Supabase manda i link magici **solo agli indirizzi del team del progetto** (e circa 2 all'ora): utenti veri non possono entrare
+  finché non c'è un SMTP nostro. Lo stesso servizio servirà per gli avvisi al fondatore (`FOUNDER_NOTIFICATION_EMAIL`, variabile
+  server) e per le motivazioni DSA di `moderate_organization`.
+
+## Domande della sessione 5 — risolte il 29-30 ottobre (`docs/decisioni/2026-10-29-iscrizione.md`)
+- Autonomo con solo NIF personale: artisti → "Gente que hace cosas"; bar o libreria → "Actividad comercial" senza NIF (con avviso).
+- Associazione fuori elenco e senza invito: entra subito, con avviso (`flag_reason = 'not_in_registry'`).
+- Categoria "Comerciantes, empresarios, profesionales y autónomos": non si importa, quindi risulta fuori elenco.
 
 ## Regole per la sessione 5 (decise dal fondatore)
 - L'email restituita da `moderate_organization` serve **solo** all'action per inviare la motivazione all'organizzazione:
@@ -133,6 +253,26 @@ Updated by the agent at the end of every session. Newest first.
   definitivo, **mai** da un'email personale.
 
 ## Known issues
+- (10/11) Restano aperti dal rapporto di sicurezza: M1 per inviti e fili (solo eventi corretti), M2, M3, M4, M6, B1–B14.
+  Il tetto M5 conta solo le iscrizioni riuscite (un'eccezione annulla anche il conteggio): i tentativi falliti via RPC
+  (per esempio per scoprire quali NIF sono già usati) non hanno limite nel database.
+- Nominatim: il ritmo di 1 richiesta al secondo vale per processo; su Vercel più istanze possono superarlo di poco.
+  Lo frenano la cache e il limite di 30 ricerche all'ora per utente. Se servirà, un limite globale con `check_rate_limit`.
+- In locale (senza `x-forwarded-for`) tutte le richieste hanno la stessa chiave di connessione: i limiti per connessione
+  (link magici, lookup 10 al giorno) sono condivisi tra le prove. Su Vercel l'header c'è sempre.
+- L'e2e dell'iscrizione legge le chiavi dal file locale del fondatore con `process.loadEnvFile` (non le stampa) e chiama
+  Nominatim vero una volta (poi resta in cache). Gli e2e restano fuori dalla CI.
+- Il modulo d'iscrizione dopo un errore ricrea i campi con i valori inviati; la casella "Mostrar mi perfil en Google"
+  torna però sempre selezionata.
+- Inviti: `register_entity` / `create_professional` accettano il token, ma il modulo non lo manda ancora (sessione 7).
+- Il link dell'email si costruisce dall'header `Origin` della richiesta: è sicuro finché Next controlla l'origine delle
+  action e i Redirect URL di Supabase non hanno jolly larghi (mai `https://*.vercel.app/**`, solo `*-<slug-del-team>`).
+- `confirmEmailLink` sta in `auth/actions.ts` (`'use server'`), quindi è chiamabile anche come action: rischio basso
+  (fa solo ciò che fa il link). Si può spostare in un helper server-only se il blocco ne avrà bisogno.
+- I `CLAUDE.md` dei blocchi (`src/features/*/CLAUDE.md`) sono ancora in inglese: sono documenti per l'agente, non commenti;
+  AGENTS.md vuole i documenti in italiano. Da decidere se tradurli.
+- PR: spiegare nel testo Turnstile (script Cloudflare, già nella CSP), Nominatim (indirizzi dei luoghi) e l'uso della
+  chiave secret negli e2e locali (R9).
 - `moderate_organization` restituisce come destinatario della motivazione il `contact_email` pubblico o, se manca,
   l'email di accesso di un membro: è un dato personale che arriva solo all'action dell'admin (obbligo DSA).
 - `protect-commands.sh` legge solo il testo del comando: non vede dentro script lanciati da file (`bash x.sh`).

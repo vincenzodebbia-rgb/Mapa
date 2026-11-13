@@ -3,7 +3,7 @@ import { filterEvents } from "./filter-events";
 import { parseMapFilters } from "./schema";
 import type { MapEvent } from "./types";
 
-// Thursday 16 July 2026, 18:00 in Madrid (UTC+2).
+// Giovedì 16 luglio 2026, 18:00 a Madrid (UTC+2).
 const now = new Date("2026-07-16T16:00:00Z");
 
 function makeEvent(overrides: Partial<MapEvent> & Pick<MapEvent, "key">): MapEvent {

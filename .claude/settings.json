@@ -1,21 +1,31 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run *)", "Bash(npm test *)", "Bash(npx tsc *)", "Bash(npx eslint *)", "Bash(npx depcruise *)",
-      "Bash(npx vitest *)", "Bash(npx playwright *)", "Bash(npx supabase migration new *)", "Bash(npx supabase gen types *)",
-      "Bash(git status)", "Bash(git diff *)", "Bash(git log *)", "Bash(git add *)", "Bash(git commit *)",
-      "Bash(git checkout -b *)", "Bash(git switch *)"
+      "Edit(./**)",
+      "Bash(npm run *)", "Bash(npm test)", "Bash(npm test *)",
+      "Bash(npx tsc *)", "Bash(npx eslint *)", "Bash(npx depcruise *)", "Bash(npx vitest *)", "Bash(npx playwright *)",
+      "Bash(npx supabase migration new *)", "Bash(npx supabase gen types *)", "Bash(npx supabase db query --linked *)",
+      "Bash(git status)", "Bash(git status *)", "Bash(git diff)", "Bash(git diff *)", "Bash(git log)", "Bash(git log *)",
+      "Bash(git add *)", "Bash(git commit *)", "Bash(git switch *)", "Bash(git branch)", "Bash(git branch *)",
+      "Bash(git checkout -b *)"
     ],
     "ask": [
-      "Bash(git push *)", "Bash(npm install *)", "Bash(npm i *)",
-      "Edit(./e2e/**)", "Edit(./supabase/tests/**)", "Edit(./src/**/*.test.ts)", "Edit(./src/**/*.test.tsx)",
-      "Edit(./.github/**)", "Edit(./.claude/**)", "Edit(./eslint.config.mjs)", "Edit(./.dependency-cruiser.cjs)",
-      "Edit(./AGENTS.md)", "Edit(./docs/SPEC.md)", "Edit(./docs/DATA_MODEL.md)", "Edit(./src/app/globals.css)", "Edit(./src/config/brand.ts)"
+      "Bash(git push)", "Bash(git push *)",
+      "Bash(npm install)", "Bash(npm install *)", "Bash(npm i)", "Bash(npm i *)",
+      "Bash(npm uninstall *)", "Bash(npm un *)", "Bash(npm remove *)", "Bash(npm ci)", "Bash(npm ci *)",
+      "Edit(./.claude/**)", "Edit(./.github/**)", "Edit(./AGENTS.md)", "Edit(./eslint.config.mjs)", "Edit(./.dependency-cruiser.cjs)"
     ],
     "deny": [
-      "Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./.env.production)",
+      "Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./.env.development)", "Read(./.env.production)",
+      "Read(./.env.test)", "Read(./**/.env)", "Read(./**/.env.local)",
+      "Bash(cat .env*)", "Bash(type .env*)", "Bash(Get-Content .env*)", "Bash(* .env.local*)", "Bash(* .env.production*)",
       "Bash(npx supabase db reset)", "Bash(npx supabase db reset *)", "Bash(npx supabase db push)", "Bash(npx supabase db push *)",
-      "Bash(npx supabase link)", "Bash(npx supabase link *)", "Bash(git push --force *)", "Bash(git push -f *)", "Bash(rm -rf *)"
+      "Bash(npx supabase link)", "Bash(npx supabase link *)",
+      "Bash(git push origin main)", "Bash(git push origin main *)", "Bash(git push * main)", "Bash(git push * main:*)",
+      "Bash(git push * HEAD:main)", "Bash(git push * *:main)",
+      "Bash(git push --force *)", "Bash(git push -f *)", "Bash(git push * --force*)", "Bash(git push * -f)",
+      "Bash(git push * -f *)", "Bash(git push * +*)",
+      "Bash(rm -rf *)", "Bash(rm -fr *)", "Bash(rm -r -f *)"
     ],
     "disableBypassPermissionsMode": "disable"
   },

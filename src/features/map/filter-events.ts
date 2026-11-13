@@ -3,11 +3,11 @@ import { ORGANIZER_FILTERS, type MapFilters } from "./schema";
 import type { MapEvent } from "./types";
 
 type FilterOptions = {
-  /** The barrio filter narrows the list view; on the map it only centers the view (docs/SPEC.md §4). */
+  /** Il filtro del barrio restringe la vista elenco; sulla mappa centra solo la vista (docs/SPEC.md §4). */
   byNeighborhood: boolean;
 };
 
-/** Events that match the URL filters, sorted by start time. */
+/** Eventi che rispettano i filtri dell'URL, in ordine di inizio. */
 export function filterEvents(events: MapEvent[], filters: MapFilters, now: Date, options: FilterOptions): MapEvent[] {
   const organizerKind = filters.quien ? ORGANIZER_FILTERS[filters.quien] : undefined;
 

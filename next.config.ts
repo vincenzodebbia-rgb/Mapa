@@ -13,20 +13,20 @@ const supabaseRealtime = supabaseOrigin.replace(/^https:/, "wss:");
 const OPENFREEMAP = "https://tiles.openfreemap.org";
 const TURNSTILE = "https://challenges.cloudflare.com";
 
-// Static CSP (no nonces), so pages can stay statically rendered: nonces force dynamic rendering
-// and break Partial Prerendering.
+// CSP statica (senza nonce), così le pagine possono restare statiche: i nonce obbligano al rendering dinamico
+// e rompono il Partial Prerendering.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  // 'unsafe-inline': Next.js inlines the scripts that hand page data to React; without it the page never
-  // hydrates. Injection is prevented elsewhere: DB text is rendered only as text. See docs/adr/0007-csp-unsafe-inline.md.
-  // React uses eval() only in development, for readable server error stacks.
+  // 'unsafe-inline': Next.js mette inline gli script che passano a React i dati della pagina; senza, la pagina non si
+  // idrata mai. L'iniezione si impedisce altrove: il testo del database si mostra solo come testo. Vedi docs/adr/0007-csp-unsafe-inline.md.
+  // React usa eval() solo in sviluppo, per avere stack leggibili degli errori del server.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${TURNSTILE}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseOrigin} ${OPENFREEMAP}`,
   "font-src 'self'",
   `connect-src 'self' ${supabaseOrigin} ${supabaseRealtime} ${OPENFREEMAP}`,
   `frame-src ${TURNSTILE}`,
-  // MapLibre runs its tile parser in a blob: web worker.
+  // MapLibre fa girare il lettore delle tile in un web worker blob:.
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -39,7 +39,7 @@ const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  // We never ask for these (docs/PRIVACY_AND_OWNERSHIP.md): forbid them for any embedded code too.
+  // Non li chiediamo mai (docs/PRIVACY_AND_OWNERSHIP.md): vietati anche a qualsiasi codice incorporato.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   // Sito demo: ogni risposta (pagine, immagini, sitemap) resta fuori dai motori di ricerca. robots.txt lascia entrare
   // i crawler, così possono leggerlo.
@@ -47,8 +47,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // Development only: the e2e test of Compartir opens the same dev server as 127.0.0.1 (a host different from the
-  // site URL, like a Vercel preview). Loopback only: nothing outside this computer.
+  // Solo in sviluppo: l'e2e di Compartir apre lo stesso dev server come 127.0.0.1 (un host diverso dall'URL del sito,
+  // come un'anteprima Vercel). Solo loopback: niente fuori da questo computer.
   allowedDevOrigins: ["127.0.0.1"],
   cacheComponents: true,
   partialPrefetching: true,

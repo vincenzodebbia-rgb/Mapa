@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getButtonClasses } from "@/components/ui/button";
 import { JsonLd } from "@/components/ui/json-ld";
+import { brand } from "@/config/brand";
+import { getClaimContactHref } from "@/lib/claim-contact";
 import { t } from "@/lib/i18n/t";
 import { buildOrganizationJsonLd } from "../organization-json-ld";
 import type { OrganizationProfile as OrganizationProfileData } from "../types";
@@ -10,13 +13,13 @@ const linkClass = "underline underline-offset-2 break-words focus-visible:outlin
 
 type OrganizationProfileProps = {
   organization: OrganizationProfileData;
-  /** Absolute URL of this page, for JSON-LD. */
+  /** URL assoluto di questa pagina, per il JSON-LD. */
   url: string;
-  /** Upcoming events, composed by the page from the events block (a block never imports another). */
+  /** Prossimi eventi, composti dalla pagina con il blocco events (un blocco non ne importa mai un altro). */
   upcoming: ReactNode;
 };
 
-/** The public profile /a/[slug] (docs/SPEC.md §7): minimal, no numbers or counters. Text is rendered as text. */
+/** La scheda pubblica /a/[slug] (docs/SPEC.md §7): minima, senza numeri né contatori. Il testo si mostra come testo. */
 export function OrganizationProfile({ organization, url, upcoming }: OrganizationProfileProps) {
   const phoneHref = organization.contactPhone ? `tel:${organization.contactPhone.replace(/[^\d+]/g, "")}` : null;
   const hasContact = organization.contactEmail || organization.contactPhone || organization.contactUrl;
@@ -26,7 +29,7 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
       <JsonLd data={buildOrganizationJsonLd(organization, url)} />
       <header className="flex items-start gap-4">
         {organization.logoUrl && (
-          // Already a small WebP re-encoded on upload: no optimization needed (and no image service).
+          // È già un piccolo WebP ricodificato al caricamento: non serve ottimizzarlo (e nessun servizio di immagini).
           <Image
             src={organization.logoUrl}
             alt={t("organization.logoAlt", { name: organization.name })}
@@ -39,7 +42,6 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted">{t(`organization.kinds.${organization.kind}`)}</p>
           <h1 className="text-2xl font-semibold">{organization.name}</h1>
-          {organization.verified && <p className="text-sm text-muted">{t("organization.verified")}</p>}
         </div>
       </header>
 
@@ -104,6 +106,14 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
       )}
 
       {upcoming}
+
+      {/* Nessun segno "verificada" (A1): chi vede la propria scheda creata da altri scrive al progetto. Ogni tipo. */}
+      <aside className="flex flex-col items-start gap-2 border-t border-line pt-4">
+        <a href={getClaimContactHref(organization.kind, organization.name)} className={getButtonClasses("secondary")}>
+          {t(`claim.button.${organization.kind}`)}
+        </a>
+        <p className="text-sm text-muted">{t(`claim.profileHint.${organization.kind}`, { email: brand.contactEmail })}</p>
+      </aside>
     </article>
   );
 }

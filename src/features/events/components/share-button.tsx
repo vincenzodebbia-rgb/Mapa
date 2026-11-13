@@ -14,15 +14,15 @@ export type ShareButtonTexts = {
 
 type ShareButtonProps = {
   title: string;
-  /** Text that goes with the link (title, date, place). */
+  /** Testo che accompagna il link (titolo, data, luogo). */
   text: string;
-  /** Absolute URL of the page on the site's own domain: used only until the browser knows where it is. */
+  /** URL assoluto della pagina sul dominio del sito: si usa solo finché il browser non sa dove si trova. */
   fallbackUrl: string;
   texts: ShareButtonTexts;
 };
 
-// Browser-only values read with useSyncExternalStore: the server and the hydration render use the server value,
-// so the markup matches; right after, the browser value replaces it. Neither value changes while the page is open.
+// Valori solo del browser letti con useSyncExternalStore: il server e il render di idratazione usano il valore del server,
+// così il markup coincide; subito dopo il valore del browser lo sostituisce. Nessuno dei due cambia a pagina aperta.
 function subscribeNever() {
   return () => {};
 }
@@ -33,7 +33,7 @@ function cannotWebShareOnServer() {
   return false;
 }
 
-/** "Compartir": the system share sheet where available; WhatsApp link and copy always (the link works without JS). */
+/** "Compartir": il pannello di condivisione del sistema dove c'è; link WhatsApp e copia sempre (il link va senza JS). */
 export function ShareButton({ title, text, fallbackUrl, texts }: ShareButtonProps) {
   const webShare = useSyncExternalStore(subscribeNever, canWebShare, cannotWebShareOnServer);
   const url = useSyncExternalStore(
@@ -47,7 +47,7 @@ export function ShareButton({ title, text, fallbackUrl, texts }: ShareButtonProp
     try {
       await navigator.share({ title, text, url });
     } catch {
-      // Closed by the person or not allowed: WhatsApp and copy are still there.
+      // Chiuso dalla persona o non permesso: WhatsApp e copia restano lì.
     }
   }
 

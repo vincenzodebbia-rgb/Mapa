@@ -3,7 +3,7 @@ import { formatMadridDate, formatMadridTime } from "@/lib/dates";
 import { t } from "@/lib/i18n/t";
 import type { EventPage, PriceType, UpcomingEvent } from "./types";
 
-// Turns event DTOs into the texts people read, on the server, always in Madrid time.
+// Trasforma i DTO degli eventi nei testi che le persone leggono, sul server, sempre con l'ora di Madrid.
 
 const euroFormat = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 

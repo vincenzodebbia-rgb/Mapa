@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: t("conexiones.metaDescription"),
 };
 
-// Threads are not shown here until the `threads` flag is on (after launch, docs/SPEC.md §6).
+// Qui i fili non si mostrano finché il flag `threads` è spento (dopo il lancio, docs/SPEC.md §6).
 export default function ConexionesPage({ searchParams }: PageProps<"/conexiones">) {
   return (
     <Suspense fallback={<p className="grid h-app place-items-center text-muted">{t("map.loading")}</p>}>

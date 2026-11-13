@@ -17,7 +17,6 @@ const association: OrganizationProfile = {
   neighborhood: { slug: "vista-alegre", name: "Vista Alegre" },
   story: "Empezamos en un garaje.",
   logoUrl: null,
-  verified: true,
   indexable: true,
 };
 

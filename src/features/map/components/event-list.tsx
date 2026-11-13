@@ -9,7 +9,7 @@ import {
 import { getLightState } from "../light-state";
 import type { MapEvent } from "../types";
 
-/** List view of the Hoy map: the same events and filters, sorted by time. */
+/** Vista elenco della mappa Hoy: gli stessi eventi e filtri, in ordine di orario. */
 export function EventList({ events, now }: { events: MapEvent[]; now: Date }) {
   const heading = t("hoy.list.heading");
 

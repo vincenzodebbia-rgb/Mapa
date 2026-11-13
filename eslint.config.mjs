@@ -5,7 +5,7 @@ import importX from "eslint-plugin-import-x";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import { readdirSync, existsSync } from "node:fs";
 
-// Every folder in src/features is a block. New blocks are protected automatically.
+// Ogni cartella in src/features è un blocco. I blocchi nuovi sono protetti in automatico.
 const features = existsSync("./src/features")
   ? readdirSync("./src/features", { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
   : [];
@@ -23,7 +23,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
 
-  // R1-R3: block boundaries
+  // R1-R3: confini tra i blocchi
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: { "import-x": importX },
@@ -46,7 +46,7 @@ export default defineConfig([
   // Le factory dei client creano i client Supabase e li tipizzano con Database.
   { files: ["src/lib/supabase/**"], rules: { "no-restricted-imports": "off" } },
 
-  // R7-R8: no raw HTML, no hard-coded design
+  // R7-R8: niente HTML grezzo, niente design scritto a mano
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
@@ -62,7 +62,7 @@ export default defineConfig([
       "@typescript-eslint/ban-ts-comment": ["error", { "ts-ignore": true, "ts-expect-error": "allow-with-description" }],
     },
   },
-  // The only places allowed to name raw brand values
+  // Gli unici posti in cui si possono scrivere i valori grezzi del marchio
   { files: ["src/config/brand.ts"], rules: { "no-restricted-syntax": "off" } },
 
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "src/lib/database.types.ts"]),

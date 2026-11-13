@@ -1,23 +1,20 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Popup, setWorkerUrl, type Map as MaplibreMap } from "maplibre-gl";
+import "./maplibre-worker";
+import { Popup, type Map as MaplibreMap } from "maplibre-gl";
 import MapGL, { Layer, Source, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import { useEffect, useRef, useState } from "react";
 import { buildPopup } from "../build-popup";
 import type { MapFeatureCollection, PopupContent } from "../types";
 import { readCssColor } from "./read-css-color";
 
-// MapLibre 6 looks for its worker next to its own file, a path that no longer exists once bundled.
-// new URL(..., import.meta.url) makes the bundler emit the worker file and gives its real, same-origin URL.
-setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href);
-
 export type MapViewProps = {
   styleUrl: string;
   data: MapFeatureCollection;
-  /** Popup texts by feature `key`, already formatted on the server. */
+  /** Testi dei popup per `key` dell'elemento, già formattati sul server. */
   popups: Record<string, PopupContent>;
-  /** [west, south, east, north] to fit, e.g. the selected barrio. Null = all of Madrid. */
+  /** [ovest, sud, est, nord] da inquadrare, per esempio il barrio scelto. Null = tutta Madrid. */
   bounds: [number, number, number, number] | null;
   label: string;
 };
@@ -26,7 +23,7 @@ const MADRID_VIEW = { longitude: -3.7038, latitude: 40.4168, zoom: 11.5 };
 const SOURCE_ID = "map-points";
 const POINTS_LAYER = "map-points";
 const PULSE_LAYER = "map-pulse";
-const POINT_RADIUS = 6; // same size for every point (docs/SPEC.md §4)
+const POINT_RADIUS = 6; // stessa grandezza per ogni punto (docs/SPEC.md §4)
 const PULSE_RADIUS = 14;
 const PULSE_PERIOD_MS = 1600;
 
@@ -40,7 +37,7 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
   const [cursor, setCursor] = useState<string>("");
   const [renderedPoints, setRenderedPoints] = useState(0);
 
-  // Depend on the numbers, not on the array: a new array with the same barrio must not undo the user's panning.
+  // Dipende dai numeri, non dall'array: un array nuovo con lo stesso barrio non deve annullare lo spostamento dell'utente.
   const boundsKey = bounds ? bounds.join(",") : "";
 
   useEffect(() => {
@@ -67,8 +64,8 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
     if (map) startPulse(map);
   }
 
-  // The pulse is a halo whose opacity breathes; the point itself never changes size.
-  // With prefers-reduced-motion the halo stays still, so "today" is still visible without movement.
+  // Il pulse è un alone la cui opacità respira; il punto non cambia mai grandezza.
+  // Con prefers-reduced-motion l'alone resta fermo, così "oggi" si vede comunque, senza movimento.
   function startPulse(map: MaplibreMap) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const tick = (time: number) => {
@@ -97,8 +94,8 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
       .addTo(map);
   }
 
-  // Counts the points actually drawn (exposed as data-rendered-points for the e2e test). It runs on `render`,
-  // not `idle`: the pulse repaints every frame, so the map is never idle. Only after data or view changes.
+  // Conta i punti davvero disegnati (esposti come data-rendered-points per l'e2e). Gira su `render`,
+  // non su `idle`: il pulse ridisegna ogni fotogramma, quindi la mappa non è mai ferma. Solo dopo cambi di dati o di vista.
   function handleRender() {
     const map = mapRef.current?.getMap();
     if (!countPendingRef.current || !map?.getLayer(POINTS_LAYER) || !map.isSourceLoaded(SOURCE_ID)) return;

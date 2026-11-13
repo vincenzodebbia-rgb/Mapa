@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 
 const { LOGO_MAX_SIDE, reencodeLogo } = await import("./reencode-logo");
 
-// A JPEG like a phone photo: large, with GPS coordinates (Puerta del Sol) and the camera in EXIF.
+// Un JPEG come una foto del telefono: grande, con le coordinate GPS (Puerta del Sol) e la fotocamera nell'EXIF.
 async function createJpegWithGps(): Promise<Buffer> {
   return sharp({ create: { width: 1200, height: 800, channels: 3, background: { r: 200, g: 120, b: 40 } } })
     .jpeg()
@@ -27,7 +27,7 @@ describe("reencodeLogo", () => {
     const inputMeta = await sharp(input).metadata();
     expect(inputMeta.exif).toBeDefined();
     expect(inputMeta.exif?.includes("CamaraFicticia")).toBe(true);
-    // Tag 0x8825 (GPS IFD pointer, little-endian TIFF): the input really carries GPS data.
+    // Tag 0x8825 (puntatore all'IFD GPS, TIFF little-endian): il file d'ingresso contiene davvero dati GPS.
     expect(inputMeta.exif?.includes(Buffer.from([0x25, 0x88]))).toBe(true);
 
     const output = await reencodeLogo(input);
@@ -39,7 +39,7 @@ describe("reencodeLogo", () => {
     expect(meta.exif).toBeUndefined();
     expect(meta.xmp).toBeUndefined();
     expect(meta.icc).toBeUndefined();
-    // Belt and braces: no EXIF chunk and no trace of the camera or GPS tags in the file bytes.
+    // Doppia sicurezza: nessun blocco EXIF e nessuna traccia della fotocamera o dei tag GPS nei byte del file.
     expect(output.includes("EXIF")).toBe(false);
     expect(output.includes("Exif")).toBe(false);
     expect(output.includes("CamaraFicticia")).toBe(false);

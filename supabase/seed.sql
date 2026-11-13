@@ -59,11 +59,11 @@ insert into public.organizations
 values
   ('5eed0000-0000-4000-8000-0000000000a1', 'association', 'Colectivo Vecinal La Colmena (ficticio)',
    'Vecinos que se juntan para cuidar el barrio.', 'Los jueves a las 19h', 'https://example.org/colmena',
-   'Calle Inventada 1', pg_temp.spot('vista-alegre', 0, 0), 'comunidad', null, true, true, 'municipal_registry', null, false,
+   'Calle Inventada 1', pg_temp.spot('vista-alegre', 0, 0), 'comunidad', null, true, false, 'municipal_registry', null, false,
    'Empezamos en un garaje prestado, con diez sillas y un termo de café. Hoy organizamos el coro, el cine fórum y las fiestas del barrio. Todo esto es inventado para la demo.'),
   ('5eed0000-0000-4000-8000-0000000000a2', 'association', 'Asociación Cultural El Tendedero (ficticia)',
    'Música y teatro en un patio de vecinos.', 'Viernes por la tarde', null,
-   'Calle de Prueba 22', pg_temp.spot('opanel', 0, 0), 'musica', null, true, true, 'municipal_registry', null, false,
+   'Calle de Prueba 22', pg_temp.spot('opanel', 0, 0), 'musica', null, true, false, 'municipal_registry', null, false,
    'Un patio, unas cuerdas de tender y muchas ganas de hacer música juntos. Historia ficticia.'),
   ('5eed0000-0000-4000-8000-0000000000a3', 'association', 'Ateneo de Prueba Los Girasoles (ficticio)',
    'Charlas, libros y café.', null, null,
@@ -109,11 +109,15 @@ insert into public.organization_verifications (organization_id, nif) values
   ('5eed0000-0000-4000-8000-0000000000b2', 'B99100068'),
   ('5eed0000-0000-4000-8000-0000000000b3', 'B99100083');
 
-insert into public.organization_answers (organization_id, what_for_whom, how_sustained) values
-  ('5eed0000-0000-4000-8000-0000000000a1', 'Actividades para vecinos de todas las edades.', null),
-  ('5eed0000-0000-4000-8000-0000000000b1', 'Presentaciones de libros para el barrio.', 'Venta de libros.'),
-  ('5eed0000-0000-4000-8000-0000000000b2', 'Conciertos y sesiones de baile.', 'Entradas y barra.'),
-  ('5eed0000-0000-4000-8000-0000000000b3', 'Ensayos y estrenos de grupos pequeños.', 'Alquiler por horas.');
+-- Il club segnalato: avviso per attività dubbia (sessione 5, flag_reason).
+update public.organizations set flag_reason = 'doubtful_activity' where id = '5eed0000-0000-4000-8000-0000000000b2';
+
+-- Associazioni: how_sustained ("¿Cómo se sostiene el proyecto?"); espacios: what_they_offer ("¿Qué ofrecéis a nivel cultural?").
+insert into public.organization_answers (organization_id, what_for_whom, how_sustained, what_they_offer) values
+  ('5eed0000-0000-4000-8000-0000000000a1', 'Actividades para vecinos de todas las edades.', 'Cuotas de los socios.', null),
+  ('5eed0000-0000-4000-8000-0000000000b1', 'Presentaciones de libros para el barrio.', null, 'Presentaciones y clubes de lectura.'),
+  ('5eed0000-0000-4000-8000-0000000000b2', 'Conciertos y sesiones de baile.', null, 'Conciertos de grupos pequeños.'),
+  ('5eed0000-0000-4000-8000-0000000000b3', 'Ensayos y estrenos de grupos pequeños.', null, 'Sala para ensayar y estrenar.');
 
 -- La Colmena ha invitato il Ateneo.
 insert into public.invites (organization_id, used_at, used_by_org) values

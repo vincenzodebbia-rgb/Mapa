@@ -1,8 +1,8 @@
-// Pure helpers behind t(): no messages file here, so tests do not depend on messages/es.json.
+// Funzioni pure dietro t(): qui non c'è il file dei messaggi, così i test non dipendono da messages/es.json.
 
 export type MessageTree = { readonly [key: string]: string | MessageTree };
 
-/** Dot path of every text leaf in a message tree, e.g. "map.loading". */
+/** Percorso con i punti di ogni testo in un albero di messaggi, per esempio "map.loading". */
 export type MessageKey<T> = {
   [K in keyof T & string]: T[K] extends string ? K : `${K}.${MessageKey<T[K]>}`;
 }[keyof T & string];
@@ -21,7 +21,7 @@ export function lookupMessage(tree: MessageTree, key: string): string {
   return node;
 }
 
-// A placeholder without a value stays visible, so a missing variable shows up in review instead of vanishing.
+// Un segnaposto senza valore resta visibile, così una variabile mancante si nota in revisione invece di sparire.
 export function interpolateMessage(template: string, values?: MessageValues): string {
   if (!values) return template;
   return template.replace(/\{(\w+)\}/g, (placeholder, name: string) =>

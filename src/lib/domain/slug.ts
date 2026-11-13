@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// Same rule as the check constraints in the database (organizations, events, neighborhoods).
-// A slug that cannot exist is rejected before any query: unknown pages answer 404 without touching the database.
+// La stessa regola dei vincoli check del database (organizations, events, neighborhoods).
+// Uno slug che non può esistere si rifiuta prima di ogni query: le pagine sconosciute rispondono 404 senza toccare il database.
 export const slugSchema = z.string().max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
 export function parseSlug(value: unknown): string | null {

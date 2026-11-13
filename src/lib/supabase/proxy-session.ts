@@ -4,8 +4,8 @@ import type { Database } from "@/lib/database.types";
 import { getPublicEnv } from "@/lib/env";
 
 /**
- * Refreshes the Supabase auth cookie on every request, so Server Components see a valid session.
- * This is NOT authorization: pages and actions re-check the user themselves.
+ * Aggiorna il cookie di accesso di Supabase a ogni richiesta, così i Server Component vedono una sessione valida.
+ * NON è un'autorizzazione: pagine e action ricontrollano l'utente da sole.
  */
 export async function refreshSession(request: NextRequest): Promise<NextResponse> {
   const env = getPublicEnv();
@@ -18,13 +18,13 @@ export async function refreshSession(request: NextRequest): Promise<NextResponse
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        // No-cache headers: a CDN must never serve one user's refreshed session to someone else.
+        // Header no-cache: una CDN non deve mai servire a qualcun altro la sessione aggiornata di un utente.
         Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
       },
     },
   });
 
-  // getClaims() validates the JWT and refreshes it when expired. A failure just means "anonymous".
+  // getClaims() verifica il JWT e lo rinnova se è scaduto. Un fallimento vuol dire solo "anonimo".
   const { error } = await supabase.auth.getClaims();
   if (error) {
     console.warn("Session refresh failed:", error.name);

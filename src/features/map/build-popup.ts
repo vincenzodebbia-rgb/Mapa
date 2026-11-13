@@ -1,8 +1,8 @@
 import type { PopupContent } from "./types";
 
 /**
- * Popup DOM built with textContent only: text from the database can never become markup.
- * Never setHTML / innerHTML (AGENTS.md, lint).
+ * DOM del popup costruito solo con textContent: il testo del database non può mai diventare markup.
+ * Mai setHTML / innerHTML (AGENTS.md, lint).
  */
 export function buildPopup(doc: Document, content: PopupContent): HTMLElement {
   const root = doc.createElement("div");
@@ -32,7 +32,7 @@ export function buildPopup(doc: Document, content: PopupContent): HTMLElement {
   return root;
 }
 
-/** Only same-site paths ("/e/slug") and http(s) URLs. Anything else (javascript:, data:, //host) is dropped. */
+/** Solo percorsi dello stesso sito ("/e/slug") e URL http(s). Tutto il resto (javascript:, data:, //host) si scarta. */
 export function toSafeHref(href: string): string | null {
   if (href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\")) return href;
   try {

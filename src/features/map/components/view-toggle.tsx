@@ -2,7 +2,7 @@ import Link from "next/link";
 import { t } from "@/lib/i18n/t";
 import { buildMapHref, type MapFilters } from "../schema";
 
-/** "Ver lista" / "Ver mapa": the list is the accessible equivalent of every map, with the same filters. */
+/** "Ver lista" / "Ver mapa": l'elenco è l'equivalente accessibile di ogni mappa, con gli stessi filtri. */
 export function ViewToggle({ pathname, filters }: { pathname: string; filters: MapFilters }) {
   return (
     <Link

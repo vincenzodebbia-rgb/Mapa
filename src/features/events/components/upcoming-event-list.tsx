@@ -9,7 +9,7 @@ type UpcomingEventListProps = {
   events: UpcomingEvent[];
 };
 
-/** Next occurrences, sorted by time (organization profile, barrio page). */
+/** Prossime occorrenze, in ordine di orario (scheda dell'organizzazione, pagina del barrio). */
 export function UpcomingEventList({ heading, emptyMessage, events }: UpcomingEventListProps) {
   return (
     <section className="flex flex-col gap-3">

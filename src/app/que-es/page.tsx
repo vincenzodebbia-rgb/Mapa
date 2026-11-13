@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: { title: t("queEs.metaTitle"), description: t("queEs.metaDescription"), url: "/que-es" },
 };
 
-// Placeholder texts in messages/es.json: the founder writes the final ones.
+// Testi provvisori in messages/es.json: quelli definitivi li scrive il fondatore.
 export default function QueEsPage() {
   return (
     <ContentPage {...getContentPageTexts()}>

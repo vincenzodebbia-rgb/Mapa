@@ -9,13 +9,13 @@ type NeighborhoodMapProps = {
   neighborhood: NeighborhoodPage;
   events: MapEvent[];
   places: MapPlace[];
-  /** Time of the cached read the items come from (ISO). */
+  /** Ora della lettura in cache da cui vengono gli elementi (ISO). */
   now: string;
 };
 
 /**
- * The map of a barrio page, centered on it: its events of the next 7 days (pulse/lit) and its associations
- * and venues (lit). The same lists are on the page as text, so the map is never the only way in.
+ * La mappa di una pagina di barrio, centrata su di lui: i suoi eventi dei prossimi 7 giorni (pulse/lit) e le sue
+ * associazioni ed espacios (lit). Gli stessi elenchi sono nella pagina come testo, così la mappa non è mai l'unica via.
  */
 export function NeighborhoodMap({ neighborhood, events, places, now }: NeighborhoodMapProps) {
   const at = new Date(now);

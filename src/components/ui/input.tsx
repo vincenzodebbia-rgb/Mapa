@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-/** Neutral placeholder input: tokens only. Always pair it with a visible <label>. */
+/** Campo di testo neutro provvisorio: solo token. Va sempre con una <label> visibile. */
 export function Input({ className = "", ...props }: ComponentProps<"input">) {
   return (
     <input

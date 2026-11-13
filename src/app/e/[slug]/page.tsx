@@ -13,10 +13,10 @@ import { getSiteUrl, toAbsoluteUrl } from "@/lib/site-url";
 import { getContentPageTexts } from "../../content-page-texts";
 import { STATIC_PARAMS_PLACEHOLDER } from "../../static-params";
 
-// The whole page is static (cached data), so 404 and the 7-day redirect are real HTTP statuses.
+// Tutta la pagina è statica (dati in cache), così il 404 e il redirect dopo 7 giorni sono stati HTTP veri.
 export const ensureStatic = "navigation";
-// Blocking on purpose: params are read before rendering so the status can be decided. Once generated,
-// the page is static and served from cache.
+// Bloccante di proposito: i params si leggono prima del rendering, così si può decidere lo stato. Una volta generata,
+// la pagina è statica e si serve dalla cache.
 export const instant = false;
 
 export function generateStaticParams() {
@@ -28,7 +28,7 @@ const organizerList = new Intl.ListFormat("es-ES", { style: "long", type: "conju
 async function loadEvent(params: PageProps<"/e/[slug]">["params"]) {
   const slug = parseSlug((await params).slug);
   const result = slug ? await getEventPage(slug) : ({ status: "missing" } as const);
-  // 7 days after the last occurrence: permanent redirect (308) to the organizer's profile (docs/SPEC.md §14).
+  // 7 giorni dopo l'ultima occorrenza: redirect permanente (308) alla scheda di chi organizza (docs/SPEC.md §14).
   if (result.status === "redirect") permanentRedirect(`/a/${result.organizerSlug}`);
   if (result.status === "missing") notFound();
   return result;
@@ -47,9 +47,9 @@ export async function generateMetadata({ params }: PageProps<"/e/[slug]">): Prom
     title: event.title,
     description,
     alternates: { canonical: path },
-    // Indexed until the end; then noindex until the redirect (docs/SPEC.md §14).
+    // Indicizzata fino alla fine; poi noindex fino al redirect (docs/SPEC.md §14).
     robots: getPageRobots(indexable),
-    // Text-only Open Graph: no event photos in v1 (docs/SPEC.md §5).
+    // Open Graph solo testo: nella v1 niente foto degli eventi (docs/SPEC.md §5).
     openGraph: { title: event.title, description, url: path, type: "website" },
   };
 }
