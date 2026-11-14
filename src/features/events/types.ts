@@ -160,6 +160,9 @@ export type EventFormTexts = {
   formErrors: Record<EventFormError, string>;
 };
 
+/** "Archivo" in /panel: eventi già finiti, quest'anno e in totale. Solo per la realtà stessa. */
+export type ArchiveCounts = { thisYear: number; total: number };
+
 /** Un evento della propria organizzazione in /panel ("Mis eventos"). */
 export type MyEvent = {
   id: string;
