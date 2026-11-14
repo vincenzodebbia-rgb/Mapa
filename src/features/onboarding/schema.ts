@@ -1,4 +1,13 @@
 import { z } from "zod";
+import {
+  asString,
+  coordinate,
+  optionalEmail,
+  optionalEnum,
+  optionalText,
+  optionalUrl,
+  requiredText,
+} from "@/lib/domain/form-fields";
 import { findNifProblem, normalizeNif, type EntityType } from "@/lib/domain/nif";
 import { slugSchema } from "@/lib/domain/slug";
 import {
@@ -26,40 +35,6 @@ export function parseRegistrationType(value: unknown): EntityType | null {
   const slug = parseRegistrationTypeSlug(value);
   return slug ? REGISTRATION_TYPES[slug] : null;
 }
-
-const asString = (value: unknown) => (typeof value === "string" ? value : "");
-
-const requiredText = (max: number) =>
-  z.preprocess(asString, z.string().trim().min(1, "required").max(max, "tooLong"));
-
-const optionalText = (max: number) =>
-  z.preprocess(asString, z.string().trim().max(max, "tooLong")).transform((value) => value || null);
-
-const optionalEmail = optionalText(254).refine(
-  (value) => value === null || z.email().safeParse(value).success,
-  "invalidEmail",
-);
-
-/** Dagli utenti solo link http/https (AGENTS.md). Stessa regola del vincolo sulla colonna. */
-export function isHttpUrl(value: string): boolean {
-  if (/\s/.test(value)) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
-
-const optionalUrl = optionalText(500).refine((value) => value === null || isHttpUrl(value), "invalidUrl");
-
-const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) =>
-  z.preprocess((value) => (value === "" || value === undefined ? null : value), z.enum(values, "invalidOption").nullable());
-
-const coordinate = z.preprocess(
-  (value) => (typeof value === "string" && value.trim() !== "" ? Number(value) : null),
-  z.number().finite().nullable(),
-);
 
 const nif = z.preprocess((value) => normalizeNif(asString(value)), z.string().max(20, "invalidNif"));
 

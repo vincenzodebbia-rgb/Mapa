@@ -1,5 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { EVENTS_TAG } from "@/lib/cache-tags";
 import type { Database } from "@/lib/database.types";
 import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
@@ -11,9 +12,8 @@ import { isEventUpcoming } from "./schema";
 import type { EventForEdit, EventOrganizer, EventOwner, EventPageResult, MyEvent, UpcomingEvent } from "./types";
 
 // Letture pubbliche, come anon (RLS: niente eventi di organizzazioni sospese), in cache così la pagina evento è statica
-// e risponde con un 404 o un 308 veri. Le scritture (sessione 6) devono chiamare updateTag(EVENTS_TAG).
+// e risponde con un 404 o un 308 veri. Le scritture devono chiamare updateTag(EVENTS_TAG) (src/lib/cache-tags.ts).
 // Le occorrenze arrivano solo da SQL (event_schedule, upcoming_events): la ripetizione non si calcola mai qui.
-export const EVENTS_TAG = "events";
 
 type UpcomingRow = Database["public"]["Views"]["upcoming_events"]["Row"];
 

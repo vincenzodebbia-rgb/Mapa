@@ -4,13 +4,13 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { LocateOutcome } from "@/components/ui/address-field";
-import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
+import { EVENTS_TAG, ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import { addressSchema } from "@/lib/domain/address";
 import { geocodeAddress } from "@/lib/geocode";
 import { getHashedKey, getIdKey, isWithinRateLimit } from "@/lib/rate-limit";
 import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { EVENTS_TAG, getEventOwner } from "./data";
+import { getEventOwner } from "./data";
 import { EVENT_REFILL_FIELDS, getPublishedEventHref, mapEventDbError, parseEventForm } from "./schema";
 import type { EventFieldErrors, EventFormState } from "./types";
 
