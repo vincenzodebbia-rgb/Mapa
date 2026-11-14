@@ -73,10 +73,8 @@ export async function createEvent(previous: EventFormState, formData: FormData):
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("events")
+    // Niente slug: lo scrive il trigger events_before_write (gli utenti non hanno permessi su slug).
     .insert({
-      // TODO(dopo db push): togliere. Segnaposto finché database.types.ts non è rigenerato con il default di slug
-      // (migrazione 20261113194715): con la migrazione applicata e i tipi vecchi l'insert è rifiutato (42501).
-      slug: "nuevo",
       title: parsed.value.title,
       category: parsed.value.category,
       price_type: parsed.value.priceType,
