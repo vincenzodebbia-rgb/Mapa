@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ContentPage } from "@/components/ui/content-page";
 import { JsonLd } from "@/components/ui/json-ld";
+import { EditEventLink } from "@/features/events/components/edit-event-link";
 import { EventDetails } from "@/features/events/components/event-details";
 import { getEventPage } from "@/features/events/data";
 import { formatMadridDate, formatMadridTime } from "@/lib/dates";
@@ -69,6 +70,8 @@ export default async function EventRoute({ params }: PageProps<"/e/[slug]">) {
     <ContentPage {...getContentPageTexts()}>
       <JsonLd data={buildBreadcrumbList(breadcrumbs)} />
       <EventDetails event={event} url={url} siteUrl={getSiteUrl().toString()} upcoming={indexable} />
+      {/* Isola client: la pagina resta statica; il link compare solo ai membri dell'organizzazione titolare. */}
+      <EditEventLink eventId={event.id} label={t("event.edit")} />
     </ContentPage>
   );
 }

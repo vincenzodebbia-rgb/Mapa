@@ -288,3 +288,78 @@ test("sin sesión /panel/eventos/nuevo lleva a /entrar", async ({ page }) => {
   await page.goto("/panel/eventos/nuevo");
   await expect(page).toHaveURL(/\/entrar$/);
 });
+
+// "Mi panel" ed "Editar" (decisione del fondatore del 14 novembre). Sulle pagine statiche sono isole client che chiedono
+// GET /sesion dopo il caricamento; sulle mappe Hoy e Conexiones li decide il server a ogni richiesta.
+
+test("sin sesión no aparecen Mi panel, Editar ni enlaces a /entrar o /registro", async ({ page }) => {
+  const seed = await admin.from("events").select("slug").eq("title", "Coro vecinal de prueba").limit(1).single();
+  expect(seed.error).toBeNull();
+  // Senza cookie di sessione le isole non chiamano nemmeno il server.
+  const sessionRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/sesion") sessionRequests.push(request.url());
+  });
+
+  for (const path of ["/", "/conexiones", `/e/${seed.data?.slug}`, "/que-es"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("link", { name: "Mi panel" }), path).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Editar", exact: true }), path).toHaveCount(0);
+    await expect(page.locator('a[href="/entrar"], a[href^="/registro"], a[href^="/panel"]'), path).toHaveCount(0);
+  }
+  expect(sessionRequests).toEqual([]);
+
+  // La rotta stessa: risposta privata, mai in cache, solo booleani.
+  const viewer = await page.request.get("/sesion");
+  expect(viewer.headers()["cache-control"]).toContain("no-store");
+  expect(await viewer.json()).toEqual({ signedIn: false, canEditEvent: false });
+});
+
+test("con sesión: Mi panel en todas partes, Editar solo en los eventos propios", async ({ page, browser }) => {
+  // A: un'altra associazione con un evento (contesto separato, solo per crearla).
+  const otherContext = await browser.newContext();
+  const otherOrganizationId = await signInAsAssociation(await otherContext.newPage());
+  await otherContext.close();
+  const foreign = await insertEvent(otherOrganizationId, "Evento e2e de otra asociación");
+
+  // B: chi guarda, con un evento suo.
+  const organizationId = await signInAsAssociation(page);
+  const own = await insertEvent(organizationId, "Evento e2e de la propia asociación");
+
+  // Pagina dell'evento proprio: Mi panel ed Editar verso il modulo di modifica.
+  await page.goto(`/e/${own.slug}`);
+  await expect(page.getByRole("link", { name: "Mi panel" })).toHaveAttribute("href", "/panel");
+  await expect(page.getByRole("link", { name: "Editar", exact: true })).toHaveAttribute("href", `/panel/eventos/${own.id}`);
+
+  // Pagina dell'evento di A: Mi panel sì, Editar no (si aspetta la risposta di /sesion prima di controllare).
+  const answered = page.waitForResponse((response) => new URL(response.url()).pathname === "/sesion");
+  await page.goto(`/e/${foreign.slug}`);
+  expect(await (await answered).json()).toEqual({ signedIn: true, canEditEvent: false });
+  await expect(page.getByRole("link", { name: "Mi panel" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Editar", exact: true })).toHaveCount(0);
+
+  // Mappa Hoy: popup del proprio evento con Editar, popup dell'evento di A senza.
+  await page.goto(`/?evento=${own.slug}`);
+  await expect(page.getByRole("link", { name: "Mi panel" })).toBeVisible();
+  await expect(page.getByTestId("map-view")).toHaveAttribute("data-opened", /:/, { timeout: 30_000 });
+  await expect(page.locator(".maplibregl-popup").getByRole("link", { name: "Editar" })).toHaveAttribute(
+    "href",
+    `/panel/eventos/${own.id}`,
+  );
+  await page.goto(`/?evento=${foreign.slug}`);
+  await expect(page.getByTestId("map-view")).toHaveAttribute("data-opened", /:/, { timeout: 30_000 });
+  await expect(page.locator(".maplibregl-popup").getByText("Evento e2e de otra asociación")).toBeVisible();
+  await expect(page.locator(".maplibregl-popup").getByRole("link", { name: "Editar" })).toHaveCount(0);
+
+  // Vista elenco (stessi elementi della mappa): Editar solo sul proprio evento.
+  await page.goto("/?vista=lista");
+  const ownItem = page.getByRole("listitem").filter({ hasText: "Evento e2e de la propia asociación" });
+  const foreignItem = page.getByRole("listitem").filter({ hasText: "Evento e2e de otra asociación" });
+  await expect(ownItem.getByRole("link", { name: "Editar" })).toHaveAttribute("href", `/panel/eventos/${own.id}`);
+  await expect(foreignItem.getByRole("link", { name: "Editar" })).toHaveCount(0);
+
+  // Conexiones: Mi panel.
+  await page.goto("/conexiones");
+  await expect(page.getByRole("link", { name: "Mi panel" })).toHaveAttribute("href", "/panel");
+});

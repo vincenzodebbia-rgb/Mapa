@@ -260,3 +260,25 @@ export async function getEventForEdit(eventId: string, organizationId: string, n
     },
   };
 }
+
+/**
+ * true se l'evento è dell'organizzazione indicata. Letto con la sessione dell'utente (RLS), mai con la chiave segreta.
+ * Serve solo a mostrare il link "Editar": la modifica vera la ricontrollano pagina, action e database.
+ */
+export async function isEventOwnedBy(eventId: string, organizationId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase.from("events").select("id").eq("id", eventId).eq("owner_org", organizationId).maybeSingle(),
+  );
+  return row !== null;
+}
+
+const OWN_EVENT_IDS_LIMIT = 500;
+
+/** Id degli eventi dell'organizzazione, per "Editar" nella mappa Hoy (pagina calcolata a ogni richiesta, mai in cache). */
+export async function getOwnEventIds(organizationId: string): Promise<string[]> {
+  const supabase = await createSupabaseServerClient();
+  const rows =
+    unwrap(await supabase.from("events").select("id").eq("owner_org", organizationId).limit(OWN_EVENT_IDS_LIMIT)) ?? [];
+  return rows.map((row) => row.id);
+}

@@ -11,7 +11,8 @@
       "map": "Ver mapa"
     },
     "popup": {
-      "see": "Ver"
+      "see": "Ver",
+      "edit": "Editar"
     }
   },
   "hoy": {
@@ -102,6 +103,9 @@
     "seeProfile": "Ver ficha",
     "empty": "Todavía no hay asociaciones ni espacios con dirección."
   },
+  "nav": {
+    "panel": "Mi panel"
+  },
   "page": {
     "backToMap": "Volver al mapa",
     "footer": {
@@ -182,6 +186,7 @@
     "about": "Más información",
     "directions": "Cómo llegar (OpenStreetMap)",
     "share": "Compartir este evento",
+    "edit": "Editar",
     "shareText": "{title} · {date}, {time} · {place}"
   },
   "claim": {

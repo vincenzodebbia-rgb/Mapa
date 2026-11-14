@@ -33,6 +33,21 @@ describe("buildPopup", () => {
     expect(link?.textContent).toBe("Ver");
   });
 
+  it("adds the Editar link after Ver only when there is one", () => {
+    const withEdit = buildPopup(document, {
+      title: "Concierto",
+      lines: [],
+      link: { href: "/e/concierto", label: "Ver" },
+      editLink: { href: "/panel/eventos/e1", label: "Editar" },
+    });
+    expect([...withEdit.querySelectorAll("a")].map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
+      ["Ver", "/e/concierto"],
+      ["Editar", "/panel/eventos/e1"],
+    ]);
+    const withoutEdit = buildPopup(document, { title: "X", lines: [], link: { href: "/e/x", label: "Ver" }, editLink: null });
+    expect(withoutEdit.querySelectorAll("a")).toHaveLength(1);
+  });
+
   it("drops a link that is not http(s) or a same-site path", () => {
     const popup = buildPopup(document, {
       title: "X",

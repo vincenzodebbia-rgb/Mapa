@@ -34,12 +34,14 @@ export function describeOrganizers(event: MapEvent): string | null {
   return event.organizerNames ? t("hoy.list.organizedBy", { names: event.organizerNames }) : null;
 }
 
-export function toEventPopup(event: MapEvent, now: Date): PopupContent {
+/** `editable`: l'evento è dell'organizzazione di chi guarda (deciso dalla pagina, per richiesta) → link "Editar". */
+export function toEventPopup(event: MapEvent, now: Date, editable = false): PopupContent {
   const lines = [describeOrganizers(event), describeEventTime(event, now), describeEventPrice(event), describeEventPlace(event)];
   return {
     title: event.title,
     lines: lines.filter((line): line is string => line !== null),
     link: { href: `/e/${event.slug}`, label: t("map.popup.see") },
+    editLink: editable ? { href: `/panel/eventos/${event.id}`, label: t("map.popup.edit") } : null,
   };
 }
 

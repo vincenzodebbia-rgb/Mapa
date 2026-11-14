@@ -63,6 +63,8 @@ export type PopupContent = {
   title: string;
   lines: string[];
   link: { href: string; label: string } | null;
+  /** "Editar" (/panel/eventos/<id>): solo sugli eventi della propria organizzazione, deciso sul server per richiesta. */
+  editLink?: { href: string; label: string } | null;
 };
 
 export type MapPointProperties = {

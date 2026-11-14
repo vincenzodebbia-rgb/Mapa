@@ -3,10 +3,9 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 6 (eventi) in corso** sul ramo `feat/eventi` (da `main` dopo il merge della PR #17), solo commit
-  locali, niente push. Modulo "Nuevo evento", Mis eventos, evento aperto sulla mappa dopo Publicar. Migrazione
-  `20261113194715_events_session6` **da applicare** su mapa-dev dal fondatore; poi tipi, pgTAP in CI ed e2e.
-  Rapporto: `docs/rapporti/sessione-6.md`.
+- Fase: **sessione 6 (eventi)** nella PR in bozza #20 (`feat/eventi`). Migrazione `20261113194715_events_session6`
+  applicata su mapa-dev, tipi rigenerati, prova dal vivo sull'anteprima ok (creare, modificare, eliminare, ieri e fine =
+  inizio rifiutati). Aggiunti "Mi panel" ed "Editar" (14/11). Rapporto: `docs/rapporti/sessione-6.md`.
 - Sessione 5 chiusa: PR #17 unita in `main` il 13/11 (prova dal vivo sull'anteprima ok).
 
 ## Done
@@ -23,6 +22,12 @@ Updated by the agent at the end of every session. Newest first.
 - 14/11, correzioni del fondatore: slug con default e senza permessi (segnaposto in createEvent da togliere dopo i tipi),
   bucket event-images chiuso (le policy permettevano caricamenti via API), fine ≠ inizio (A), modifica
   `/panel/eventos/[id]` + Editar (B), test "un'altra organizzazione" (pgTAP 18, e2e). Vitest 175/175, e2e 24/28.
+- 14/11, dopo la migrazione: tipi rigenerati, createEvent senza slug; home e Conexiones con `await connection()`
+  (errore "Date.now() while prerendering"); pagine private 200 in produzione senza dati privati (B15 nel rapporto di
+  sicurezza).
+- 14/11, "Mi panel" ed "Editar": pagine statiche con isole client che chiedono `GET /sesion` (private no-store, solo
+  booleani, proprietà letta con la sessione e la RLS); Hoy e Conexiones decise sul server per richiesta. Senza sessione
+  nessun link verso /panel, /entrar o /registro e nessuna richiesta a /sesion.
 
 ### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
 - CLI Supabase fissata a `2.122.0` come devDependency esatta: `npx supabase` usa sempre quella.

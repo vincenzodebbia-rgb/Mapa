@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { getEventOwner, getOwnEventIds } from "@/features/events/data";
 import { HoyView } from "@/features/map/components/hoy-view";
 import { getNeighborhoods, getUpcomingEvents } from "@/features/map/data";
 import { parseMapFilters } from "@/features/map/schema";
 import { t } from "@/lib/i18n/t";
+import { getCurrentUserId } from "@/lib/supabase/current-user";
 
 export const metadata: Metadata = {
   title: t("hoy.metaTitle"),
@@ -27,6 +29,27 @@ async function HoyContent({ searchParams }: Pick<PageProps<"/">, "searchParams">
   // rendering fatto dopo una Server Action (redirect di "Publicar" a /?evento=…) leggeva l'ora durante il prerender.
   await connection();
   const filters = parseMapFilters(await searchParams);
-  const [events, neighborhoods] = await Promise.all([getUpcomingEvents(), getNeighborhoods()]);
-  return <HoyView events={events} neighborhoods={neighborhoods} filters={filters} now={new Date()} />;
+  const [events, neighborhoods, editor] = await Promise.all([getUpcomingEvents(), getNeighborhoods(), getEditor()]);
+  return (
+    <HoyView
+      events={events}
+      neighborhoods={neighborhoods}
+      filters={filters}
+      now={new Date()}
+      panelLabel={editor.signedIn ? t("nav.panel") : null}
+      editableEventIds={editor.editableEventIds}
+    />
+  );
+}
+
+/**
+ * Chi guarda la mappa: "Mi panel" con una sessione, "Editar" sugli eventi della propria organizzazione.
+ * Letto con la sessione dell'utente e la RLS, a ogni richiesta (questa parte non è mai in cache).
+ * Solo un aiuto: la pagina di modifica, l'action e il database ricontrollano tutto.
+ */
+async function getEditor(): Promise<{ signedIn: boolean; editableEventIds: string[] }> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { signedIn: false, editableEventIds: [] };
+  const owner = await getEventOwner(userId);
+  return { signedIn: true, editableEventIds: owner ? await getOwnEventIds(owner.organizationId) : [] };
 }
