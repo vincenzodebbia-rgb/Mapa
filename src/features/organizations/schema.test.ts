@@ -79,6 +79,13 @@ describe("mapProfileDbError", () => {
       error: "invalidEmail",
     });
     expect(mapProfileDbError({ message: "permission denied", code: "42501" })).toEqual({ type: "form", error: "notAllowed" });
+    expect(mapProfileDbError({ message: "invalid_location" })).toEqual({ type: "field", field: "address", error: "invalidLocation" });
+    expect(mapProfileDbError({ message: "invalid_neighborhood" })).toEqual({
+      type: "field",
+      field: "neighborhoodSlug",
+      error: "invalidOption",
+    });
+    expect(mapProfileDbError({ message: "not_allowed" })).toEqual({ type: "form", error: "notAllowed" });
     expect(mapProfileDbError({ message: "boom" })).toEqual({ type: "form", error: "generic" });
   });
 });

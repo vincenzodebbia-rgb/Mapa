@@ -60,6 +60,23 @@ export async function getOrganizationProfile(slug: string): Promise<Organization
   };
 }
 
+/**
+ * Vecchio slug di una scheda → slug attuale, per il redirect permanente di /a/<vecchio> (sessione 7). Letto come anon:
+ * la RLS di organization_slugs mostra solo i vecchi slug di organizzazioni visibili (una sospesa non rimanda).
+ * In cache come la scheda: dopo un cambio di nome updateProfile chiama updateTag(ORGANIZATIONS_TAG).
+ */
+export async function getOrganizationSlugRedirect(oldSlug: string): Promise<string | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(ORGANIZATIONS_TAG, `organization:${oldSlug}`);
+
+  const supabase = createSupabasePublicClient();
+  const row = unwrap(
+    await supabase.from("organization_slugs").select("organization:organizations(slug)").eq("slug", oldSlug).maybeSingle(),
+  );
+  return row?.organization?.slug ?? null;
+}
+
 /** Associazioni ed espacios attivi di un barrio, in ordine di nome. */
 export async function getOrganizationsInNeighborhood(neighborhoodSlug: string): Promise<OrganizationSummary[]> {
   "use cache";

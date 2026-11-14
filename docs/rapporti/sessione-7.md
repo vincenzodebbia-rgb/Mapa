@@ -170,6 +170,13 @@ Nella stessa migrazione `20261114133035_profile_account` (non ancora applicata):
    non scrive i campi di un altro tipo. L'action la userà dopo i tipi rigenerati.
 3. **AGENTS.md**: regola sugli slug aggiornata (organizzazioni: segue il nome, vecchio riservato con 308; eventi: mai).
 
+## 7 ter. Dopo la migrazione (14 novembre)
+- Migrazione `20261114133035_profile_account` applicata su mapa-dev dal fondatore, dopo db-test verde nella PR #22.
+- Tipi rigenerati (`organization_slugs`, `update_my_profile`).
+- `/a/<vecchio slug>` → redirect permanente (308) al nuovo (`getOrganizationSlugRedirect`, in cache come la scheda).
+- Mi ficha salva con una sola chiamata a `update_my_profile` (o tutto o niente); errori della funzione tradotti sul campo.
+- Test: Vitest 188/188, deps e build verdi, e2e **37/37**.
+
 ## 8. Domani, nell'ordine
 1. **Fondatore**: apre la PR 1 (pulizia) da GitHub. CI **~4-5 minuti**. Se verde, merge (**~1 minuto**).
 2. **Agente, con il tuo permesso**: push di `feat/profilo` (**~10 secondi**). Fondatore: apre la PR 2 in bozza. Se la PR 1 è

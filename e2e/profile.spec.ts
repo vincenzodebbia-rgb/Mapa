@@ -4,8 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 // Sessione 7 (docs/piani/sessione-7.md): Mi ficha, Mi cuenta, Archivo, Ayuda y contacto, su mapa-dev dal telefono.
 // Realtà di prova inventate, create con l'API admin e cancellate alla fine.
-// ATTENZIONE: "vecchio indirizzo → redirect al nuovo" aspetta la migrazione 20261114133035_profile_account su mapa-dev,
-// i tipi rigenerati e la lettura dei vecchi slug in /a/[slug] (passo per domani nel rapporto della sessione 7).
+// Servono la migrazione 20261114133035_profile_account su mapa-dev (vecchi slug, update_my_profile).
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
@@ -112,7 +111,7 @@ test("Mi ficha rechaza un correo que no es válido", async ({ page }) => {
   await expect(page).toHaveURL(/\/panel\/ficha$/);
 });
 
-test("cambiar el nombre cambia la dirección y la antigua lleva a la nueva (espera la migración)", async ({ page, request }) => {
+test("cambiar el nombre cambia la dirección y la antigua lleva a la nueva", async ({ page, request }) => {
   const realm = await signInWithRealm(page, "association");
   await page.goto("/panel/ficha");
   const newName = `Asociación renombrada e2e ${Date.now()} (ficticia)`;

@@ -3,10 +3,10 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 7 (home privata)** sul ramo `feat/profilo` (da `chore/aggiornamenti`), solo commit locali, niente
-  push. Mi ficha, Mi cuenta, Archivo, Ayuda y contacto. Migrazione `20261114133035_profile_account` **da applicare**;
-  dopo i tipi manca il redirect dei vecchi slug in `/a/[slug]`. Rapporto: `docs/rapporti/sessione-7.md`.
-- Pulizia: `chore/aggiornamenti` pushato (patch e minor), PR da aprire (testo nel rapporto della sessione 7).
+- Fase: **sessione 7 (home privata)** nella PR in bozza #22 (`feat/profilo`). Migrazione
+  `20261114133035_profile_account` applicata su mapa-dev, tipi rigenerati, redirect dei vecchi slug e Mi ficha con
+  `update_my_profile` fatti; e2e 37/37. Manca la prova dal vivo. Rapporto: `docs/rapporti/sessione-7.md`.
+- Pulizia: `chore/aggiornamenti` unita in `main`.
 - Sessione 6 chiusa: PR #20 unita in `main` il 14/11. Sessione 5: PR #17 unita il 13/11.
 
 ## Done

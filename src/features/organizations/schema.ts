@@ -147,6 +147,11 @@ export function mapProfileDbError(error: { message: string; code?: string }): Pr
     return { type: "field", field: "contactEmail", error: "invalidEmail" };
   }
   if (error.message.includes("contact_url")) return { type: "field", field: "contactUrl", error: "invalidUrl" };
+  // Errori di update_my_profile.
+  if (error.message === "invalid_location") return { type: "field", field: "address", error: "invalidLocation" };
+  if (error.message === "invalid_neighborhood") return { type: "field", field: "neighborhoodSlug", error: "invalidOption" };
+  if (error.message === "not_allowed" || error.message === "no_organization") return { type: "form", error: "notAllowed" };
+  // RLS: per esempio un'organizzazione sospesa (anche nel database dalla sessione 7).
   if (error.code === "42501") return { type: "form", error: "notAllowed" };
   return { type: "form", error: "generic" };
 }

@@ -9,7 +9,6 @@ import { geocodeAddress } from "@/lib/geocode";
 import { getHashedKey, getIdKey, isWithinRateLimit } from "@/lib/rate-limit";
 import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { unwrap } from "@/lib/supabase/unwrap";
 import { getProfileForEdit } from "./data";
 import { mapProfileDbError, parseProfileForm, PROFILE_REFILL_FIELDS } from "./schema";
 import type { ProfileFieldErrors, ProfileFormState } from "./types";
@@ -54,84 +53,62 @@ export async function updateProfile(previous: ProfileFormState, formData: FormDa
   if (!parsed.ok) return fail({ fieldErrors: parsed.fieldErrors });
   const input = parsed.value;
 
-  const supabase = await createSupabaseServerClient();
-  let location: string | null = null;
-  let neighborhoodId: string | null = null;
+  let point: { lng: number; lat: number } | null = null;
   try {
     if (!(await isWithinRateLimit(getIdKey("profile", profile.organizationId), SAVES_PER_ORGANIZATION_PER_HOUR, "1 hour"))) {
       return fail({ formError: "tooMany" });
     }
-    if (input.kind === "professional") {
-      if (input.neighborhoodSlug) {
-        const neighborhood = unwrap(
-          await supabase.from("neighborhoods").select("id").eq("slug", input.neighborhoodSlug).maybeSingle(),
-        );
-        if (!neighborhood) return fail({ fieldErrors: { neighborhoodSlug: "invalidOption" } });
-        neighborhoodId = neighborhood.id;
-      }
-    } else if (input.address) {
+    if (input.kind !== "professional" && input.address) {
       // Il pin del modulo (anche quello della sede già salvata); senza pin, l'indirizzo geocodificato qui.
-      let point = input.lng !== null && input.lat !== null ? { lng: input.lng, lat: input.lat } : null;
+      point = input.lng !== null && input.lat !== null ? { lng: input.lng, lat: input.lat } : null;
       if (!point) {
         const result = await geocodeAddress(input.address);
         point = result ? { lng: result.lng, lat: result.lat } : null;
       }
       // Gli espacios hanno sempre un punto (docs/SPEC.md §7); un'associazione può avere un indirizzo senza punto.
       if (!point && input.kind === "venue") return fail({ fieldErrors: { address: "addressNotFound" } });
-      location = point ? `SRID=4326;POINT(${point.lng} ${point.lat})` : null;
     }
   } catch {
     return fail({ formError: "generic" });
   }
 
-  // TODO(dopo i tipi rigenerati): una sola chiamata a update_my_profile (migrazione 20261114133035), così scheda e
-  // risposte si salvano insieme o per niente. Oggi la funzione non è nei tipi generati e il typecheck la rifiuterebbe.
+  // Una sola chiamata: scheda e risposte private si salvano insieme o per niente (update_my_profile, security invoker:
+  // valgono le policy dell'utente, anche il blocco delle sospese). Un campo vuoto si omette (undefined = null nel database).
+  const value = <T>(field: T | null | undefined) => field ?? undefined;
   const contacts = {
-    contact_email: input.contactEmail,
-    contact_phone: input.contactPhone,
-    contact_url: input.contactUrl,
+    p_contact_email: value(input.contactEmail),
+    p_contact_phone: value(input.contactPhone),
+    p_contact_url: value(input.contactUrl),
   };
-  const { error } =
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc(
+    "update_my_profile",
     input.kind === "professional"
-      ? await supabase
-          .from("organizations")
-          .update({
-            name: input.name,
-            one_liner: input.oneLiner,
-            neighborhood_id: neighborhoodId,
-            seeking_offering: input.seekingOffering,
-            indexable: input.indexable,
-            ...contacts,
-          })
-          .eq("id", profile.organizationId)
-      : await supabase
-          .from("organizations")
-          .update({
-            name: input.name,
-            one_liner: input.oneLiner,
-            when_to_visit: input.whenToVisit,
-            usual_category: input.usualCategory,
-            address: input.address,
-            location,
-            story: input.story,
-            ...(input.kind === "venue" ? { venue_activity: input.venueActivity } : {}),
-            ...contacts,
-          })
-          .eq("id", profile.organizationId);
+      ? {
+          p_name: input.name,
+          p_one_liner: input.oneLiner,
+          p_neighborhood_slug: value(input.neighborhoodSlug),
+          p_seeking_offering: value(input.seekingOffering),
+          p_indexable: input.indexable,
+          ...contacts,
+        }
+      : {
+          p_name: input.name,
+          p_one_liner: value(input.oneLiner),
+          p_when_to_visit: value(input.whenToVisit),
+          p_usual_category: value(input.usualCategory),
+          p_venue_activity: input.kind === "venue" ? input.venueActivity : undefined,
+          p_address: value(input.address),
+          p_lng: point?.lng,
+          p_lat: point?.lat,
+          p_story: value(input.story),
+          p_what_for_whom: value(input.whatForWhom),
+          p_how_sustained: input.kind === "association" ? value(input.howSustained) : undefined,
+          p_what_they_offer: input.kind === "venue" ? input.whatTheyOffer : undefined,
+          ...contacts,
+        },
+  );
   if (error) return failWithDbError(error, fail);
-
-  // Le risposte dell'iscrizione (private, le legge solo la revisione): ogni tipo le sue.
-  if (input.kind !== "professional") {
-    const answers =
-      input.kind === "venue"
-        ? { what_for_whom: input.whatForWhom, what_they_offer: input.whatTheyOffer }
-        : { what_for_whom: input.whatForWhom, how_sustained: input.howSustained };
-    const { error: answersError } = await supabase
-      .from("organization_answers")
-      .update(answers)
-      .eq("organization_id", profile.organizationId);
-    if (answersError) return failWithDbError(answersError, fail);
-  }
 
   // La scheda, le pagine dei barrios e le pagine evento (nome e link di chi organizza) leggono dalla cache.
   updateTag(ORGANIZATIONS_TAG);
