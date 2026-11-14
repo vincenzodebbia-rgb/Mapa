@@ -119,6 +119,9 @@ test("un evento de hoy lleva a la mapa Hoy con su punto abierto (D8)", async ({ 
   await expect(page).toHaveURL(/\/\?evento=charla-e2e-de-hoy/);
   await expect(page.getByTestId("map-view")).toHaveAttribute("data-opened", /:/, { timeout: 30_000 });
   await expect(page.locator(".maplibregl-popup").getByText("Charla e2e de hoy")).toBeVisible();
+  // La home non resta ferma dopo una pubblicazione: l'evento c'è anche nella vista elenco, letta di nuovo.
+  await page.goto("/?vista=lista");
+  await expect(page.getByText("Charla e2e de hoy")).toBeVisible();
 });
 
 test("un título con HTML se muestra como texto", async ({ page }) => {

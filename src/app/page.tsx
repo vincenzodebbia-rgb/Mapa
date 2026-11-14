@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { HoyView } from "@/features/map/components/hoy-view";
 import { getNeighborhoods, getUpcomingEvents } from "@/features/map/data";
@@ -21,6 +22,10 @@ export default function HoyPage({ searchParams }: PageProps<"/">) {
 }
 
 async function HoyContent({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+  // "Adesso" decide cosa è acceso (pulse/lit) e cosa è già finito: deve essere l'ora della richiesta, mai quella di un
+  // prerender. connection() rimanda tutto ciò che segue alla richiesta vera (Next.js 16, Cache Components): senza, il
+  // rendering fatto dopo una Server Action (redirect di "Publicar" a /?evento=…) leggeva l'ora durante il prerender.
+  await connection();
   const filters = parseMapFilters(await searchParams);
   const [events, neighborhoods] = await Promise.all([getUpcomingEvents(), getNeighborhoods()]);
   return <HoyView events={events} neighborhoods={neighborhoods} filters={filters} now={new Date()} />;
