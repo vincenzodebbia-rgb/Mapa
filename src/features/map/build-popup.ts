@@ -20,12 +20,13 @@ export function buildPopup(doc: Document, content: PopupContent): HTMLElement {
     root.append(paragraph);
   }
 
-  const href = content.link ? toSafeHref(content.link.href) : null;
-  if (content.link && href) {
+  for (const item of [content.link, content.editLink]) {
+    const href = item ? toSafeHref(item.href) : null;
+    if (!item || !href) continue;
     const link = doc.createElement("a");
     link.href = href;
     link.className = "mt-1 font-medium underline focus-visible:outline-2";
-    link.textContent = content.link.label;
+    link.textContent = item.label;
     root.append(link);
   }
 

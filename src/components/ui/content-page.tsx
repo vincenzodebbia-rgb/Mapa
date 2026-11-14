@@ -7,19 +7,22 @@ type ContentPageProps = {
   backLabel: string;
   footerLabel: string;
   footerLinks: FooterLink[];
+  /** A destra nell'intestazione (per esempio "Mi panel", composto dalla pagina). */
+  headerEnd?: ReactNode;
   children: ReactNode;
 };
 
 const linkClass = "underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-light";
 
 /** Guscio neutro delle pagine di testo (scheda, evento, barrio, qué es, legal). Prima il telefono, solo token. */
-export function ContentPage({ backLabel, footerLabel, footerLinks, children }: ContentPageProps) {
+export function ContentPage({ backLabel, footerLabel, footerLinks, headerEnd, children }: ContentPageProps) {
   return (
     <div className="mx-auto flex min-h-app w-full max-w-2xl flex-col gap-6 p-4">
-      <header>
+      <header className="flex items-center justify-between gap-4">
         <Link href="/" className={`text-sm text-muted ${linkClass}`}>
           {backLabel}
         </Link>
+        {headerEnd}
       </header>
       <main className="flex flex-1 flex-col gap-6">{children}</main>
       <footer>

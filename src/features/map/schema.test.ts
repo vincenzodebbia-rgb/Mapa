@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { buildMapHref, hasEventFilters, parseMapFilters } from "./schema";
 
 describe("parseMapFilters", () => {
+  it("reads the event to open (D8) and ignores a malformed one; links never carry it", () => {
+    expect(parseMapFilters({ evento: "concierto-de-prueba" }).evento).toBe("concierto-de-prueba");
+    expect(parseMapFilters({ evento: "<script>" }).evento).toBeUndefined();
+    expect(buildMapHref("/", parseMapFilters({ evento: "concierto-de-prueba", solo: "hoy" }))).toBe("/?solo=hoy");
+  });
+
   it("reads every filter from the URL", () => {
     expect(
       parseMapFilters({

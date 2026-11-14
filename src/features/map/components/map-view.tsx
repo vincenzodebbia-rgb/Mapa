@@ -17,6 +17,8 @@ export type MapViewProps = {
   /** [ovest, sud, est, nord] da inquadrare, per esempio il barrio scelto. Null = tutta Madrid. */
   bounds: [number, number, number, number] | null;
   label: string;
+  /** Chiave dell'elemento da aprire subito (centrato, con il popup): l'evento appena pubblicato (D8). */
+  selectedKey?: string | null;
 };
 
 const MADRID_VIEW = { longitude: -3.7038, latitude: 40.4168, zoom: 11.5 };
@@ -26,8 +28,9 @@ const PULSE_LAYER = "map-pulse";
 const POINT_RADIUS = 6; // stessa grandezza per ogni punto (docs/SPEC.md §4)
 const PULSE_RADIUS = 14;
 const PULSE_PERIOD_MS = 1600;
+const SELECTED_ZOOM = 15;
 
-export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps) {
+export function MapView({ styleUrl, data, popups, bounds, label, selectedKey = null }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const colorProbeRef = useRef<HTMLSpanElement>(null);
   const popupRef = useRef<Popup | null>(null);
@@ -36,6 +39,7 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
   const [lightColor, setLightColor] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string>("");
   const [renderedPoints, setRenderedPoints] = useState(0);
+  const [openedKey, setOpenedKey] = useState<string | null>(null);
 
   // Dipende dai numeri, non dall'array: un array nuovo con lo stesso barrio non deve annullare lo spostamento dell'utente.
   const boundsKey = bounds ? bounds.join(",") : "";
@@ -62,6 +66,28 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
     if (probe) setLightColor(readCssColor(probe));
     const map = mapRef.current?.getMap();
     if (map) startPulse(map);
+    if (map && selectedKey) openSelected(map, selectedKey);
+  }
+
+  // Il punto scelto dall'URL: si centra la mappa e si apre il suo popup, come dopo un clic.
+  function openSelected(map: MaplibreMap, key: string) {
+    const feature = data.features.find((candidate) => candidate.properties.key === key);
+    if (!feature) return;
+    const [lng, lat] = feature.geometry.coordinates;
+    if (lng === undefined || lat === undefined) return;
+    map.jumpTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), SELECTED_ZOOM) });
+    openPopup(map, key, lng, lat);
+  }
+
+  function openPopup(map: MaplibreMap, key: string, lng: number, lat: number) {
+    const content = popups[key];
+    if (!content) return;
+    popupRef.current?.remove();
+    popupRef.current = new Popup({ maxWidth: "18rem" })
+      .setLngLat([lng, lat])
+      .setDOMContent(buildPopup(document, content))
+      .addTo(map);
+    setOpenedKey(key);
   }
 
   // Il pulse è un alone la cui opacità respira; il punto non cambia mai grandezza.
@@ -83,15 +109,9 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
     const key = feature?.properties?.key;
     const map = mapRef.current?.getMap();
     if (!map || typeof key !== "string" || feature?.geometry.type !== "Point") return;
-    const content = popups[key];
-    if (!content) return;
     const [lng, lat] = feature.geometry.coordinates;
     if (lng === undefined || lat === undefined) return;
-    popupRef.current?.remove();
-    popupRef.current = new Popup({ maxWidth: "18rem" })
-      .setLngLat([lng, lat])
-      .setDOMContent(buildPopup(document, content))
-      .addTo(map);
+    openPopup(map, key, lng, lat);
   }
 
   // Conta i punti davvero disegnati (esposti come data-rendered-points per l'e2e). Gira su `render`,
@@ -112,6 +132,7 @@ export function MapView({ styleUrl, data, popups, bounds, label }: MapViewProps)
       data-testid="map-view"
       data-points={data.features.length}
       data-rendered-points={renderedPoints}
+      data-opened={openedKey ?? undefined}
     >
       <span ref={colorProbeRef} className="hidden text-light" aria-hidden="true" />
       <MapGL

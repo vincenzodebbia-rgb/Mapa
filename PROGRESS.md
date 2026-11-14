@@ -3,15 +3,32 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 5 finita nel codice** sul ramo `feat/onboarding` (pushato il 5/11 fino a `3203a77`; i due commit della
-  notte del 5/11 sono **solo locali**). Manca la prova vera: un'associazione di prova si registra **dal telefono** con il link
-  magico ricevuto per email e arriva a `/panel` (chiusura della sessione 5 in BUILD_PLAN). Poi PR con CI.
-- Piano della sessione 6 scritto (senza codice) in `docs/piani/sessione-6.md`, con 13 punti da decidere (D1–D13).
-- Correzioni di sicurezza A1, M1, M5 nella PR in bozza #17: migrazione `20261110211136_security_a1_m1_m5` applicata a
-  mapa-dev dal fondatore il 13/11. Tipi rigenerati (nessuna differenza), check, deps ed e2e 20/20 verdi; in CI check,
-  secrets-scan e db-test (pgTAP 1–17) verdi.
+- Fase: **sessione 6 (eventi)** nella PR in bozza #20 (`feat/eventi`). Migrazione `20261113194715_events_session6`
+  applicata su mapa-dev, tipi rigenerati, prova dal vivo sull'anteprima ok (creare, modificare, eliminare, ieri e fine =
+  inizio rifiutati). Aggiunti "Mi panel" ed "Editar" (14/11). Rapporto: `docs/rapporti/sessione-6.md`.
+- Sessione 5 chiusa: PR #17 unita in `main` il 13/11 (prova dal vivo sull'anteprima ok).
 
 ## Done
+### 2026-11-13/14 (notte, in autonomia) — Sessione 6: eventi
+- Punto 0: con `NEXT_PUBLIC_DEMO=1` /entrar e /registro rimandano alla mappa; senza chiavi Turnstile o variabili segrete
+  mostrano "El acceso estará disponible pronto" (`src/lib/access.ts`), le action rispondono con un errore pulito.
+- Decisioni del 13/11 in `docs/decisioni/2026-11-13-eventi.md` (D4, D5, D7, D8). Migrazione: trigger
+  `events_not_in_past`, niente insert su `event_organizers` per gli utenti, `grant insert (slug)` (lo sovrascrive il
+  trigger). pgTAP 18.
+- `/panel/eventos/nuevo` (Qué, Cuándo, Dónde, Más), `createEvent`, `deleteEvent`, `locateEventAddress`; /panel con Nuevo
+  evento e Mis eventos; `/?evento=<slug>` apre il punto sulla mappa Hoy. `dates.ts`: ore di Madrid → istante.
+  FormField e AddressField in `components/ui`.
+- check verde (Vitest 172/172), deps verde, build verde, e2e 22/26 (i 4 rossi aspettano la migrazione), e2e demo 6/6.
+- 14/11, correzioni del fondatore: slug con default e senza permessi (segnaposto in createEvent da togliere dopo i tipi),
+  bucket event-images chiuso (le policy permettevano caricamenti via API), fine ≠ inizio (A), modifica
+  `/panel/eventos/[id]` + Editar (B), test "un'altra organizzazione" (pgTAP 18, e2e). Vitest 175/175, e2e 24/28.
+- 14/11, dopo la migrazione: tipi rigenerati, createEvent senza slug; home e Conexiones con `await connection()`
+  (errore "Date.now() while prerendering"); pagine private 200 in produzione senza dati privati (B15 nel rapporto di
+  sicurezza).
+- 14/11, "Mi panel" ed "Editar": pagine statiche con isole client che chiedono `GET /sesion` (private no-store, solo
+  booleani, proprietà letta con la sessione e la RLS); Hoy e Conexiones decise sul server per richiesta. Senza sessione
+  nessun link verso /panel, /entrar o /registro e nessuna richiesta a /sesion.
+
 ### 2026-11-11 — Dopo il rapporto A1/M1/M5 (decisioni del fondatore)
 - CLI Supabase fissata a `2.122.0` come devDependency esatta: `npx supabase` usa sempre quella.
 - Tasto di rivendicazione su tutte le schede: "¿Es tu asociación?", "¿Es tu espacio?", "¿Es tu perfil?" (`claim.*` per

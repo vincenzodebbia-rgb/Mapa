@@ -2,6 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { getAccessState } from "@/lib/access";
 import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
 import { isInsideMadridRegion } from "@/lib/domain/geocode";
 import { geocodeAddress } from "@/lib/geocode";
@@ -12,7 +13,8 @@ import { getCurrentUserId } from "@/lib/supabase/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { hasOrganization } from "./data";
-import { addressSchema, lookupSchema, mapRegistrationDbError, parseRegistration, parseRegistrationType } from "./schema";
+import { addressSchema } from "@/lib/domain/address";
+import { lookupSchema, mapRegistrationDbError, parseRegistration, parseRegistrationType } from "./schema";
 import type { FieldErrors, GeocodeOutcome, LookupResult, RegistrationField, RegistrationState } from "./types";
 
 const REGISTRATIONS_PER_USER_PER_HOUR = 5;
@@ -74,6 +76,8 @@ export async function registerOrganization(previous: RegistrationState, formData
 
   const entityType = parseRegistrationType(formData.get("tipo"));
   if (!entityType) return fail({ formError: "generic" });
+  // Demo o variabili mancanti: la pagina non mostra il modulo; una chiamata diretta riceve un errore pulito.
+  if (getAccessState() !== "available") return fail({ formError: "generic" });
   const parsed = parseRegistration(entityType, Object.fromEntries(formData));
   if (!parsed.ok) return fail({ fieldErrors: parsed.fieldErrors });
 

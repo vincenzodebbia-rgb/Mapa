@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMadridDate, formatMadridTime, getMadridDateKey } from "./dates";
+import { addDaysToDateKey, addMonthsToDateKey, formatMadridDate, formatMadridTime, getMadridDateKey, madridLocalToInstant } from "./dates";
 
 describe("formatMadridTime", () => {
   it("uses CET (UTC+1) in winter", () => {
@@ -39,5 +39,42 @@ describe("getMadridDateKey", () => {
 describe("formatMadridDate", () => {
   it("writes the date in Spanish", () => {
     expect(formatMadridDate("2026-07-16T10:00:00Z")).toBe("jueves, 16 de julio");
+  });
+});
+
+describe("madridLocalToInstant", () => {
+  it("converts winter and summer times", () => {
+    expect(madridLocalToInstant("2026-01-15", "19:30")).toEqual({ ok: true, iso: "2026-01-15T18:30:00.000Z" });
+    expect(madridLocalToInstant("2026-07-15", "19:30")).toEqual({ ok: true, iso: "2026-07-15T17:30:00.000Z" });
+  });
+
+  it("refuses a time that does not exist when summer time starts (29 March 2026)", () => {
+    expect(madridLocalToInstant("2026-03-29", "02:30")).toEqual({ ok: false, error: "nonexistent" });
+    expect(madridLocalToInstant("2026-03-29", "01:59")).toEqual({ ok: true, iso: "2026-03-29T00:59:00.000Z" });
+    expect(madridLocalToInstant("2026-03-29", "03:00")).toEqual({ ok: true, iso: "2026-03-29T01:00:00.000Z" });
+  });
+
+  it("takes the first of a time that happens twice when summer time ends (25 October 2026)", () => {
+    expect(madridLocalToInstant("2026-10-25", "02:30")).toEqual({ ok: true, iso: "2026-10-25T00:30:00.000Z" });
+    expect(madridLocalToInstant("2026-10-25", "03:30")).toEqual({ ok: true, iso: "2026-10-25T02:30:00.000Z" });
+  });
+
+  it("refuses malformed or impossible values", () => {
+    expect(madridLocalToInstant("2026-02-30", "19:00")).toEqual({ ok: false, error: "invalid" });
+    expect(madridLocalToInstant("2026-02-10", "24:00")).toEqual({ ok: false, error: "invalid" });
+    expect(madridLocalToInstant("10/02/2026", "19:00")).toEqual({ ok: false, error: "invalid" });
+  });
+});
+
+describe("addDaysToDateKey and addMonthsToDateKey", () => {
+  it("moves on the calendar across months and years", () => {
+    expect(addDaysToDateKey("2026-12-31", 1)).toBe("2027-01-01");
+    expect(addDaysToDateKey("2026-03-01", -1)).toBe("2026-02-28");
+  });
+
+  it("clamps to the last day of the month like Postgres", () => {
+    expect(addMonthsToDateKey("2026-08-31", 6)).toBe("2027-02-28");
+    expect(addMonthsToDateKey("2026-11-13", 6)).toBe("2027-05-13");
+    expect(addMonthsToDateKey("2026-02-30", 6)).toBeNull();
   });
 });

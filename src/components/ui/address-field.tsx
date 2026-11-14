@@ -4,8 +4,13 @@ import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePointField } from "@/components/ui/point-field";
-import { locateAddress } from "../actions";
-import type { RegistrationFormTexts } from "../types";
+
+/** Risposta di una Server Action che cerca un indirizzo (ogni blocco ha la sua, con il suo limite di frequenza). */
+export type LocateOutcome =
+  | { ok: true; lng: number; lat: number }
+  | { ok: false; error: "notFound" | "tooMany" | "invalid" | "generic" };
+
+export type AddressFieldTexts = { button: string; searching: string; found: string; notFound: string; failed: string };
 
 type AddressFieldProps = {
   id: string;
@@ -13,16 +18,18 @@ type AddressFieldProps = {
   required: boolean;
   describedBy: string | undefined;
   invalid: boolean;
-  texts: RegistrationFormTexts["geocode"];
+  texts: AddressFieldTexts;
+  /** La Server Action del blocco che usa il campo (iscrizione, eventi). */
+  locate: (address: string) => Promise<LocateOutcome>;
 };
 
 type Status = "idle" | "found" | "notFound" | "failed";
 
 /**
  * Indirizzo + "Buscar en el mapa": mette il pin (PointField condiviso) sull'indirizzo; poi il pin si può trascinare.
- * Senza JavaScript il server geocodifica l'indirizzo all'invio.
+ * Senza JavaScript il server geocodifica l'indirizzo all'invio. Generico: non conosce né l'iscrizione né gli eventi.
  */
-export function AddressField({ id, defaultValue, required, describedBy, invalid, texts }: AddressFieldProps) {
+export function AddressField({ id, defaultValue, required, describedBy, invalid, texts, locate }: AddressFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { setPoint } = usePointField();
   const [status, setStatus] = useState<Status>("idle");
@@ -31,7 +38,7 @@ export function AddressField({ id, defaultValue, required, describedBy, invalid,
   function handleSearch() {
     const address = inputRef.current?.value ?? "";
     startTransition(async () => {
-      const outcome = await locateAddress(address);
+      const outcome = await locate(address);
       if (outcome.ok) {
         setPoint({ lng: outcome.lng, lat: outcome.lat });
         setStatus("found");

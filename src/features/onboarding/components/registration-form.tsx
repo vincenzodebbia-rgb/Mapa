@@ -8,7 +8,7 @@ import { PointFieldInputs, PointFieldProvider } from "@/components/ui/point-fiel
 import { Select } from "@/components/ui/select";
 import { TurnstileWidget } from "@/components/ui/turnstile-widget";
 import type { EntityType } from "@/lib/domain/nif";
-import { registerOrganization } from "../actions";
+import { locateAddress, registerOrganization } from "../actions";
 import {
   INITIAL_REGISTRATION_STATE,
   LOOKUP_ENTITY_TYPES,
@@ -17,8 +17,8 @@ import {
   type RegistrationFormTexts,
   type RegistrationTypeSlug,
 } from "../types";
-import { AddressField } from "./address-field";
-import { FormField } from "./form-field";
+import { AddressField } from "@/components/ui/address-field";
+import { FormField } from "@/components/ui/form-field";
 import { NifLookup } from "./nif-lookup";
 
 type RegistrationFormProps = {
@@ -211,6 +211,7 @@ function RegistrationFormBody({
                   describedBy={describedBy}
                   invalid={invalid}
                   texts={texts.geocode}
+                  locate={locateAddress}
                 />
               )}
             </FormField>

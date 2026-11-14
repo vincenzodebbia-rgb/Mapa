@@ -4,6 +4,7 @@ Le pagine dei barrios (/barrio/[slug]) leggono con createSupabasePublicClient() 
 Le pagine importano solo data.ts, schema.ts (filtri dell'URL), types.ts e components/ (HoyView e ConexionesView compongono tutto il resto).
 Funzioni pure con test unitari: light-state.ts (`getLightState(item, now)` → 'pulse' | 'lit'; sulla mappa Hoy non esiste 'faint'), filter-events.ts, to-geojson.ts, build-popup.ts. describe-items.ts (server-only) trasforma i DTO nei testi dei popup e degli elenchi.
 La mappa Hoy (`/`) mostra solo eventi. Le organizzazioni compaiono come punti solo sulla mappa statica `/conexiones` (associazioni ed espacios attivi con un indirizzo); le linee dei fili si aggiungono lì solo quando il flag `threads` è acceso.
+Hoy e Conexiones sono calcolate a ogni richiesta (`await connection()` all'inizio: con un cookie di sessione il client Supabase legge l'ora, vietato nel prerender). La pagina passa `panelLabel` ("Mi panel" solo con una sessione) e, per Hoy, `editableEventIds` ("Editar" nel popup e nell'elenco solo sugli eventi della propria organizzazione). Le mappe dei barrios sono in cache: lì niente sessione.
 I filtri stanno nell'URL (precio, cat, quien, barrio, solo=hoy, vista=lista). Il barrio centra la mappa e filtra l'elenco; i punti della mappa non si filtrano per barrio.
 build-popup.ts costruisce nodi DOM solo con textContent; i link accettano solo http/https o percorsi dello stesso sito. Mai setHTML.
 Ci sono esattamente DUE componenti MapLibre, tutti e due 'use client' e caricati con dynamic(..., { ssr: false }):

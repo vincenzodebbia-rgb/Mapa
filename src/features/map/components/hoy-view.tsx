@@ -9,6 +9,7 @@ import { EventList } from "./event-list";
 import { MapFiltersForm } from "./map-filters";
 import { MapLegend } from "./map-legend";
 import { MapNotice } from "./map-notice";
+import { MapPanelLink } from "./map-panel-link";
 import { MapSwitch } from "./map-switch";
 import { MapViewLoader } from "./map-view-loader";
 import { SoloHoyToggle } from "./solo-hoy-toggle";
@@ -19,6 +20,10 @@ type HoyViewProps = {
   neighborhoods: MapNeighborhood[];
   filters: MapFilters;
   now: Date;
+  /** "Mi panel" solo con una sessione (null senza). La pagina è calcolata a ogni richiesta, mai in cache. */
+  panelLabel: string | null;
+  /** Id degli eventi della propria organizzazione: solo questi hanno "Editar" (popup ed elenco). */
+  editableEventIds: string[];
 };
 
 function getEmptyMessage(filters: MapFilters): string {
@@ -28,11 +33,14 @@ function getEmptyMessage(filters: MapFilters): string {
 }
 
 /** La mappa Hoy (`/`): solo eventi, `pulse` oggi e `lit` nei prossimi 7 giorni (docs/SPEC.md §4). */
-export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
+export function HoyView({ events, neighborhoods, filters, now, panelLabel, editableEventIds }: HoyViewProps) {
+  const editable = new Set(editableEventIds);
   const mapEvents = filterEvents(events, filters, now, { byNeighborhood: false });
   const listEvents = filterEvents(events, filters, now, { byNeighborhood: true });
   const shown = filters.lista ? listEvents : mapEvents;
   const notice = shown.length === 0 ? <MapNotice message={getEmptyMessage(filters)} /> : null;
+  // D8: dopo "Publicar" un evento di oggi si apre sulla mappa (la prima occorrenza visibile con quello slug).
+  const selectedKey = filters.evento ? (mapEvents.find((event) => event.slug === filters.evento)?.key ?? null) : null;
   const bounds = neighborhoods.find((neighborhood) => neighborhood.slug === filters.barrio)?.bounds ?? null;
 
   return (
@@ -43,6 +51,7 @@ export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
           <MapSwitch current="hoy" />
           <SoloHoyToggle filters={filters} />
           <ViewToggle pathname="/" filters={filters} />
+          <MapPanelLink label={panelLabel} />
         </div>
         <MapFiltersForm filters={filters} neighborhoods={neighborhoods} />
       </header>
@@ -50,15 +59,18 @@ export function HoyView({ events, neighborhoods, filters, now }: HoyViewProps) {
       {filters.lista ? (
         <div className="flex-1 overflow-y-auto">
           {notice && <div className="mx-auto w-full max-w-2xl px-4">{notice}</div>}
-          <EventList events={listEvents} now={now} />
+          <EventList events={listEvents} now={now} editableEventIds={editable} />
         </div>
       ) : (
         <div className="relative flex-1">
           <MapViewLoader
             styleUrl={brand.mapStyleUrl}
             data={eventsToGeoJson(mapEvents, now)}
-            popups={Object.fromEntries(mapEvents.map((event) => [event.key, toEventPopup(event, now)]))}
+            popups={Object.fromEntries(
+              mapEvents.map((event) => [event.key, toEventPopup(event, now, editable.has(event.id))]),
+            )}
             bounds={bounds}
+            selectedKey={selectedKey}
             label={t("hoy.mapLabel")}
             loadingLabel={t("map.loading")}
           />

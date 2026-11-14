@@ -5,6 +5,7 @@ import type { MapFilters } from "../schema";
 import { placesToGeoJson } from "../to-geojson";
 import type { MapPlace } from "../types";
 import { MapNotice } from "./map-notice";
+import { MapPanelLink } from "./map-panel-link";
 import { MapSwitch } from "./map-switch";
 import { MapViewLoader } from "./map-view-loader";
 import { PlaceList } from "./place-list";
@@ -14,7 +15,16 @@ import { ViewToggle } from "./view-toggle";
  * La mappa Conexiones, prima del lancio: chi c'è. Associazioni e espacios attivi con un indirizzo,
  * ognuno un punto acceso con il nome al tocco. Niente fili finché il flag `threads` è spento (docs/SPEC.md §6).
  */
-export function ConexionesView({ places, filters }: { places: MapPlace[]; filters: MapFilters }) {
+export function ConexionesView({
+  places,
+  filters,
+  panelLabel,
+}: {
+  places: MapPlace[];
+  filters: MapFilters;
+  /** "Mi panel" solo con una sessione (null senza). Pagina calcolata a ogni richiesta, mai in cache. */
+  panelLabel: string | null;
+}) {
   const notice = places.length === 0 ? <MapNotice message={t("conexiones.empty")} /> : null;
 
   return (
@@ -23,6 +33,7 @@ export function ConexionesView({ places, filters }: { places: MapPlace[]; filter
         <div className="flex flex-wrap items-center gap-2">
           <MapSwitch current="conexiones" />
           <ViewToggle pathname="/conexiones" filters={filters} />
+          <MapPanelLink label={panelLabel} />
         </div>
         <h1 className="text-lg font-semibold">{t("conexiones.heading")}</h1>
         <p className="text-sm text-muted">{t("conexiones.intro")}</p>

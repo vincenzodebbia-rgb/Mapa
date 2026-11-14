@@ -203,7 +203,6 @@ export const lookupSchema = z
   .object({ entityType: z.enum(LOOKUP_ENTITY_TYPES), nif: z.preprocess((value) => normalizeNif(asString(value)), z.string()) })
   .refine((value) => findNifProblem(value.entityType, value.nif) === null);
 
-export const addressSchema = z.preprocess(asString, z.string().trim().min(3).max(200));
 
 export type DbErrorOutcome =
   | { type: "field"; field: RegistrationField; error: FieldError }

@@ -33,6 +33,8 @@ export type MapFilters = {
   barrio?: string;
   soloHoy: boolean;
   lista: boolean;
+  /** Slug di un evento da aprire sulla mappa (dopo "Publicar", D8). Non fa parte dei filtri: buildMapHref lo lascia fuori. */
+  evento?: string;
 };
 
 const priceSchema = z.enum(PRICE_FILTERS);
@@ -63,6 +65,7 @@ export function parseMapFilters(params: RawSearchParams): MapFilters {
     barrio: readOptional(slugSchema, params.barrio),
     soloHoy: readFlag(params.solo, "hoy"),
     lista: readFlag(params.vista, "lista"),
+    evento: readOptional(slugSchema, params.evento),
   };
 }
 

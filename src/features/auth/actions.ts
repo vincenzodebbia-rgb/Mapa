@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAccessState } from "@/lib/access";
 import { getConnectionKey, getHashedKey, isWithinRateLimit } from "@/lib/rate-limit";
 import { getSiteUrl } from "@/lib/site-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -40,6 +41,8 @@ export async function requestMagicLink(previous: SignInState, formData: FormData
     turnstileToken: formData.get("cf-turnstile-response") ?? undefined,
   });
   if (!parsed.success) return { ok: false, sent: false, error: "invalidEmail", attempt };
+  // Demo o variabili mancanti: la pagina non mostra il modulo; una chiamata diretta riceve un errore pulito.
+  if (getAccessState() !== "available") return { ok: false, sent: false, error: "generic", attempt };
 
   // Nessun utente da controllare: questa è la porta d'ingresso. Prima l'anti-robot, poi i limiti.
   if (!(await verifyTurnstileToken(parsed.data.turnstileToken))) {

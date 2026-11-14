@@ -61,3 +61,10 @@ test("la sitemap è vuota", async ({ request }) => {
   expect(response.headers()["x-robots-tag"]).toBe("noindex, nofollow");
   expect(await response.text()).not.toContain("<url>");
 });
+
+test("nel sito demo /entrar e /registro rimandano alla mappa", async ({ page }) => {
+  for (const path of ["/entrar", "/registro", "/registro?tipo=asociacion"]) {
+    await page.goto(path);
+    await expect(page, path).toHaveURL(/\/$/);
+  }
+});

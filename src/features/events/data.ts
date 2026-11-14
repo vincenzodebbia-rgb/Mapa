@@ -3,9 +3,12 @@ import { cacheLife, cacheTag } from "next/cache";
 import type { Database } from "@/lib/database.types";
 import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
+import { formatMadridTime, getMadridDateKey } from "@/lib/dates";
 import { isEventIndexable, shouldRedirectEvent } from "./event-page-rules";
-import type { EventOrganizer, EventPageResult, UpcomingEvent } from "./types";
+import { isEventUpcoming } from "./schema";
+import type { EventForEdit, EventOrganizer, EventOwner, EventPageResult, MyEvent, UpcomingEvent } from "./types";
 
 // Letture pubbliche, come anon (RLS: niente eventi di organizzazioni sospese), in cache così la pagina evento è statica
 // e risponde con un 404 o un 308 veri. Le scritture (sessione 6) devono chiamare updateTag(EVENTS_TAG).
@@ -158,4 +161,124 @@ export async function getIndexableEventSlugs(): Promise<string[]> {
   ]);
   const slugs = [...(unwrap(upcoming) ?? []), ...(unwrap(later) ?? [])].flatMap((row) => (row.slug ? [row.slug] : []));
   return [...new Set(slugs)].sort();
+}
+
+// Letture private per /panel (sessione 6): con il client dell'utente (RLS), mai in cache.
+
+/**
+ * L'organizzazione dell'utente che pubblica gli eventi, con sede e categoria abituale per precompilare il modulo.
+ * Null se l'utente non ha un'organizzazione. Legge come l'utente: la RLS mostra solo le sue membership.
+ */
+export async function getEventOwner(userId: string): Promise<EventOwner | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase
+      .from("memberships")
+      .select("organization:organizations(id, kind, status, address, location, usual_category)")
+      .eq("user_id", userId)
+      .maybeSingle(),
+  );
+  const organization = row?.organization;
+  if (!organization) return null;
+  const point = parseEwkbPoint(organization.location);
+  return {
+    organizationId: organization.id,
+    kind: organization.kind,
+    active: organization.status === "active",
+    // "Gente que hace cosas" non ha una sede: il luogo si scrive ogni volta (docs/SPEC.md §5).
+    address: organization.kind === "professional" ? null : organization.address,
+    point: organization.kind === "professional" || !point ? null : { lng: point[0], lat: point[1] },
+    usualCategory: organization.usual_category,
+  };
+}
+
+const MY_EVENTS_LIMIT = 100;
+
+/** "Mis eventos": gli eventi della propria organizzazione, prima i prossimi. `now` per decidere cosa è passato. */
+export async function getMyEvents(organizationId: string, now: Date): Promise<MyEvent[]> {
+  const supabase = await createSupabaseServerClient();
+  const rows =
+    unwrap(
+      await supabase
+        .from("events")
+        .select("id, slug, title, starts_at, ends_at, recurrence, recurrence_until")
+        .eq("owner_org", organizationId)
+        .order("starts_at", { ascending: false })
+        .limit(MY_EVENTS_LIMIT),
+    ) ?? [];
+  return rows
+    .map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      startsAt: toIso(row.starts_at),
+      recurrence: row.recurrence,
+      recurrenceUntil: row.recurrence_until,
+      upcoming: isEventUpcoming({ endsAt: row.ends_at, recurrence: row.recurrence, recurrenceUntil: row.recurrence_until }, now),
+    }))
+    .sort((a, b) => Number(b.upcoming) - Number(a.upcoming) || (a.upcoming ? a.startsAt.localeCompare(b.startsAt) : 0));
+}
+
+/**
+ * Un evento della propria organizzazione, con i valori per il modulo di modifica. Null se non esiste o se è di un'altra
+ * organizzazione (la query filtra per owner_org, e la RLS lo ricontrolla): la pagina risponde 404.
+ */
+export async function getEventForEdit(eventId: string, organizationId: string, now: Date): Promise<EventForEdit | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase
+      .from("events")
+      .select(
+        "id, slug, title, description, category, price_type, price_amount, starts_at, ends_at, recurrence, recurrence_until, venue_name, address, location",
+      )
+      .eq("id", eventId)
+      .eq("owner_org", organizationId)
+      .maybeSingle(),
+  );
+  if (!row) return null;
+  const point = parseEwkbPoint(row.location);
+  return {
+    id: row.id,
+    slug: row.slug,
+    upcoming: isEventUpcoming({ endsAt: row.ends_at, recurrence: row.recurrence, recurrenceUntil: row.recurrence_until }, now),
+    defaults: {
+      values: {
+        title: row.title,
+        category: row.category,
+        priceType: row.price_type,
+        priceAmount: row.price_amount === null ? undefined : String(row.price_amount),
+        date: getMadridDateKey(row.starts_at),
+        startTime: formatMadridTime(row.starts_at),
+        endTime: formatMadridTime(row.ends_at),
+        recurrence: row.recurrence,
+        recurrenceUntil: row.recurrence_until ?? undefined,
+        address: row.address,
+        venueName: row.venue_name ?? undefined,
+        description: row.description ?? undefined,
+      },
+      point: point ? { lng: point[0], lat: point[1] } : null,
+    },
+  };
+}
+
+/**
+ * true se l'evento è dell'organizzazione indicata. Letto con la sessione dell'utente (RLS), mai con la chiave segreta.
+ * Serve solo a mostrare il link "Editar": la modifica vera la ricontrollano pagina, action e database.
+ */
+export async function isEventOwnedBy(eventId: string, organizationId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase.from("events").select("id").eq("id", eventId).eq("owner_org", organizationId).maybeSingle(),
+  );
+  return row !== null;
+}
+
+const OWN_EVENT_IDS_LIMIT = 500;
+
+/** Id degli eventi dell'organizzazione, per "Editar" nella mappa Hoy (pagina calcolata a ogni richiesta, mai in cache). */
+export async function getOwnEventIds(organizationId: string): Promise<string[]> {
+  const supabase = await createSupabaseServerClient();
+  const rows =
+    unwrap(await supabase.from("events").select("id").eq("owner_org", organizationId).limit(OWN_EVENT_IDS_LIMIT)) ?? [];
+  return rows.map((row) => row.id);
 }

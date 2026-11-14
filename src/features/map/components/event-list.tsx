@@ -9,8 +9,15 @@ import {
 import { getLightState } from "../light-state";
 import type { MapEvent } from "../types";
 
+type EventListProps = {
+  events: MapEvent[];
+  now: Date;
+  /** Eventi della propria organizzazione: "Editar" come nel popup (vista elenco = stessi elementi della mappa). */
+  editableEventIds?: ReadonlySet<string>;
+};
+
 /** Vista elenco della mappa Hoy: gli stessi eventi e filtri, in ordine di orario. */
-export function EventList({ events, now }: { events: MapEvent[]; now: Date }) {
+export function EventList({ events, now, editableEventIds }: EventListProps) {
   const heading = t("hoy.list.heading");
 
   return (
@@ -50,6 +57,14 @@ export function EventList({ events, now }: { events: MapEvent[]; now: Date }) {
               <p className="text-sm text-muted">
                 {[t(`hoy.categories.${event.category}`), describeEventPrice(event)].join(t("hoy.list.separator"))}
               </p>
+              {editableEventIds?.has(event.id) && (
+                <Link
+                  href={`/panel/eventos/${event.id}`}
+                  className="self-start text-sm font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-light"
+                >
+                  {t("map.popup.edit")}
+                </Link>
+              )}
             </li>
           );
         })}

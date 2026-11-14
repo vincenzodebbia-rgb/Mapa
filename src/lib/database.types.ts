@@ -134,7 +134,7 @@ export type Database = {
           price_type?: Database["public"]["Enums"]["price_type"]
           recurrence?: Database["public"]["Enums"]["recurrence"]
           recurrence_until?: string | null
-          slug: string
+          slug?: string
           starts_at: string
           title: string
           updated_at?: string

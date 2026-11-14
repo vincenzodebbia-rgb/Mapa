@@ -158,6 +158,11 @@ RLS: `select` delle proprie righe. Nessuna policy di scrittura (solo funzioni).
   anche per gli insert diretti via API (rapporto di sicurezza, M1). Conta solo gli insert riusciti con un utente; seed e
   `service_role` non contano. Mai dentro una policy: le policy non hanno effetti collaterali.
   `update`/`delete` solo i membri di `owner_org`. `owner_org` e `slug` non si cambiano (grant per colonna).
+  Sessione 6 (docs/decisioni/2026-11-13-eventi.md): trigger `events_not_in_past` (solo con un utente) → `event_in_past` se l'evento
+  è già finito all'inserimento, o se una modifica di orari/ripetizione lo porta nel passato (per una serie: `recurrence_until` prima
+  di oggi a Madrid). Vincolo `events_end_differs_from_start`: ora di fine (a Madrid) diversa da quella di inizio (decisione A).
+  `slug` ha un valore predefinito (stringa vuota) solo per il tipo generato: lo scrive sempre il trigger e gli utenti non hanno
+  nessun permesso su `slug` né su `image_path`.
 - Trigger: `slug` all'inserimento; `neighborhood_id` da `location`; all'inserimento/modifica aggiorna `organizations.last_activity_at`
   di tutti gli organizzatori; all'inserimento aggiunge la riga `owner` in `event_organizers`.
 - Indici: `starts_at`, `owner_org`, GIST su `location`.
@@ -166,7 +171,8 @@ RLS: `select` delle proprie righe. Nessuna policy di scrittura (solo funzioni).
 ### event_organizers
 `event_id uuid references events on delete cascade`, `organization_id uuid references organizations on delete cascade`,
 `role text check (role in ('owner','co'))`, primary key (`event_id`, `organization_id`).
-RLS: `select` se l'evento è visibile. `insert` di righe `co` dai membri dell'`owner_org` dell'evento (entrambe le organizzazioni `active`).
+RLS: `select` se l'evento è visibile. Nessun `insert` per gli utenti (decisione D7 del 13 novembre: niente co-organizzatori,
+nemmeno via API); la riga `owner` la scrive il trigger `events_after_write`.
 `delete` di una riga `co` dai membri dell'owner org OPPURE da quelli del co-organizzatore (che si toglie).
 
 ### threads
@@ -235,6 +241,7 @@ Queste contano solo le scritture riuscite: un'eccezione annulla anche il contegg
 
 ## Storage
 Bucket `event-images`: lettura pubblica, solo `image/webp`, max 5 MB. Path `"{organization_id}/{event_id}.webp"`.
+Dalla sessione 6 nessuno può caricare o riscrivere file (policy insert/update tolte, decisione del 21 ottobre: niente foto).
 Policy insert/update/delete: la prima cartella del path è un'organizzazione di cui l'utente è membro.
 I file li carica solo l'action dopo che `sharp` li ha ri-codificati in WebP, max 1600 px, senza metadati.
 Cancellare righe non cancella i file: le action cancellano prima i file tramite l'API Storage.
@@ -319,6 +326,11 @@ tipo, attività, barrio, web, risposte e motivo. **Mai il NIF né l'email di chi
     ma `verified = false`. M5: il tetto delle nuove organizzazioni conta solo le iscrizioni riuscite e oltre il tetto
     `register_entity` e `create_professional` rispondono `rate_limited`. M1: un insert diretto in `events` conta nel limite;
     il ventunesimo del giorno → `rate_limited`; un insert rifiutato dalla RLS non tocca il limite di un'altra organizzazione.
+21. (sessione 6, file 18) Un evento già finito non si crea (`event_in_past`), uno in corso sì; la descrizione di un evento
+    passato si modifica; un evento passa la mezzanotte, non oltre 24 ore; il membro non cambia `owner_org` né `slug`; lo slug
+    non si scrive; il titolo cambia, lo slug no; fine uguale all'inizio rifiutata; nessun caricamento in `event-images` né
+    `image_path`; nessun co-organizzatore via API, ma una riga `co` esistente si toglie; un'altra organizzazione non modifica né
+    elimina l'evento.
 
 I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
 (`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,

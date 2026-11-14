@@ -11,7 +11,8 @@
       "map": "Ver mapa"
     },
     "popup": {
-      "see": "Ver"
+      "see": "Ver",
+      "edit": "Editar"
     }
   },
   "hoy": {
@@ -102,6 +103,9 @@
     "seeProfile": "Ver ficha",
     "empty": "Todavía no hay asociaciones ni espacios con dirección."
   },
+  "nav": {
+    "panel": "Mi panel"
+  },
   "page": {
     "backToMap": "Volver al mapa",
     "footer": {
@@ -182,6 +186,7 @@
     "about": "Más información",
     "directions": "Cómo llegar (OpenStreetMap)",
     "share": "Compartir este evento",
+    "edit": "Editar",
     "shareText": "{title} · {date}, {time} · {place}"
   },
   "claim": {
@@ -256,6 +261,7 @@
     "sent": "Si el correo es correcto, te llegará un enlace en unos minutos. Ábrelo en este mismo teléfono u ordenador.",
     "noScript": "Para comprobar que no eres un robot hace falta JavaScript.",
     "linkError": "El enlace no es válido o ha caducado. Pide uno nuevo.",
+    "unavailable": "El acceso estará disponible pronto.",
     "signOut": "Salir",
     "errors": {
       "invalidEmail": "Revisa el correo: no parece válido.",
@@ -400,8 +406,107 @@
   "panel": {
     "metaTitle": "Tu panel",
     "title": "Hola, {name}",
-    "intro": "Esta es vuestra página privada. Pronto podréis publicar eventos desde aquí.",
-    "viewProfile": "Ver vuestra ficha pública"
+    "intro": "Esta es vuestra página privada. Desde aquí publicáis vuestros eventos.",
+    "viewProfile": "Ver vuestra ficha pública",
+    "newEvent": "Nuevo evento",
+    "suspended": "Vuestra organización está suspendida: no podéis publicar eventos.",
+    "myEvents": {
+      "upcoming": "Mis eventos",
+      "past": "Pasados",
+      "empty": "Todavía no hay eventos. Publicad el primero.",
+      "repeatsUntil": "se repite hasta el {date}",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Eliminar este evento? No se puede deshacer.",
+      "deleted": "Evento eliminado.",
+      "saved": "Cambios guardados.",
+      "deleteFailed": "No hemos podido eliminar el evento. Inténtalo de nuevo."
+    }
+  },
+  "eventForm": {
+    "metaTitle": "Nuevo evento",
+    "title": "Nuevo evento",
+    "back": "Volver al panel",
+    "sections": {
+      "what": "Qué",
+      "when": "Cuándo",
+      "where": "Dónde",
+      "more": "Más (opcional)"
+    },
+    "labels": {
+      "title": "Título",
+      "category": "Tipo de evento",
+      "priceType": "Precio",
+      "priceAmount": "Precio en euros",
+      "date": "Día",
+      "startTime": "Empieza",
+      "endTime": "Termina",
+      "recurrence": "¿Se repite?",
+      "recurrenceUntil": "Se repite hasta",
+      "address": "Dirección",
+      "venueName": "Nombre del sitio",
+      "description": "Descripción"
+    },
+    "hints": {
+      "priceAmount": "Solo si es de pago. Por ejemplo: 5 o 7,50.",
+      "endTime": "Si termina después de medianoche, pon la hora del día siguiente (por ejemplo 02:00). Máximo 24 horas.",
+      "recurrenceUntil": "Solo si se repite. Como mucho, 6 meses desde el primer día.",
+      "address": "Escribe la dirección y pulsa «Buscar en el mapa» para colocar el punto.",
+      "venueName": "Por ejemplo, el nombre del bar o de la plaza."
+    },
+    "required": "(obligatorio)",
+    "optional": "(opcional)",
+    "choose": "Elige una opción",
+    "priceTypes": {
+      "free": "Gratis",
+      "donation": "Aportación voluntaria",
+      "paid": "De pago"
+    },
+    "recurrences": {
+      "none": "No, solo ese día",
+      "weekly": "Cada semana",
+      "monthly": "Cada mes, el mismo día"
+    },
+    "geocode": {
+      "button": "Buscar en el mapa",
+      "searching": "Buscando…",
+      "found": "Punto colocado. Puedes arrastrarlo si no está en el sitio exacto.",
+      "notFound": "No encontramos esa dirección en la Comunidad de Madrid. Revísala.",
+      "failed": "No hemos podido buscarla ahora. Inténtalo en un momento."
+    },
+    "picker": {
+      "label": "Mapa para colocar el punto del evento",
+      "hint": "Arrastra el punto para ajustarlo."
+    },
+    "submit": "Publicar",
+    "sending": "Publicando…",
+    "editMetaTitle": "Editar evento",
+    "editTitle": "Editar evento",
+    "editSubmit": "Guardar cambios",
+    "editSending": "Guardando…",
+    "seriesNote": "Si el evento se repite, los cambios valen para todas sus fechas.",
+    "notEditable": "Este evento ya ha terminado: ya no se puede editar.",
+    "checkFields": "Revisa los campos marcados.",
+    "fieldErrors": {
+      "required": "Este campo es obligatorio.",
+      "tooLong": "Es demasiado largo.",
+      "invalidOption": "Elige una opción de la lista.",
+      "invalidPrice": "Pon un precio en euros, por ejemplo 5 o 7,50.",
+      "invalidDate": "Revisa el día.",
+      "invalidTime": "Revisa la hora.",
+      "nonexistentTime": "Esa hora no existe ese día: es el cambio de hora. Elige otra.",
+      "tooLongDuration": "Un evento dura como mucho 24 horas. Si dura varios días, publica uno por día.",
+      "sameTime": "La hora de fin debe ser distinta de la de inicio.",
+      "inPast": "Este evento ya ha terminado. Solo se pueden publicar eventos de hoy en adelante.",
+      "invalidRecurrenceUntil": "Elige un día entre el primer día del evento y 6 meses después.",
+      "addressNotFound": "No encontramos esa dirección en la Comunidad de Madrid.",
+      "invalidLocation": "El punto tiene que estar dentro de la Comunidad de Madrid."
+    },
+    "formErrors": {
+      "tooMany": "Habéis publicado muchos eventos hoy. Mañana podréis seguir.",
+      "notAllowed": "No podéis publicar eventos con esta organización.",
+      "generic": "Algo ha fallado. Inténtalo de nuevo en unos minutos."
+    }
   },
   "revision": {
     "metaTitle": "Revisión",
