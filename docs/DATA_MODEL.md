@@ -77,6 +77,13 @@ Le associazioni della categoria del Comune "Comerciantes, empresarios, profesion
   senza scopo). Script `scripts/import-municipal-associations.ts` (sessione 5); nella seed solo 5 righe fittizie.
 - Fonte: "Entidades de participación ciudadana. Asociaciones (Sección 1ª)", CSV `;`, UTF-8 con BOM, CC BY 4.0 (attribuzione in `/legal`).
 
+### organization_slugs (sessione 7)
+`slug text primary key` (stesso formato degli slug), `organization_id uuid references organizations on delete cascade`,
+`created_at`. I vecchi slug di un'organizzazione: `make_unique_slug(..., 'organizations')` li considera occupati, così
+nessun'altra organizzazione li prende. RLS: `select` ad `anon`/`authenticated` solo se l'organizzazione è visibile
+(una sospesa non rimanda); nessuna scrittura per gli utenti (solo il trigger, security definer). Si eliminano con
+l'organizzazione (e quindi con l'account).
+
 ### organization_verifications (privata)
 `organization_id uuid primary key references organizations on delete cascade`, `nif text not null`, `verified_at timestamptz default now()`.
 - RLS attiva, nessuna policy. Un NIF = un solo account (indice unico parziale), **tranne** i NIF di enti pubblici (P, Q, S):
@@ -132,6 +139,12 @@ RLS: `select` delle proprie righe. Inserita solo da `register_entity()` / `creat
 - Privilegi per colonna: `grant update (name, one_liner, when_to_visit, contact_email, contact_phone, contact_url, address, location,
   usual_category, seeking_offering, indexable, venue_activity, logo_path, story, neighborhood_id)`; `logo_path` e `story` sono anche nella `grant select` pubblica. L'utente non cambia mai `kind`, `entity_type`, `slug`, `verified`, `entry_method`,
   `status`, `flagged_for_review`, `flag_reason`, `last_reviewed_at`, `last_activity_at`.
+- **Slug (sessione 7, decisione del fondatore del 14 novembre):** quando cambia `name` cambia anche `slug`
+  (`private.next_organization_slug`, dal trigger). Il vecchio va in `organization_slugs` e resta riservato
+  all'organizzazione; `/a/<vecchio>` rimanda con un 308 al nuovo. Stesso slug se cambiano solo maiuscole o accenti; un
+  vecchio slug dell'organizzazione stessa si riprende; al massimo 5 cambi di slug ogni 30 giorni (`rate_limited`).
+  L'utente non scrive mai `slug` a mano. Per gli eventi lo slug non cambia mai (AGENTS.md).
+- `contact_email`: vincolo `organizations_contact_email_format` (una sola `@`, niente spazi né `? & < > , ; : "`), `not valid`.
 - Trigger: `slug` generato all'inserimento; `neighborhood_id` da `location` (`ST_Covers` su `neighborhoods.boundary`) per associazioni
   ed espacios, a ogni scrittura (così il `neighborhood_id` scritto a mano viene sempre ricalcolato); per i professionisti, che non hanno
   un punto, resta il barrio scelto (sessione 5);
@@ -282,8 +295,8 @@ Il file lo carica solo l'action di "Mi ficha" (sessione 7) dopo `reencodeLogo` (
 | `register_entity(p_entity_type, p_nif, p_name, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_venue_activity, p_what_for_whom, p_how_sustained, p_what_they_offer, p_one_liner, p_when_to_visit, p_contact_email, p_contact_phone, p_contact_url, p_usual_category, p_address, p_lng, p_lat)` (dal 7° in poi `default null`) | security definer | Sessione 5. Per tutti i tipi tranne `informal`. Richiede `auth.uid()`. Normalizza il NIF: rifiuta i documenti personali e le lettere sbagliate per il tipo; obbligatorio tranne per `commercial`; unico tranne P/Q/S. Decide `entry_method` e avviso secondo la tabella "Chi entra e come". `commercial`: attività, le due risposte (`what_for_whom`, `what_they_offer`), indirizzo e punto obbligatori. Crea in una sola transazione organizzazione (slug unico, scheda completa), verifica (se c'è il NIF), membership, accettazione, risposte; segna l'invito come usato. Restituisce `(slug, flagged, flag_reason)`. Errori: `not_authenticated`, `invalid_kind`, `already_member`, `terms_required`, `invalid_name`, `nif_required`, `personal_nif`, `invalid_nif`, `already_claimed`, `venue_activity_required`, `answers_required`, `answer_too_long`, `address_required`, `invalid_location`, `invalid_invite`, `rate_limited` (oltre 60 nuove organizzazioni all'ora in tutto il sito, anche chiamata via RPC). Non scrive mai `verified`. |
 | `create_professional(p_name, p_one_liner, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_neighborhood_slug, p_contact_email, p_contact_phone, p_contact_url, p_seeking_offering, p_indexable)` (dal 6° in poi con default) | security definer | Stesso schema per i professionisti (`entity_type = 'informal'`); `entry_method` = `invite` con invito valido, altrimenti `email_only`. Barrio scelto per slug (`invalid_neighborhood` se non esiste). Stesso tetto `rate_limited` di `register_entity`. Restituisce lo slug. |
 | `get_invite(p_token)` | security definer | Restituisce solo nome e slug dell'organizzazione che invita, se il token è valido, non usato, non scaduto e l'organizzazione è attiva. |
-| `export_my_data()` | security definer | `jsonb` con email dell'utente, membership, accettazioni, organizzazione, NIF, risposte, eventi, organizzatori, fili, inviti, spazi e `moderation_actions` sulla propria organizzazione. |
-| `delete_my_account()` | security definer | Elimina l'organizzazione dell'utente se ne è l'unico membro (a cascata: eventi, organizzatori, fili, inviti, spazi, verifica, risposte), poi la riga di `auth.users`. L'action cancella prima i file di Storage. Restano solo le `moderation_actions` (senza riferimenti all'utente). |
+| `export_my_data()` | security definer | `jsonb` con email dell'utente, membership, accettazioni, organizzazione, vecchi slug (`old_slugs`, sessione 7), NIF, risposte, eventi, organizzatori, fili, inviti, spazi e `moderation_actions` sulla propria organizzazione. "Descargar mis datos": `GET /panel/cuenta/datos`. |
+| `delete_my_account()` | security definer | Sessione 7 ("un account = una realtà"): elimina **sempre** l'organizzazione dell'utente, anche se avesse altri membri (a cascata: eventi, organizzatori, fili, inviti, spazi, verifica, risposte, vecchi slug), poi la riga di `auth.users`. L'action cancella prima i file di Storage (logo). Restano solo le `moderation_actions` (senza riferimenti all'utente). |
 | `admin_review_list()` | security definer | Se `is_admin()`: per **tutte** le organizzazioni `id, slug, name, kind, entity_type, entry_method, venue_activity, neighborhood_name, contact_url, what_for_whom, how_sustained, what_they_offer, status, flagged_for_review, flag_reason, created_at, last_reviewed_at`. **Mai** NIF, email, telefono, user id. Altrimenti `forbidden`. La legge la pagina `/revision` (sessione 5: sola lettura, solo le segnalate). |
 | `moderate_organization(p_org, p_action, p_reason)` | security definer | Se `is_admin()`: `suspend`/`reactivate` cambiano `status`; `delete` elimina l'organizzazione (stessa cascata di `delete_my_account`, senza toccare `auth.users`). Scrive sempre `moderation_actions`. Motivo obbligatorio. Restituisce all'action l'email a cui mandare la motivazione (`contact_email`, altrimenti l'email di accesso del membro). Errori: `forbidden`, `reason_required`, `not_found`. |
 | `mark_reviewed(p_org)` | security definer | Se `is_admin()`: `last_reviewed_at = now()`, `flagged_for_review = false`, `flag_reason = null`. |
@@ -331,6 +344,11 @@ tipo, attività, barrio, web, risposte e motivo. **Mai il NIF né l'email di chi
     non si scrive; il titolo cambia, lo slug no; fine uguale all'inizio rifiutata; nessun caricamento in `event-images` né
     `image_path`; nessun co-organizzatore via API, ma una riga `co` esistente si toglie; un'altra organizzazione non modifica né
     elimina l'evento.
+22. (sessione 7, file 19) Cambio di nome → slug nuovo e vecchio in `organization_slugs`; solo maiuscole → stesso slug; un'altra
+    organizzazione non prende il vecchio slug; ritorno al nome di prima → riprende il suo slug; oltre 5 cambi in 30 giorni →
+    `rate_limited`; nessuna scrittura diretta di slug né di `organization_slugs`; `entity_type` non modificabile; formato di
+    `contact_email`; `export_my_data` con i vecchi slug; vecchi slug di una sospesa invisibili ad anon; `delete_my_account`
+    elimina realtà, eventi, risposte, NIF e vecchi slug anche con un altro membro. Il file 05 ora verifica che lo slug segua il nome.
 
 I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
 (`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,
