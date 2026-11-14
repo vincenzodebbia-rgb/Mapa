@@ -151,8 +151,12 @@ test("una asociación fuera del registro entra con aviso para la revisión", asy
 test("las páginas privadas no se abren sin sesión", async ({ page }) => {
   await page.goto("/panel");
   await expect(page).toHaveURL(/\/entrar$/);
-  const review = await page.goto("/revision");
-  expect(review?.status()).toBe(404);
+  // Niente controllo dello status: in produzione la pagina è in streaming e il notFound() lascia 200 (Next.js 16, con
+  // noindex); in sviluppo è 404. Conta che si veda il "non trovato" e nessun dato della revisione
+  // (docs/rapporti/sicurezza-2026-11.md, B15).
+  await page.goto("/revision");
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Revisión" })).toHaveCount(0);
   await page.goto("/registro");
   await expect(page.getByLabel("Tu correo")).toBeVisible();
 });

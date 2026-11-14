@@ -33,6 +33,7 @@ rischio che dipende da un'impostazione non verificabile · **Bassa** = difetto l
 | B9 | Bassa | `event_occurrences()` / `event_schedule()` espandono tutti gli eventi a ogni chiamata anonima | No |
 | B10 | Bassa | 9 vulnerabilità "moderate" solo nelle dipendenze di sviluppo | No |
 | B11–B14 | Bassa | Aperti dopo A1/M1/M5 (11/11): tentativi falliti non contati, tetto globale, inviti e fili, contatto segnaposto | Prima del lancio |
+| B15 | Bassa | Pagine private: 200 invece di 404/307 in produzione (streaming); nessun dato privato esce (verificato) | Prima del lancio |
 | I1–I4 | Info | Cose controllate e a posto; impostazioni da verificare nei pannelli | — |
 
 ---
@@ -257,6 +258,18 @@ vanno chiusi o accettati per iscritto prima del lancio.
 - **B14 — `brand.contactEmail` ancora segnaposto.** `src/config/brand.ts` ha `hola@example.org`: il tasto
   "¿Es tu asociación?" / "¿Es tu espacio?" / "¿Es tu perfil?" e l'errore "Este NIF ya está registrado" mandano lì. Va
   sostituito con il canale di contatto vero del progetto (mai un indirizzo personale) prima che qualcuno lo usi.
+- **B15 — Le pagine private rispondono 200 invece di 404 o 307 in produzione** (aggiunto il 14 novembre, sessione 6).
+  `/panel`, `/panel/eventos/nuevo`, `/panel/eventos/[id]` e `/revision` sono in streaming: un `redirect()` o un
+  `notFound()` che arriva dopo l'inizio della risposta lascia lo status a 200 (comportamento documentato di Next.js 16,
+  `not-found.md` e `loading.md` → "Status codes"). La pagina mostra comunque il redirect a `/entrar` o il "This page could
+  not be found." e ha `noindex`; il payload RSC risponde con un 307 vero. In sviluppo lo status è 404 o 307.
+  **Verificato** con `next build` + `next start` in locale e richieste dirette (HTML e payload RSC): senza sessione
+  `/panel`, `/revision` e `/panel/eventos/<uuid>` contengono solo il titolo della scheda del browser, il template del 404 e
+  il redirect; con la sessione di un'altra organizzazione `/panel/eventos/<id di A>` non contiene titolo, descrizione,
+  slug, id né nome dell'organizzazione di A. Compare solo l'uuid scritto nell'URL, che Next.js ripete nello stato del router
+  anche per un uuid inventato. Coperto dagli e2e (`events.spec.ts`, `onboarding.spec.ts`) in sviluppo e in produzione.
+  *Da decidere prima del lancio:* accettare il 200 (soft 404, nessun dato esce) oppure fare il controllo prima dello stream,
+  per esempio nel proxy (ma l'autorizzazione non deve stare solo nel proxy, AGENTS.md: andrebbe ripetuta nella pagina).
 
 ---
 

@@ -221,13 +221,44 @@ test("otra organización no edita ni elimina un evento que no es suyo", async ({
   const ownerOrganizationId = await signInAsAssociation(await otherContext.newPage());
   await otherContext.close();
   const foreign = await insertEvent(ownerOrganizationId, "Evento e2e ajeno");
+  const privateDescription = `Descripción privada e2e ${foreign.id.slice(0, 8)}`;
+  const described = await admin.from("events").update({ description: privateDescription }).eq("id", foreign.id);
+  expect(described.error).toBeNull();
+  const ownerRow = await admin.from("organizations").select("name").eq("id", ownerOrganizationId).single();
+  expect(ownerRow.error).toBeNull();
 
   // B: un'altra associazione, con un evento suo per avere i pulsanti.
   const organizationId = await signInAsAssociation(page);
   const own = await insertEvent(organizationId, "Evento e2e propio");
 
-  const response = await page.goto(`/panel/eventos/${foreign.id}`);
-  expect(response?.status()).toBe(404);
+  // Niente controllo dello status qui: in sviluppo è 404, in produzione 200. La pagina è in streaming e un notFound()
+  // che arriva dopo l'inizio della risposta lascia lo status a 200 (comportamento documentato di Next.js 16, con
+  // noindex). Conta che non esca niente: si vede il "non trovato", nessun modulo e nessun dato dell'evento o
+  // dell'organizzazione di A, né nella pagina né nell'HTML grezzo né nel payload RSC (docs/rapporti/sicurezza-2026-11.md, B15).
+  const foreignUrl = `/panel/eventos/${foreign.id}`;
+  // L'id dell'evento non è nella lista: è nell'URL chiesto da B, e Next.js lo ripete nello stato del router (parametri
+  // della rotta) anche per un uuid inventato e senza sessione. Non è un dato letto dal database.
+  const secrets = {
+    title: "Evento e2e ajeno",
+    description: privateDescription,
+    slug: foreign.slug,
+    ownerOrganizationId,
+    ownerName: ownerRow.data?.name ?? "",
+  };
+  await page.goto(foreignUrl);
+  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Guardar cambios" })).toHaveCount(0);
+  const html = await (await page.request.get(foreignUrl)).text();
+  const rsc = await (await page.request.get(`${foreignUrl}?_rsc=e2e`, { headers: { RSC: "1" } })).text();
+  for (const [where, body] of [
+    ["pagina", await page.content()],
+    ["HTML", html],
+    ["RSC", rsc],
+  ] as const) {
+    for (const [label, secret] of Object.entries(secrets)) {
+      expect(body, `${where} contiene ${label} ("${secret}")`).not.toContain(secret);
+    }
+  }
 
   // Modifica: il modulo del proprio evento con l'id dell'evento altrui nel campo nascosto.
   await page.goto(`/panel/eventos/${own.id}`);
