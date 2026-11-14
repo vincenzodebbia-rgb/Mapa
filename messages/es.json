@@ -421,6 +421,121 @@
       "deleted": "Evento eliminado.",
       "saved": "Cambios guardados.",
       "deleteFailed": "No hemos podido eliminar el evento. Inténtalo de nuevo."
+    },
+    "sections": {
+      "manage": "Vuestra ficha y cuenta"
+    },
+    "myProfile": "Mi ficha",
+    "myAccount": "Mi cuenta",
+    "profileSaved": "Ficha guardada.",
+    "archive": {
+      "heading": "Archivo",
+      "thisYear": "Eventos hechos este año: {count}",
+      "total": "Eventos hechos en total: {count}",
+      "note": "Solo lo veis vosotros."
+    },
+    "help": {
+      "heading": "Ayuda y contacto",
+      "body": "¿Dudas o algún problema? Escríbenos a {email}.",
+      "legal": "Aviso legal y privacidad"
+    }
+  },
+  "ficha": {
+    "metaTitle": "Mi ficha",
+    "title": "Mi ficha",
+    "intro": "Esto es lo que ve todo el mundo en vuestra ficha. El NIF y el tipo de entidad no se pueden cambiar aquí.",
+    "renameNote": "Si cambiáis el nombre, cambia también la dirección de la ficha. La dirección antigua sigue llevando a la nueva.",
+    "suspended": "Vuestra organización está suspendida: no podéis cambiar la ficha.",
+    "viewProfile": "Ver la ficha pública",
+    "sections": {
+      "identity": "Nombre",
+      "about": "Qué hacéis",
+      "place": "Dónde",
+      "contact": "Contacto público",
+      "story": "Nuestra historia",
+      "google": "Google"
+    },
+    "contactIntro": "Todo lo que pongáis aquí es público. Es opcional: poned solo lo que queráis que vea la gente.",
+    "labels": {
+      "name": "Nombre",
+      "oneLiner": "Qué hacéis, en una frase",
+      "whenToVisit": "Cuándo ir",
+      "usualCategory": "Tipo de actividad habitual",
+      "venueActivity": "Tipo de espacio",
+      "address": "Dirección",
+      "neighborhoodSlug": "Barrio",
+      "seekingOffering": "Busco / Ofrezco",
+      "whatForWhom": "¿Qué hacéis y para quién?",
+      "howSustained": "¿Cómo os sostenéis?",
+      "whatTheyOffer": "¿Qué ofrecéis a nivel cultural?",
+      "contactEmail": "Correo",
+      "contactPhone": "Teléfono",
+      "contactUrl": "Web o red social",
+      "story": "Nuestra historia",
+      "indexable": "Mostrar mi perfil en Google"
+    },
+    "hints": {
+      "whenToVisit": "Por ejemplo: «Los jueves a las 19h».",
+      "whatForWhom": "No se muestra en la ficha: solo lo lee la revisión del proyecto.",
+      "howSustained": "No se muestra en la ficha: solo lo lee la revisión del proyecto.",
+      "whatTheyOffer": "No se muestra en la ficha: solo lo lee la revisión del proyecto.",
+      "address": "Escribe la dirección y pulsa «Buscar en el mapa» para colocar el punto.",
+      "contactEmail": "Es público: no pongas un correo personal si no quieres que se vea.",
+      "contactUrl": "Empieza por https:// o http://.",
+      "story": "Opcional, hasta 1000 caracteres. Solo texto.",
+      "indexable": "Si lo apagas, tu ficha no aparece en buscadores ni en el mapa del sitio. Sigue siendo visible aquí."
+    },
+    "required": "(obligatorio)",
+    "optional": "(opcional)",
+    "choose": "Elige una opción",
+    "geocode": {
+      "button": "Buscar en el mapa",
+      "searching": "Buscando…",
+      "found": "Punto colocado. Puedes arrastrarlo si no está en el sitio exacto.",
+      "notFound": "No encontramos esa dirección en la Comunidad de Madrid. Revísala.",
+      "failed": "No hemos podido buscarla ahora. Inténtalo en un momento."
+    },
+    "picker": {
+      "label": "Mapa para colocar el punto de la sede",
+      "hint": "Arrastra el punto para ajustarlo."
+    },
+    "submit": "Guardar la ficha",
+    "sending": "Guardando…",
+    "checkFields": "Revisa los campos marcados.",
+    "fieldErrors": {
+      "required": "Este campo es obligatorio.",
+      "tooLong": "Es demasiado largo.",
+      "invalidEmail": "Revisa el correo: no parece válido.",
+      "invalidUrl": "Pon un enlace que empiece por https:// o http://.",
+      "invalidOption": "Elige una opción de la lista.",
+      "addressNotFound": "No encontramos esa dirección en la Comunidad de Madrid.",
+      "invalidLocation": "El punto tiene que estar dentro de la Comunidad de Madrid."
+    },
+    "formErrors": {
+      "tooMany": "Demasiados cambios seguidos. Espera un rato y vuelve a probar.",
+      "tooManyRenames": "Habéis cambiado el nombre muchas veces este mes. Podréis volver a cambiarlo más adelante.",
+      "notAllowed": "No podéis cambiar esta ficha.",
+      "generic": "Algo ha fallado. Inténtalo de nuevo en unos minutos."
+    }
+  },
+  "cuenta": {
+    "metaTitle": "Mi cuenta",
+    "title": "Mi cuenta",
+    "download": {
+      "heading": "Descargar mis datos",
+      "body": "Un archivo con todo lo que guardamos de vuestra cuenta y vuestra ficha: correo, ficha, respuestas del registro, NIF, eventos y direcciones antiguas de la ficha.",
+      "button": "Descargar mis datos (JSON)"
+    },
+    "delete": {
+      "heading": "Eliminar cuenta",
+      "body": "Al eliminar la cuenta se borran también, para siempre: vuestra ficha y su dirección (y las antiguas), todos vuestros eventos, las respuestas del registro y el NIF. No se puede deshacer.",
+      "confirmLabel": "Para confirmar, escribe ELIMINAR",
+      "confirmWord": "ELIMINAR",
+      "button": "Eliminar la cuenta para siempre",
+      "sending": "Eliminando…",
+      "wrongWord": "Escribe ELIMINAR, en mayúsculas, para confirmar.",
+      "tooMany": "Demasiados intentos. Espera un rato y vuelve a probar.",
+      "failed": "No hemos podido eliminar la cuenta. Inténtalo de nuevo o escríbenos."
     }
   },
   "eventForm": {

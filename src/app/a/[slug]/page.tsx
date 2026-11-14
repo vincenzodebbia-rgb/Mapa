@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ContentPage } from "@/components/ui/content-page";
 import { JsonLd } from "@/components/ui/json-ld";
 import { UpcomingEventList } from "@/features/events/components/upcoming-event-list";
 import { getUpcomingEventsForOrganization } from "@/features/events/data";
 import { OrganizationProfile } from "@/features/organizations/components/organization-profile";
-import { getOrganizationProfile } from "@/features/organizations/data";
+import { getOrganizationProfile, getOrganizationSlugRedirect } from "@/features/organizations/data";
 import { parseSlug } from "@/lib/domain/slug";
 import { t } from "@/lib/i18n/t";
 import { buildBreadcrumbList } from "@/lib/seo/json-ld";
@@ -27,9 +27,14 @@ export function generateStaticParams() {
 
 async function loadOrganization(params: PageProps<"/a/[slug]">["params"]) {
   const slug = parseSlug((await params).slug);
-  const organization = slug ? await getOrganizationProfile(slug) : null;
-  if (!organization) notFound();
-  return organization;
+  if (!slug) notFound();
+  const organization = await getOrganizationProfile(slug);
+  if (organization) return organization;
+  // Vecchio indirizzo di una scheda che ha cambiato nome: redirect permanente (308) al nuovo, così i link già condivisi
+  // continuano a funzionare (sessione 7). Deciso prima del rendering, come il 404: risposta vera, non in streaming.
+  const currentSlug = await getOrganizationSlugRedirect(slug);
+  if (currentSlug) permanentRedirect(`/a/${currentSlug}`);
+  notFound();
 }
 
 export async function generateMetadata({ params }: PageProps<"/a/[slug]">): Promise<Metadata> {

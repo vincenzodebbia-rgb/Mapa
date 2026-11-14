@@ -1,3 +1,15 @@
+/** Stato del modulo "Eliminar cuenta". */
+export type DeleteAccountError = "wrongWord" | "tooMany" | "failed";
+export type DeleteAccountState = { attempt: number; error: DeleteAccountError | null };
+export const INITIAL_DELETE_ACCOUNT_STATE: DeleteAccountState = { attempt: 0, error: null };
+
+export type DeleteAccountTexts = {
+  confirmLabel: string;
+  button: string;
+  sending: string;
+  errors: Record<DeleteAccountError, string>;
+};
+
 export type ReviewEntityType = "association" | "foundation" | "cooperative" | "public_entity" | "commercial" | "informal";
 export type ReviewFlagReason = "not_in_registry" | "public_entity" | "no_nif" | "doubtful_activity";
 export type ReviewVenueActivity =

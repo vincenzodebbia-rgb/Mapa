@@ -39,8 +39,14 @@ select lives_ok($$ update public.organizations set name = 'Prueba A renombrada' 
   'il nome si cambia');
 
 reset role;
+-- Sessione 7 (decisione del fondatore del 14 novembre): lo slug segue il nome; il vecchio resta riservato e rimanda.
 select is((select slug from public.organizations where id = 'a0000000-0000-4000-8000-000000000001'),
-  'prueba-a', 'lo slug resta quello della creazione anche dopo il cambio di nome');
+  'prueba-a-renombrada', 'lo slug segue il nome nuovo');
+select results_eq(
+  $$ select slug from public.organization_slugs where organization_id = 'a0000000-0000-4000-8000-000000000001' $$,
+  $$ values ('prueba-a'::text) $$,
+  'il vecchio slug resta riservato all''organizzazione'
+);
 
 -- La librería passa a discoteca: l'avviso si accende; tornare a libreria non lo spegne.
 set local request.jwt.claims to '{"sub":"0000000b-0000-4000-8000-000000000001","role":"authenticated"}';

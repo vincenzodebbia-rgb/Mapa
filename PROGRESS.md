@@ -3,12 +3,27 @@
 Updated by the agent at the end of every session. Newest first.
 
 ## Status
-- Fase: **sessione 6 (eventi)** nella PR in bozza #20 (`feat/eventi`). Migrazione `20261113194715_events_session6`
-  applicata su mapa-dev, tipi rigenerati, prova dal vivo sull'anteprima ok (creare, modificare, eliminare, ieri e fine =
-  inizio rifiutati). Aggiunti "Mi panel" ed "Editar" (14/11). Rapporto: `docs/rapporti/sessione-6.md`.
-- Sessione 5 chiusa: PR #17 unita in `main` il 13/11 (prova dal vivo sull'anteprima ok).
+- Fase: **sessione 7 (home privata)** nella PR in bozza #22 (`feat/profilo`). Migrazione
+  `20261114133035_profile_account` applicata su mapa-dev, tipi rigenerati, redirect dei vecchi slug e Mi ficha con
+  `update_my_profile` fatti; e2e 37/37. Manca la prova dal vivo. Rapporto: `docs/rapporti/sessione-7.md`.
+- Pulizia: `chore/aggiornamenti` unita in `main`.
+- Sessione 6 chiusa: PR #20 unita in `main` il 14/11. Sessione 5: PR #17 unita il 13/11.
 
 ## Done
+### 2026-11-14 (in autonomia) — Sessione 7: Mi ficha, Mi cuenta, Archivo, Ayuda y contacto
+- Piano in `docs/piani/sessione-7.md` (scelte P1–P8 da confermare).
+- Migrazione: `organization_slugs` (vecchi slug riservati), slug che segue il nome (limite 5 cambi in 30 giorni),
+  `make_unique_slug` che salta i vecchi slug, vincolo sul formato di `contact_email` (B4), `delete_my_account` che
+  elimina sempre la realtà, `export_my_data` con i vecchi slug. pgTAP 19; 05 aggiornato.
+- `/panel/ficha` (campi per tipo, contatti, Nuestra historia, Google), `/panel/cuenta` (JSON da `/panel/cuenta/datos`,
+  eliminazione con ELIMINAR), Archivo e Ayuda in `/panel`. `src/lib/domain/form-fields.ts`, `EVENTS_TAG` in lib.
+- Vitest 188/188, deps e build verdi, e2e 36/37 (il cambio di slug aspetta migrazione, tipi e redirect).
+
+### 2026-11-14 — Pulizia: dipendenze e remote
+- `main` aggiornato, remote `origin` → `https://github.com/vincenzodebbia-rgb/Mapa.git`.
+- Patch e minor aggiornati su `chore/aggiornamenti` (`2c5bd15`), CLI Supabase ancora 2.122.0. Major non fatti:
+  eslint 10, typescript 7, @types/node 26, supabase CLI 3.
+
 ### 2026-11-13/14 (notte, in autonomia) — Sessione 6: eventi
 - Punto 0: con `NEXT_PUBLIC_DEMO=1` /entrar e /registro rimandano alla mappa; senza chiavi Turnstile o variabili segrete
   mostrano "El acceso estará disponible pronto" (`src/lib/access.ts`), le action rispondono con un errore pulito.

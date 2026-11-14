@@ -59,7 +59,8 @@ export function OrganizationProfile({ organization, url, upcoming }: Organizatio
             <dt className="text-sm text-muted">{t("organization.contact")}</dt>
             {organization.contactEmail && (
               <dd>
-                <a href={`mailto:${organization.contactEmail}`} className={linkClass}>
+                {/* B4: codificato, così un indirizzo vecchio con ? o & non aggiunge destinatari né testo all'email. */}
+                <a href={`mailto:${encodeURIComponent(organization.contactEmail).replace(/%40/g, "@")}`} className={linkClass}>
                   {t("organization.email", { value: organization.contactEmail })}
                 </a>
               </dd>

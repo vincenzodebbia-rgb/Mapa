@@ -3,6 +3,24 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
 import type { ReviewItem } from "./types";
 
+/**
+ * "Descargar mis datos": tutto ciò che il database ha dell'utente e della sua realtà (export_my_data, letto come
+ * l'utente stesso: la funzione usa auth.uid()). Mai in cache.
+ */
+export async function getMyDataExport(): Promise<unknown> {
+  const supabase = await createSupabaseServerClient();
+  return unwrap(await supabase.rpc("export_my_data"));
+}
+
+/** Il percorso del logo della propria realtà, se c'è: va tolto dallo Storage prima di eliminare l'account. */
+export async function getOwnLogoPath(userId: string): Promise<string | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase.from("memberships").select("organization:organizations(logo_path)").eq("user_id", userId).maybeSingle(),
+  );
+  return row?.organization?.logo_path ?? null;
+}
+
 /** Se l'utente che ha fatto l'accesso è in app_admins (controllato in SQL, mai in user_metadata). */
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const supabase = await createSupabaseServerClient();

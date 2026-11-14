@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isHttpUrl, lookupSchema, mapRegistrationDbError, parseRegistration, parseRegistrationType } from "./schema";
+import { isHttpUrl } from "@/lib/domain/form-fields";
+import { lookupSchema, mapRegistrationDbError, parseRegistration, parseRegistrationType } from "./schema";
 
 const accepted = { accept: "on" };
 

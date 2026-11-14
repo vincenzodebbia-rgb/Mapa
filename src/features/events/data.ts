@@ -1,19 +1,27 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { EVENTS_TAG } from "@/lib/cache-tags";
 import type { Database } from "@/lib/database.types";
 import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
-import { formatMadridTime, getMadridDateKey } from "@/lib/dates";
+import { formatMadridTime, getMadridDateKey, madridLocalToInstant } from "@/lib/dates";
 import { isEventIndexable, shouldRedirectEvent } from "./event-page-rules";
 import { isEventUpcoming } from "./schema";
-import type { EventForEdit, EventOrganizer, EventOwner, EventPageResult, MyEvent, UpcomingEvent } from "./types";
+import type {
+  ArchiveCounts,
+  EventForEdit,
+  EventOrganizer,
+  EventOwner,
+  EventPageResult,
+  MyEvent,
+  UpcomingEvent,
+} from "./types";
 
 // Letture pubbliche, come anon (RLS: niente eventi di organizzazioni sospese), in cache così la pagina evento è statica
-// e risponde con un 404 o un 308 veri. Le scritture (sessione 6) devono chiamare updateTag(EVENTS_TAG).
+// e risponde con un 404 o un 308 veri. Le scritture devono chiamare updateTag(EVENTS_TAG) (src/lib/cache-tags.ts).
 // Le occorrenze arrivano solo da SQL (event_schedule, upcoming_events): la ripetizione non si calcola mai qui.
-export const EVENTS_TAG = "events";
 
 type UpcomingRow = Database["public"]["Views"]["upcoming_events"]["Row"];
 
@@ -271,6 +279,26 @@ export async function isEventOwnedBy(eventId: string, organizationId: string): P
     await supabase.from("events").select("id").eq("id", eventId).eq("owner_org", organizationId).maybeSingle(),
   );
   return row !== null;
+}
+
+/**
+ * "Archivo" in /panel (SPEC §9): eventi già finiti della propria organizzazione, quest'anno (cominciati dal 1° gennaio,
+ * ora di Madrid) e in totale. Una serie che si ripete conta come un evento (non si espandono le ripetizioni, B9).
+ * Letto come l'utente (RLS), mai in cache: lo vede solo la realtà stessa.
+ */
+export async function getArchiveCounts(organizationId: string, now: Date): Promise<ArchiveCounts> {
+  const supabase = await createSupabaseServerClient();
+  const nowIso = now.toISOString();
+  const yearStart = madridLocalToInstant(`${getMadridDateKey(now).slice(0, 4)}-01-01`, "00:00");
+  const base = () =>
+    supabase.from("events").select("id", { count: "exact", head: true }).eq("owner_org", organizationId).lte("ends_at", nowIso);
+  const [total, thisYear] = await Promise.all([
+    base(),
+    yearStart.ok ? base().gte("starts_at", yearStart.iso) : base(),
+  ]);
+  unwrap(total);
+  unwrap(thisYear);
+  return { total: total.count ?? 0, thisYear: thisYear.count ?? 0 };
 }
 
 const OWN_EVENT_IDS_LIMIT = 500;

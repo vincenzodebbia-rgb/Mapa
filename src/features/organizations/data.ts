@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { ORGANIZATIONS_TAG } from "@/lib/cache-tags";
+import { parseEwkbPoint } from "@/lib/domain/geo";
 import { createSupabasePublicClient, getPublicStorageUrl } from "@/lib/supabase/public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { unwrap } from "@/lib/supabase/unwrap";
@@ -10,6 +11,7 @@ import type {
   OrganizationProfile,
   OrganizationSitemapEntry,
   OrganizationSummary,
+  ProfileForEdit,
 } from "./types";
 
 // Letture pubbliche, come anon (RLS: niente organizzazioni sospese), in cache così le pagine pubbliche sono statiche
@@ -56,6 +58,23 @@ export async function getOrganizationProfile(slug: string): Promise<Organization
     logoUrl: row.logo_path ? getPublicStorageUrl("org-logos", row.logo_path) : null,
     indexable: row.indexable,
   };
+}
+
+/**
+ * Vecchio slug di una scheda → slug attuale, per il redirect permanente di /a/<vecchio> (sessione 7). Letto come anon:
+ * la RLS di organization_slugs mostra solo i vecchi slug di organizzazioni visibili (una sospesa non rimanda).
+ * In cache come la scheda: dopo un cambio di nome updateProfile chiama updateTag(ORGANIZATIONS_TAG).
+ */
+export async function getOrganizationSlugRedirect(oldSlug: string): Promise<string | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(ORGANIZATIONS_TAG, `organization:${oldSlug}`);
+
+  const supabase = createSupabasePublicClient();
+  const row = unwrap(
+    await supabase.from("organization_slugs").select("organization:organizations(slug)").eq("slug", oldSlug).maybeSingle(),
+  );
+  return row?.organization?.slug ?? null;
 }
 
 /** Associazioni ed espacios attivi di un barrio, in ordine di nome. */
@@ -105,4 +124,48 @@ export async function getOrganizationForUser(userId: string): Promise<MyOrganiza
   );
   const organization = row?.organization;
   return organization ? { slug: organization.slug, name: organization.name, status: organization.status } : null;
+}
+
+const EDIT_COLUMNS =
+  "id, slug, kind, status, name, one_liner, when_to_visit, usual_category, venue_activity, address, location, seeking_offering, indexable, contact_email, contact_phone, contact_url, story, neighborhood:neighborhoods(slug), answers:organization_answers(what_for_whom, how_sustained, what_they_offer)";
+
+/**
+ * "Mi ficha": la scheda della propria organizzazione con i valori del modulo, letta come l'utente (RLS: solo la propria
+ * membership; anche se sospesa). Mai in cache. NIF ed entity_type non si leggono: non si modificano.
+ */
+export async function getProfileForEdit(userId: string): Promise<ProfileForEdit | null> {
+  const supabase = await createSupabaseServerClient();
+  const row = unwrap(
+    await supabase.from("memberships").select(`organization:organizations(${EDIT_COLUMNS})`).eq("user_id", userId).maybeSingle(),
+  );
+  const organization = row?.organization;
+  if (!organization) return null;
+  const answers = Array.isArray(organization.answers) ? organization.answers[0] : organization.answers;
+  const point = parseEwkbPoint(organization.location);
+  const text = (value: string | null | undefined) => value ?? undefined;
+  return {
+    organizationId: organization.id,
+    slug: organization.slug,
+    kind: organization.kind,
+    active: organization.status === "active",
+    values: {
+      name: organization.name,
+      oneLiner: text(organization.one_liner),
+      whenToVisit: text(organization.when_to_visit),
+      usualCategory: text(organization.usual_category),
+      venueActivity: text(organization.venue_activity),
+      address: text(organization.address),
+      neighborhoodSlug: text(organization.neighborhood?.slug),
+      seekingOffering: text(organization.seeking_offering),
+      whatForWhom: text(answers?.what_for_whom),
+      howSustained: text(answers?.how_sustained),
+      whatTheyOffer: text(answers?.what_they_offer),
+      contactEmail: text(organization.contact_email),
+      contactPhone: text(organization.contact_phone),
+      contactUrl: text(organization.contact_url),
+      story: text(organization.story),
+      indexable: organization.indexable ? "on" : undefined,
+    },
+    point: point ? { lng: point[0], lat: point[1] } : null,
+  };
 }

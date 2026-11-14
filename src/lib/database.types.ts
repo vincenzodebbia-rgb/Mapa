@@ -398,6 +398,32 @@ export type Database = {
           },
         ]
       }
+      organization_slugs: {
+        Row: {
+          created_at: string
+          organization_id: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_slugs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_verifications: {
         Row: {
           nif: string
@@ -887,6 +913,29 @@ export type Database = {
           flagged: boolean
           slug: string
         }[]
+      }
+      update_my_profile: {
+        Args: {
+          p_address?: string
+          p_contact_email?: string
+          p_contact_phone?: string
+          p_contact_url?: string
+          p_how_sustained?: string
+          p_indexable?: boolean
+          p_lat?: number
+          p_lng?: number
+          p_name: string
+          p_neighborhood_slug?: string
+          p_one_liner?: string
+          p_seeking_offering?: string
+          p_story?: string
+          p_usual_category?: Database["public"]["Enums"]["event_category"]
+          p_venue_activity?: Database["public"]["Enums"]["venue_activity"]
+          p_what_for_whom?: string
+          p_what_they_offer?: string
+          p_when_to_visit?: string
+        }
+        Returns: string
       }
     }
     Enums: {
