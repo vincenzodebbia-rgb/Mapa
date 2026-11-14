@@ -327,3 +327,136 @@ begin
   );
 end;
 $$;
+
+-- Organizzazione sospesa: niente modifiche alla scheda né alle risposte (rapporto di sicurezza, B1, in parte) -----------
+
+-- Correzione del fondatore del 14 novembre: il blocco vale anche nel database, non solo nell'applicazione.
+-- Il membro di una sospesa continua a leggere la propria scheda (organizations_select) e può eliminare l'account
+-- (delete_my_account è security definer). La moderazione degli admin passa da funzioni security definer: non cambia.
+-- Eventi, spazi e fili delle sospese restano come oggi (resto di B1: decisione aperta).
+drop policy organizations_update_members on public.organizations;
+create policy organizations_update_members on public.organizations
+  for update to authenticated
+  using (private.is_org_member(id))
+  with check (private.is_org_member(id) and private.is_org_active(id));
+
+drop policy organization_answers_update_members on public.organization_answers;
+create policy organization_answers_update_members on public.organization_answers
+  for update to authenticated
+  using (private.is_org_member(organization_id))
+  with check (private.is_org_member(organization_id) and private.is_org_active(organization_id));
+
+-- Mi ficha in un'unica operazione ----------------------------------------------------------
+
+-- Correzione del fondatore del 14 novembre: scheda e risposte private si salvano insieme, o tutto o niente (una funzione è
+-- una sola transazione). security invoker: valgono le policy (anche il blocco delle sospese) e i grant per colonna
+-- dell'utente, come per un update diretto. Il tipo si legge dal database; ogni tipo scrive solo i suoi campi.
+-- NIF, entity_type, kind e slug non sono parametri (lo slug lo cambia il trigger quando cambia il nome).
+-- Restituisce lo slug attuale (nuovo, se il nome è cambiato).
+create function public.update_my_profile(
+  p_name text,
+  p_one_liner text default null,
+  p_when_to_visit text default null,
+  p_usual_category public.event_category default null,
+  p_venue_activity public.venue_activity default null,
+  p_address text default null,
+  p_lng double precision default null,
+  p_lat double precision default null,
+  p_story text default null,
+  p_neighborhood_slug text default null,
+  p_seeking_offering text default null,
+  p_indexable boolean default true,
+  p_contact_email text default null,
+  p_contact_phone text default null,
+  p_contact_url text default null,
+  p_what_for_whom text default null,
+  p_how_sustained text default null,
+  p_what_they_offer text default null
+)
+returns text
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_org uuid;
+  v_kind public.org_kind;
+  v_neighborhood uuid;
+  v_slug text;
+  v_contact_email text := nullif(btrim(coalesce(p_contact_email, '')), '');
+  v_contact_phone text := nullif(btrim(coalesce(p_contact_phone, '')), '');
+  v_contact_url text := nullif(btrim(coalesce(p_contact_url, '')), '');
+begin
+  if v_uid is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select o.id, o.kind into v_org, v_kind
+  from public.memberships m
+  join public.organizations o on o.id = m.organization_id
+  where m.user_id = v_uid;
+  if v_org is null then
+    raise exception 'no_organization';
+  end if;
+
+  if v_kind = 'professional' then
+    if nullif(btrim(coalesce(p_neighborhood_slug, '')), '') is not null then
+      select n.id into v_neighborhood from public.neighborhoods n where n.slug = btrim(p_neighborhood_slug);
+      if v_neighborhood is null then
+        raise exception 'invalid_neighborhood';
+      end if;
+    end if;
+    update public.organizations o
+    set name = btrim(coalesce(p_name, '')),
+        one_liner = nullif(btrim(coalesce(p_one_liner, '')), ''),
+        neighborhood_id = v_neighborhood,
+        seeking_offering = nullif(btrim(coalesce(p_seeking_offering, '')), ''),
+        indexable = coalesce(p_indexable, true),
+        contact_email = v_contact_email,
+        contact_phone = v_contact_phone,
+        contact_url = v_contact_url
+    where o.id = v_org
+    returning o.slug into v_slug;
+  else
+    update public.organizations o
+    set name = btrim(coalesce(p_name, '')),
+        one_liner = nullif(btrim(coalesce(p_one_liner, '')), ''),
+        when_to_visit = nullif(btrim(coalesce(p_when_to_visit, '')), ''),
+        usual_category = p_usual_category,
+        venue_activity = case when v_kind = 'venue' then p_venue_activity else o.venue_activity end,
+        address = nullif(btrim(coalesce(p_address, '')), ''),
+        -- Tutti e due o nessuno, dentro la Comunidad de Madrid (invalid_location), come all'iscrizione.
+        location = private.make_org_point(p_lng, p_lat),
+        story = nullif(btrim(coalesce(p_story, '')), ''),
+        contact_email = v_contact_email,
+        contact_phone = v_contact_phone,
+        contact_url = v_contact_url
+    where o.id = v_org
+    returning o.slug into v_slug;
+
+    -- Ogni tipo le sue risposte (come register_entity).
+    update public.organization_answers a
+    set what_for_whom = nullif(btrim(coalesce(p_what_for_whom, '')), ''),
+        how_sustained = case when v_kind = 'association' then nullif(btrim(coalesce(p_how_sustained, '')), '') else a.how_sustained end,
+        what_they_offer = case when v_kind = 'venue' then nullif(btrim(coalesce(p_what_they_offer, '')), '') else a.what_they_offer end
+    where a.organization_id = v_org;
+  end if;
+
+  -- Nessuna riga toccata (RLS): niente da salvare. L'errore annulla tutta la funzione.
+  if v_slug is null then
+    raise exception 'not_allowed';
+  end if;
+  return v_slug;
+end;
+$$;
+
+revoke execute on function public.update_my_profile(
+  text, text, text, public.event_category, public.venue_activity, text, double precision, double precision, text, text,
+  text, boolean, text, text, text, text, text, text
+) from public, anon;
+grant execute on function public.update_my_profile(
+  text, text, text, public.event_category, public.venue_activity, text, double precision, double precision, text, text,
+  text, boolean, text, text, text, text, text, text
+) to authenticated;

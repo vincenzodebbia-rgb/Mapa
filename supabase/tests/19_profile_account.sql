@@ -3,6 +3,8 @@
 -- ritorno al nome di prima; limite dei cambi; vecchi slug di una sospesa invisibili; nessuna scrittura diretta;
 -- formato di contact_email; entity_type non modificabile; export_my_data con i vecchi slug;
 -- delete_my_account elimina sempre la realtà (anche con un altro membro), eventi, risposte, verifica e vecchi slug.
+-- Correzioni del 14 novembre: una sospesa non modifica scheda né risposte (anche nel database); update_my_profile salva
+-- scheda e risposte in un'unica operazione (o tutto o niente).
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
@@ -27,7 +29,9 @@ insert into public.memberships (user_id, organization_id) values
   -- D ha un secondo membro: delete_my_account deve eliminare la realtà lo stesso.
   ('0000000e-0000-4000-8000-000000000019', 'd0000000-0000-4000-8000-000000000019');
 insert into public.organization_answers (organization_id, what_for_whom) values
-  ('d0000000-0000-4000-8000-000000000019', 'Respuesta privada');
+  ('d0000000-0000-4000-8000-000000000019', 'Respuesta privada'),
+  ('b0000000-0000-4000-8000-000000000019', 'Respuesta de B'),
+  ('c0000000-0000-4000-8000-000000000019', 'Respuesta de C');
 insert into public.organization_verifications (organization_id, nif) values
   ('d0000000-0000-4000-8000-000000000019', 'G91000019');
 insert into public.events (title, category, starts_at, ends_at, address, location, owner_org) values
@@ -142,6 +146,63 @@ select is_empty(
   'anon non vede i vecchi slug di un''organizzazione sospesa'
 );
 reset role;
+
+-- Sospesa: niente modifiche alla scheda né alle risposte, nemmeno nel database (correzione del 14 novembre) -------
+set local request.jwt.claims to '{"sub":"0000000b-0000-4000-8000-000000000019","role":"authenticated"}';
+set local role authenticated;
+select throws_ok(
+  $$ update public.organizations set one_liner = 'Cambio de una suspendida' where id = 'b0000000-0000-4000-8000-000000000019' $$,
+  '42501', null, 'una sospesa non modifica la scheda'
+);
+select throws_ok(
+  $$ update public.organization_answers set what_for_whom = 'Cambio' where organization_id = 'b0000000-0000-4000-8000-000000000019' $$,
+  '42501', null, 'una sospesa non modifica le risposte'
+);
+select throws_ok(
+  $$ select public.update_my_profile('Nombre de una suspendida') $$,
+  '42501', null, 'una sospesa non salva nemmeno con update_my_profile'
+);
+select lives_ok($$ select public.export_my_data() $$, 'una sospesa scarica ancora i propri dati');
+reset role;
+
+-- update_my_profile: scheda e risposte insieme, o tutto o niente -----------------------------
+set local request.jwt.claims to '{"sub":"0000000c-0000-4000-8000-000000000019","role":"authenticated"}';
+set local role authenticated;
+select throws_ok(
+  $$ select public.update_my_profile('Prueba Tres Cambiada', p_what_for_whom => repeat('x', 501)) $$,
+  '23514', null, 'una risposta troppo lunga fa fallire tutto il salvataggio'
+);
+select throws_ok(
+  $$ select public.update_my_profile('Prueba Tres Cambiada', p_lng => -3.70) $$,
+  'P0001', 'invalid_location', 'mezzo punto: invalid_location'
+);
+reset role;
+select results_eq(
+  $$ select o.name, o.slug, a.what_for_whom from public.organizations o
+     join public.organization_answers a on a.organization_id = o.id
+     where o.id = 'c0000000-0000-4000-8000-000000000019' $$,
+  $$ values ('Prueba Tres Diecinueve'::text, 'prueba-tres-diecinueve'::text, 'Respuesta de C'::text) $$,
+  'dopo un errore né il nome, né lo slug, né le risposte sono cambiati'
+);
+select is((select count(*)::integer from public.organization_slugs where organization_id = 'c0000000-0000-4000-8000-000000000019'), 0,
+  'dopo un errore nessun vecchio slug');
+
+set local request.jwt.claims to '{"sub":"0000000c-0000-4000-8000-000000000019","role":"authenticated"}';
+set local role authenticated;
+select is(
+  public.update_my_profile('Prueba Tres Nueva', p_one_liner => 'Hacemos cosas', p_lng => -3.70, p_lat => 40.41,
+    p_what_for_whom => 'Para el barrio', p_how_sustained => 'Cuotas', p_what_they_offer => 'No se guarda',
+    p_venue_activity => 'discoteca_club'),
+  'prueba-tres-nueva', 'update_my_profile salva e restituisce lo slug nuovo'
+);
+reset role;
+select results_eq(
+  $$ select o.one_liner, o.location is not null, o.venue_activity::text, a.what_for_whom, a.how_sustained, a.what_they_offer
+     from public.organizations o join public.organization_answers a on a.organization_id = o.id
+     where o.id = 'c0000000-0000-4000-8000-000000000019' $$,
+  $$ values ('Hacemos cosas'::text, true, null::text, 'Para el barrio'::text, 'Cuotas'::text, null::text) $$,
+  'scheda e risposte salvate insieme; i campi di un altro tipo non si scrivono'
+);
 
 -- delete_my_account: la realtà si elimina sempre, anche con un altro membro ------------------
 update public.organizations set name = 'Prueba Cuatro Renombrada' where id = 'd0000000-0000-4000-8000-000000000019';

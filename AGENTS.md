@@ -75,7 +75,9 @@ Hosting: Vercel (functions region fra1). Supabase projects in an EU region.
 - Every view: `with (security_invoker = true)`. Otherwise it bypasses RLS.
 - Roles and memberships live in tables (`memberships`), never in `user_metadata`.
 - Times are `timestamptz`. Display in Europe/Madrid with `src/lib/dates.ts` only.
-- Slugs are generated once, unique, and never change when a title changes.
+- Slugs are unique. Events: the slug is generated once and never changes when the title changes.
+  Organizations: the slug follows the name; the old slug stays reserved to that organization (`organization_slugs`)
+  and `/a/<old>` answers with a permanent redirect (308) to the new one. Users never write a slug by hand.
 - Write an RLS test (pgTAP in `supabase/tests/`) for every new table or policy.
 
 ## Security and privacy (non-negotiable, details in docs/PRIVACY_AND_OWNERSHIP.md)

@@ -84,6 +84,8 @@ export async function updateProfile(previous: ProfileFormState, formData: FormDa
     return fail({ formError: "generic" });
   }
 
+  // TODO(dopo i tipi rigenerati): una sola chiamata a update_my_profile (migrazione 20261114133035), così scheda e
+  // risposte si salvano insieme o per niente. Oggi la funzione non è nei tipi generati e il typecheck la rifiuterebbe.
   const contacts = {
     contact_email: input.contactEmail,
     contact_phone: input.contactPhone,

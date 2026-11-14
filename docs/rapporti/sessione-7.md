@@ -65,13 +65,13 @@ in `src/lib/cache-tags.ts`.
 ## 5. Da confermare (scelte dell'agente)
 1. **[P1] Campi di Mi ficha**: gli stessi dell'iscrizione per tipo, comprese le risposte private (`what_for_whom`,
    `how_sustained`, `what_they_offer`), con un aiuto che dice che non sono pubbliche.
-2. **[P2] Organizzazione sospesa**: non può modificare la scheda (controllo nella pagina e nell'action). La policy del
-   database non cambia: B1 resta una tua decisione.
+2. **[P2] Organizzazione sospesa**: non può modificare la scheda né le risposte. **Corretto il 14 novembre su tua richiesta**:
+   ora lo blocca anche il database (policy di `update` di `organizations` e `organization_answers` con
+   `is_org_active`), oltre a pagina e action. Eventi, spazi e fili delle sospese restano come oggi (resto di B1).
 3. **[P3] Contatti nel database**: vincolo solo sull'email. Il telefono resta libero (≤ 30): l'iscrizione accetta già
    qualsiasi testo e un vincolo nuovo potrebbe rompere iscrizioni valide.
-4. **[P4] Slug**: conflitto con AGENTS.md ("Slugs … never change when a title changes"). Per le organizzazioni vale la tua
-   decisione del 14 novembre, per gli eventi la regola resta. AGENTS.md lo puoi aggiornare solo tu. Il test pgTAP 05, che
-   verificava la vecchia regola, ora verifica la nuova.
+4. **[P4] Slug**: per le organizzazioni lo slug segue il nome, per gli eventi non cambia mai. **AGENTS.md aggiornato il
+   14 novembre con il tuo permesso.** Il test pgTAP 05, che verificava la vecchia regola, ora verifica la nuova.
 5. **[P5] Limite dei cambi di slug**: 5 ogni 30 giorni per organizzazione (ogni cambio riserva uno slug per sempre).
 6. **[P6] Vecchi slug dopo l'eliminazione dell'account**: tornano liberi (a cascata, come chiedevi: "i vecchi slug" si
    cancellano).
@@ -80,8 +80,9 @@ in `src/lib/cache-tags.ts`.
    ripete conta come un evento.
 9. **Stesso slug se il nome dà la stessa base**: se lo slug attuale è `festival-2026` e il nome nuovo è "Festival", lo slug
    resta `festival-2026` (la regola tiene "nome-numero" come lo stesso nome).
-10. **Mi ficha non atomica**: la scheda e le risposte private si salvano con due scritture. Se la seconda fallisce, la scheda
-    resta salvata e la persona vede un errore generico. Raro; si può spostare in una funzione SQL.
+10. **Mi ficha atomica**: **corretto il 14 novembre su tua richiesta** con la funzione SQL `update_my_profile` (security
+    invoker, una sola transazione: o tutto o niente), nella stessa migrazione, con test pgTAP. L'action la userà dopo la
+    rigenerazione dei tipi (§8, passo 5): fino ad allora fa ancora due scritture.
 11. **Limiti**: 30 salvataggi della scheda all'ora per organizzazione, 10 download dei dati all'ora per utente.
 12. **Invita** non fatto: era nel BUILD_PLAN della sessione 7, ma non nella tua lista.
 
@@ -160,6 +161,15 @@ Le scelte dell'agente sono in `docs/rapporti/sessione-7.md` (§5).
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
+## 7 bis. Correzioni del fondatore (14 novembre, dopo il rapporto)
+Nella stessa migrazione `20261114133035_profile_account` (non ancora applicata):
+1. **Sospese bloccate nel database**: policy di `update` di `organizations` e `organization_answers` con
+   `is_org_active`. pgTAP 19: una sospesa non modifica scheda né risposte (anche via `update_my_profile`), ma scarica i dati.
+2. **Mi ficha atomica**: funzione `update_my_profile` (security invoker). pgTAP 19: con una risposta troppo lunga o mezzo
+   punto non cambia niente (nome, slug, risposte, vecchi slug); un salvataggio riuscito scrive scheda e risposte insieme e
+   non scrive i campi di un altro tipo. L'action la userà dopo i tipi rigenerati.
+3. **AGENTS.md**: regola sugli slug aggiornata (organizzazioni: segue il nome, vecchio riservato con 308; eventi: mai).
+
 ## 8. Domani, nell'ordine
 1. **Fondatore**: apre la PR 1 (pulizia) da GitHub. CI **~4-5 minuti**. Se verde, merge (**~1 minuto**).
 2. **Agente, con il tuo permesso**: push di `feat/profilo` (**~10 secondi**). Fondatore: apre la PR 2 in bozza. Se la PR 1 è
@@ -168,8 +178,8 @@ Le scelte dell'agente sono in `docs/rapporti/sessione-7.md` (§5).
    del passo 4.
 4. **Fondatore, solo con db-test verde**: dal tuo terminale, prima `npx supabase db push --linked --dry-run` (deve
    comparire solo `20261114133035_profile_account`, **~10 secondi**), poi `npx supabase db push --linked` (**~15 secondi**).
-5. **Agente**: `npm run db:types` (**~15 secondi**); poi il redirect dei vecchi slug in `/a/[slug]` (**~20-30 minuti** con
-   i test); `npm run check` e `npm run deps` (**~2 minuti**); `npx playwright test` (**~3 minuti**, attesi 37/37);
+5. **Agente**: `npm run db:types` (**~15 secondi**); poi il redirect dei vecchi slug in `/a/[slug]` e `updateProfile` con
+   una sola chiamata a `update_my_profile` (**~30-40 minuti** con i test); `npm run check` e `npm run deps` (**~2 minuti**); `npx playwright test` (**~3 minuti**, attesi 37/37);
    commit e, con il tuo permesso, push sulla PR 2 (**~10 secondi**). CI di nuovo **~5 minuti**.
 6. **Fondatore**: prova dal vivo sull'anteprima (Mi ficha con cambio di nome e vecchio indirizzo, scarica i dati,
-   elimina un account di prova) (**~10 minuti**); se vuoi, aggiorni in AGENTS.md la regola sugli slug (**~2 minuti**).
+   elimina un account di prova) (**~10 minuti**).

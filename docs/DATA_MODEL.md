@@ -145,6 +145,9 @@ RLS: `select` delle proprie righe. Inserita solo da `register_entity()` / `creat
   vecchio slug dell'organizzazione stessa si riprende; al massimo 5 cambi di slug ogni 30 giorni (`rate_limited`).
   L'utente non scrive mai `slug` a mano. Per gli eventi lo slug non cambia mai (AGENTS.md).
 - `contact_email`: vincolo `organizations_contact_email_format` (una sola `@`, niente spazi né `? & < > , ; : "`), `not valid`.
+- Sessione 7: la policy `update` di `organizations` e quella di `organization_answers` chiedono anche
+  `private.is_org_active(...)` nel `with check`: un'organizzazione sospesa non modifica scheda né risposte (eventi, spazi e
+  fili: resto di B1, decisione aperta). "Mi ficha" salva scheda e risposte con `update_my_profile()` (o tutto o niente).
 - Trigger: `slug` generato all'inserimento; `neighborhood_id` da `location` (`ST_Covers` su `neighborhoods.boundary`) per associazioni
   ed espacios, a ogni scrittura (così il `neighborhood_id` scritto a mano viene sempre ricalcolato); per i professionisti, che non hanno
   un punto, resta il barrio scelto (sessione 5);
@@ -296,6 +299,7 @@ Il file lo carica solo l'action di "Mi ficha" (sessione 7) dopo `reencodeLogo` (
 | `create_professional(p_name, p_one_liner, p_terms_version, p_privacy_version, p_age_confirmed, p_invite_token, p_neighborhood_slug, p_contact_email, p_contact_phone, p_contact_url, p_seeking_offering, p_indexable)` (dal 6° in poi con default) | security definer | Stesso schema per i professionisti (`entity_type = 'informal'`); `entry_method` = `invite` con invito valido, altrimenti `email_only`. Barrio scelto per slug (`invalid_neighborhood` se non esiste). Stesso tetto `rate_limited` di `register_entity`. Restituisce lo slug. |
 | `get_invite(p_token)` | security definer | Restituisce solo nome e slug dell'organizzazione che invita, se il token è valido, non usato, non scaduto e l'organizzazione è attiva. |
 | `export_my_data()` | security definer | `jsonb` con email dell'utente, membership, accettazioni, organizzazione, vecchi slug (`old_slugs`, sessione 7), NIF, risposte, eventi, organizzatori, fili, inviti, spazi e `moderation_actions` sulla propria organizzazione. "Descargar mis datos": `GET /panel/cuenta/datos`. |
+| `update_my_profile(p_name, p_one_liner, p_when_to_visit, p_usual_category, p_venue_activity, p_address, p_lng, p_lat, p_story, p_neighborhood_slug, p_seeking_offering, p_indexable, p_contact_email, p_contact_phone, p_contact_url, p_what_for_whom, p_how_sustained, p_what_they_offer)` (dal 2° in poi con default) | **security invoker** | Sessione 7, "Mi ficha": scheda e risposte private della realtà dell'utente in una sola transazione (o tutto o niente). Valgono policy e grant dell'utente (una sospesa → 42501). Il tipo si legge dal database; ogni tipo scrive solo i suoi campi; punto con `make_org_point` (`invalid_location`). Mai NIF, `entity_type`, `kind`, slug. Restituisce lo slug attuale. Errori: `not_authenticated`, `no_organization`, `invalid_neighborhood`, `invalid_location`, `not_allowed`. |
 | `delete_my_account()` | security definer | Sessione 7 ("un account = una realtà"): elimina **sempre** l'organizzazione dell'utente, anche se avesse altri membri (a cascata: eventi, organizzatori, fili, inviti, spazi, verifica, risposte, vecchi slug), poi la riga di `auth.users`. L'action cancella prima i file di Storage (logo). Restano solo le `moderation_actions` (senza riferimenti all'utente). |
 | `admin_review_list()` | security definer | Se `is_admin()`: per **tutte** le organizzazioni `id, slug, name, kind, entity_type, entry_method, venue_activity, neighborhood_name, contact_url, what_for_whom, how_sustained, what_they_offer, status, flagged_for_review, flag_reason, created_at, last_reviewed_at`. **Mai** NIF, email, telefono, user id. Altrimenti `forbidden`. La legge la pagina `/revision` (sessione 5: sola lettura, solo le segnalate). |
 | `moderate_organization(p_org, p_action, p_reason)` | security definer | Se `is_admin()`: `suspend`/`reactivate` cambiano `status`; `delete` elimina l'organizzazione (stessa cascata di `delete_my_account`, senza toccare `auth.users`). Scrive sempre `moderation_actions`. Motivo obbligatorio. Restituisce all'action l'email a cui mandare la motivazione (`contact_email`, altrimenti l'email di accesso del membro). Errori: `forbidden`, `reason_required`, `not_found`. |
@@ -349,6 +353,9 @@ tipo, attività, barrio, web, risposte e motivo. **Mai il NIF né l'email di chi
     `rate_limited`; nessuna scrittura diretta di slug né di `organization_slugs`; `entity_type` non modificabile; formato di
     `contact_email`; `export_my_data` con i vecchi slug; vecchi slug di una sospesa invisibili ad anon; `delete_my_account`
     elimina realtà, eventi, risposte, NIF e vecchi slug anche con un altro membro. Il file 05 ora verifica che lo slug segua il nome.
+    Una sospesa non modifica scheda né risposte (anche con `update_my_profile`) ma scarica i propri dati; `update_my_profile`
+    con una risposta troppo lunga o mezzo punto non salva niente (nome, slug e risposte invariati); salvataggio riuscito di
+    scheda e risposte insieme, senza scrivere i campi di un altro tipo.
 
 I test girano in GitHub Actions (`.github/workflows/db-test.yml`: `supabase start` + `supabase test db`). In locale servono Docker
 (`npx supabase test db`, anche con `--linked`). Senza Docker si possono eseguire su mapa-dev con `npx supabase db query --linked -f`,
